@@ -1,0 +1,14 @@
+{
+  "name": "SugarWorld by SugarParda",
+  "short_name": "SugarWorld",
+  "description": "El juego de plataformas de la diabetes. ¡Mantén tu glucosa en rango!",
+  "start_url": "/SUGARPARDA/",
+  "scope": "/SUGARPARDA/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0a1628",
+  "theme_color": "#4CAF50",
+  "icons": [
+    { "src": "assets/logo.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

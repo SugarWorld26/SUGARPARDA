@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="theme-color" content="#0a1628"/>
+  <title>SugarWorld</title>
+  <link rel="manifest" href="manifest.json"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{width:100%;height:100%;background:#0a1628;overflow:hidden;position:fixed;top:0;left:0}
+    
+    #nameScreen{
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:#0a1628;z-index:9999;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;
+    }
+    #nameScreen img{max-width:min(75vw,320px);max-height:26vh;object-fit:contain}
+    #nameScreen h2{color:#aaa;font-family:monospace;font-size:clamp(15px,4vw,19px);text-align:center;line-height:1.5}
+    #nameInput{
+      background:#111e2e;color:#4CAF50;border:2px solid #4CAF50;
+      padding:14px 18px;font-size:clamp(17px,5vw,22px);
+      font-family:monospace;border-radius:10px;
+      width:min(88vw,340px);text-align:center;outline:none;-webkit-appearance:none;
+    }
+    #nameInput::placeholder{color:#2a3a4a}
+    #nameError{color:#FF5252;font-family:monospace;font-size:13px;min-height:16px}
+    #playBtn{
+      background:#4CAF50;color:#000;border:none;
+      padding:16px 0;font-size:clamp(17px,5vw,22px);
+      font-family:monospace;font-weight:bold;border-radius:10px;
+      cursor:pointer;width:min(88vw,340px);letter-spacing:1px;
+      touch-action:manipulation;
+    }
+    #playBtn:active{background:#388E3C;transform:scale(0.97)}
+
+    #gameCanvas{
+      display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    }
+    #gameCanvas canvas{width:100%!important;height:100%!important;display:block;image-rendering:pixelated}
+  </style>
+</head>
+<body>
+
+<div id="nameScreen">
+  <img src="assets/logo.png" alt="SugarWorld" onerror="this.style.display='none'"/>
+  <h2>¡Mantén tu glucosa<br>en rango y llega a la meta!</h2>
+  <input id="nameInput" type="text" maxlength="16" placeholder="Tu nombre..."
+    autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"/>
+  <div id="nameError"></div>
+  <button id="playBtn" type="button">▶ &nbsp;JUGAR</button>
+</div>
+
+<div id="gameCanvas"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="src/systems/GlucoseSystem.js"></script>
+<script src="src/systems/ScoreSystem.js"></script>
+<script src="supabase.js"></script>
+<script src="src/scenes/BootScene.js"></script>
+<script src="src/scenes/MenuScene.js"></script>
+<script src="src/scenes/GameScene.js"></script>
+<script src="src/scenes/HUDScene.js"></script>
+<script src="src/scenes/ResultScene.js"></script>
+
+<script>
+  const nameScreen = document.getElementById('nameScreen');
+  const nameInput  = document.getElementById('nameInput');
+  const playBtn    = document.getElementById('playBtn');
+  const nameError  = document.getElementById('nameError');
+
+  // Recuperar nombre guardado
+  const saved = localStorage.getItem('sugarparda_name')||'';
+  if(saved) nameInput.value = saved;
+
+  function launch(playerName){
+    localStorage.setItem('sugarparda_name', playerName);
+    window._playerName = playerName;
+    nameScreen.style.display = 'none';
+    document.getElementById('gameCanvas').style.display = 'block';
+
+    SupabaseRanking.init();
+    new Phaser.Game({
+      type: Phaser.AUTO,
+      parent: 'gameCanvas',
+      backgroundColor: '#0a1628',
+      scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
+      physics: { default:'arcade', arcade:{ gravity:{y:0}, debug:false } },
+      scene: [BootScene, MenuScene, GameScene, HUDScene, ResultScene],
+    });
+  }
+
+  playBtn.addEventListener('click', ()=>{
+    const name = nameInput.value.trim();
+    if(!name){ nameError.textContent='⚠ Escribe tu nombre primero'; return; }
+    launch(name);
+  });
+  nameInput.addEventListener('keydown', e=>{ if(e.key==='Enter') playBtn.click(); });
+</script>
+</body>
+</html>
