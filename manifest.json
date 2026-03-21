@@ -1,0 +1,14 @@
+{
+  "name": "SugarWorld by SugarParda",
+  "short_name": "SugarWorld",
+  "description": "Mantén tu glucosa en rango y llega a la meta",
+  "start_url": "/SUGARPARDA/",
+  "scope": "/SUGARPARDA/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0a1628",
+  "theme_color": "#43A047",
+  "icons": [
+    { "src": "assets/logo.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="theme-color" content="#0a1628"/>
+  <title>SugarWorld</title>
+  <link rel="manifest" href="manifest.json"/>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html, body {
+      width:100%; height:100%;
+      background:#0a1628;
+      overflow:hidden;
+      position:fixed; top:0; left:0;
+      touch-action:none;
+    }
+
+    /* ── Girar móvil ── */
+    #rotate {
+      display:none; position:fixed; inset:0;
+      background:#0a1628; z-index:99999;
+      flex-direction:column; align-items:center; justify-content:center; gap:20px;
+    }
+    #rotate.on { display:flex; }
+    #rotate .icon { font-size:64px; animation:spin 2s ease-in-out infinite; }
+    #rotate p { color:#43A047; font-family:monospace; font-size:clamp(15px,4vw,20px); text-align:center; }
+    @keyframes spin { 0%,100%{transform:rotate(0)} 50%{transform:rotate(90deg)} }
+
+    /* ── Pantalla nombre ── */
+    #nameWrap {
+      position:fixed; inset:0; background:#0a1628; z-index:9999;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:28px;
+    }
+    #nameWrap img  { max-width:min(70vw,300px); max-height:22vh; object-fit:contain; }
+    #nameWrap p    { color:#78909C; font-family:monospace; font-size:clamp(13px,3.5vw,16px); text-align:center; line-height:1.6; }
+    #nameInput {
+      background:#0d1f3c; color:#43A047; border:2px solid #43A047;
+      padding:13px 16px; font-size:clamp(17px,4.5vw,22px);
+      font-family:monospace; border-radius:10px;
+      width:min(84vw,310px); text-align:center; outline:none; -webkit-appearance:none;
+      caret-color:#43A047;
+    }
+    #nameInput::placeholder { color:#1e3a5f; }
+    #nameErr { color:#EF5350; font-family:monospace; font-size:13px; min-height:16px; }
+    #playBtn {
+      background:#43A047; color:#000; border:none;
+      padding:14px 0; font-size:clamp(17px,4.5vw,22px);
+      font-family:monospace; font-weight:bold; border-radius:10px;
+      cursor:pointer; width:min(84vw,310px); letter-spacing:1px;
+      touch-action:manipulation;
+    }
+    #playBtn:active { background:#2E7D32; transform:scale(0.97); }
+
+    /* ── Canvas ── */
+    #game { display:none; position:fixed; inset:0; }
+    #game canvas {
+      width:100%!important; height:100%!important;
+      display:block;
+      image-rendering:pixelated;
+      image-rendering:crisp-edges;
+    }
+  </style>
+</head>
+<body>
+
+<div id="rotate">
+  <div class="icon">📱</div>
+  <p>Gira el móvil<br>para jugar en horizontal</p>
+</div>
+
+<div id="nameWrap">
+  <img src="assets/logo.png" alt="SugarWorld" onerror="this.style.display='none'"/>
+  <p>Mantén tu glucosa en rango<br>y llega a la meta lo antes posible</p>
+  <input id="nameInput" type="text" maxlength="16" placeholder="Tu nombre..."
+    autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"/>
+  <div id="nameErr"></div>
+  <button id="playBtn" type="button">▶  JUGAR</button>
+</div>
+
+<div id="game"></div>
+
+<!-- Librerías -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<!-- Juego: orden importa -->
+<script src="config.js"></script>
+<script src="db.js"></script>
+<script src="src/systems/Glucose.js"></script>
+<script src="src/systems/Score.js"></script>
+<script src="src/world/Ground.js"></script>
+<script src="src/world/HUD.js"></script>
+<script src="src/entities/Enemy.js"></script>
+<script src="src/entities/Player.js"></script>
+<script src="src/scenes/Scenes.js"></script>
+<script src="src/scenes/Game.js"></script>
+
+<script>
+(function () {
+  const rotEl  = document.getElementById('rotate');
+  const nameEl = document.getElementById('nameWrap');
+  const input  = document.getElementById('nameInput');
+  const btn    = document.getElementById('playBtn');
+  const errEl  = document.getElementById('nameErr');
+
+  // Detectar orientación
+  function checkOrient() {
+    if (window._gameOn) return;
+    const portrait = window.innerHeight > window.innerWidth;
+    const mobile   = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (mobile && portrait) {
+      rotEl.classList.add('on');
+      nameEl.style.display = 'none';
+    } else {
+      rotEl.classList.remove('on');
+      nameEl.style.display = 'flex';
+    }
+  }
+  window.addEventListener('resize', checkOrient);
+  window.addEventListener('orientationchange', () => setTimeout(checkOrient, 250));
+  checkOrient();
+
+  // Nombre guardado
+  const saved = localStorage.getItem('sg_name') || '';
+  if (saved) input.value = saved;
+
+  function launch(name) {
+    localStorage.setItem('sg_name', name);
+    window.PLAYER_NAME = name;
+    window._gameOn     = true;
+    nameEl.style.display = 'none';
+    rotEl.classList.remove('on');
+    document.getElementById('game').style.display = 'block';
+
+    DB.init();
+
+    new Phaser.Game({
+      type:   Phaser.AUTO,
+      width:  CONFIG.W,
+      height: CONFIG.H,
+      parent: 'game',
+      backgroundColor: '#0a1628',
+      scale: {
+        mode:       Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+      },
+      physics: {
+        default: 'arcade',
+        arcade:  { gravity: { y: 0 }, debug: false },
+      },
+      scene: [BootScene, MenuScene, GameScene, ResultScene],
+    });
+  }
+
+  btn.addEventListener('click', () => {
+    const name = input.value.trim();
+    if (!name) { errEl.textContent = '⚠ Escribe tu nombre'; return; }
+    launch(name);
+  });
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
+})();
+</script>
+</body>
+</html>
