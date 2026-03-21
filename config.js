@@ -14,36 +14,36 @@ const CONFIG = {
 
   // ── Física ──────────────────────────────────────────────────
   GRAVITY:      900,
-  JUMP_VY:     -520,   // velocidad vertical al saltar
+  JUMP_VY:     -520,
 
   // ── Velocidad jugadora ───────────────────────────────────────
-  SPD_NORMAL:   230,   // px/s corriendo normal
-  SPD_FAST:     380,   // px/s corriendo rápido (agitando)
-  SPD_SLOW:      90,   // px/s tras impacto cupcake
-  FAST_MS:     3000,   // duración del sprint en ms
-  SHAKE_G:       14,   // umbral acelerómetro (m/s²)
+  SPD_NORMAL:   230,
+  SPD_FAST:     380,
+  SPD_SLOW:      90,
+  FAST_MS:     3000,
+  SHAKE_G:       14,
 
   // ── Glucosa ──────────────────────────────────────────────────
   GLUCOSE_INIT:    100,
   GLUCOSE_MIN:      20,
   GLUCOSE_MAX:     400,
-  RANGE_LO:         80,   // límite inferior rango saludable
-  RANGE_HI:        130,   // límite superior rango saludable
-  RANGAZO_LO:       90,   // RANGAZO inferior
-  RANGAZO_HI:      110,   // RANGAZO superior
-  HYPO_THRESH:      50,   // por debajo → desmayo
-  HYPER_THRESH:    180,   // por encima → overlay rojo
+  RANGE_LO:         80,
+  RANGE_HI:        130,
+  RANGAZO_LO:       90,
+  RANGAZO_HI:      110,
+  HYPO_THRESH:      50,
+  HYPER_THRESH:    180,
 
-  // caídas de glucosa por movimiento (mg/dL por segundo)
   DROP_RUN:        0.7,
   DROP_FAST:       1.8,
-  DROP_JUMP:       1.2,  // caída al saltar (instantánea)
+  DROP_JUMP:       1.2,
+  DROP_SLOPE:      1.0,
 
   // ── Insulina ─────────────────────────────────────────────────
-  INS_SLOW_DPS:    3,     // mg/dL/s insulina lenta
-  INS_SLOW_MS:  8000,     // duración efecto
-  INS_FAST_DROP:  40,     // caída instantánea insulina rápida
-  INS_FAST_MAX:    3,     // dosis disponibles por partida
+  INS_SLOW_DPS:    3,
+  INS_SLOW_MS:  8000,
+  INS_FAST_DROP:  40,
+  INS_FAST_MAX:    3,
 
   // ── Enemigos ─────────────────────────────────────────────────
   ENEMY_RAISE: {
@@ -52,24 +52,24 @@ const CONFIG = {
     choco:    45,
     cupcake:  25,
   },
-  CUPCAKE_SLOW_MS: 2000, // duración efecto lentitud
+  CUPCAKE_SLOW_MS: 2000,
 
   // ── Ítems ────────────────────────────────────────────────────
-  APPLE_DPS:     4,      // mg/dL/s que sube la manzana
-  APPLE_MS:   5000,      // duración
-  GLUCAGON_MAX:  2,      // glucagones por partida
-  GLUCAGON_VAL: 80,      // glucosa al usar glucagón
+  APPLE_DPS:     4,
+  APPLE_MS:   5000,
+  GLUCAGON_MAX:  2,
+  GLUCAGON_VAL: 80,
 
   // ── Puntuación ───────────────────────────────────────────────
   PTS_RANGAZO:   100,
   PTS_IN_RANGE:   60,
   PTS_OUT:        10,
-  SPEED_BONUS:   500,    // máximo bonus velocidad
-  SPEED_REF_S:    90,    // segundos de referencia para el bonus
+  SPEED_BONUS:   500,
+  SPEED_REF_S:    90,
 
   // ── Suelo ────────────────────────────────────────────────────
-  GROUND_Y:      390,    // Y del borde superior del suelo
-  GROUND_H:       60,    // altura del bloque de suelo
+  GROUND_Y:      390,
+  GROUND_H:       60,
 
   // ── Niveles ──────────────────────────────────────────────────
   LEVELS: [
@@ -86,6 +86,7 @@ const CONFIG = {
       glucagons:  2,
       length:     7000,
       holePct:    0.06,
+      slopePct:   0.25,
     },
     {
       id: 2, name: 'Bosque',
@@ -100,6 +101,7 @@ const CONFIG = {
       glucagons:  2,
       length:     8000,
       holePct:    0.08,
+      slopePct:   0.30,
     },
     {
       id: 3, name: 'Montaña',
@@ -114,6 +116,7 @@ const CONFIG = {
       glucagons:  1,
       length:     8500,
       holePct:    0.10,
+      slopePct:   0.35,
     },
     {
       id: 4, name: 'Mundo Chuches',
@@ -128,6 +131,7 @@ const CONFIG = {
       glucagons:  1,
       length:     9000,
       holePct:    0.12,
+      slopePct:   0.40,
     },
     {
       id: 5, name: 'Nivel Final',
@@ -142,6 +146,7 @@ const CONFIG = {
       glucagons:  1,
       length:     10000,
       holePct:    0.14,
+      slopePct:   0.45,
     },
   ],
 };
