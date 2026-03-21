@@ -34,23 +34,24 @@ const CONFIG = {
   HYPO_THRESH:      50,
   HYPER_THRESH:    180,
 
-  DROP_RUN:        0.7,
-  DROP_FAST:       1.8,
-  DROP_JUMP:       1.2,
-  DROP_SLOPE:      1.0,
+  // caídas de glucosa por movimiento (mg/dL por segundo)
+  DROP_RUN:        1.8,
+  DROP_FAST:       3.5,
+  DROP_JUMP:       2.5,
+  DROP_SLOPE:      2.8,
 
   // ── Insulina ─────────────────────────────────────────────────
-  INS_SLOW_DPS:    3,
+  INS_SLOW_DPS:    2,
   INS_SLOW_MS:  8000,
   INS_FAST_DROP:  40,
   INS_FAST_MAX:    3,
 
   // ── Enemigos ─────────────────────────────────────────────────
   ENEMY_RAISE: {
-    lollipop: 15,
-    cake:     30,
-    choco:    45,
-    cupcake:  25,
+    lollipop: 25,
+    cake:     45,
+    choco:    65,
+    cupcake:  35,
   },
   CUPCAKE_SLOW_MS: 2000,
 
@@ -86,7 +87,7 @@ const CONFIG = {
       glucagons:  2,
       length:     7000,
       holePct:    0.06,
-      slopePct:   0.25,
+      slopePct:   0.55,
     },
     {
       id: 2, name: 'Bosque',
@@ -101,7 +102,7 @@ const CONFIG = {
       glucagons:  2,
       length:     8000,
       holePct:    0.08,
-      slopePct:   0.30,
+      slopePct:   0.60,
     },
     {
       id: 3, name: 'Montaña',
@@ -116,7 +117,7 @@ const CONFIG = {
       glucagons:  1,
       length:     8500,
       holePct:    0.10,
-      slopePct:   0.35,
+      slopePct:   0.65,
     },
     {
       id: 4, name: 'Mundo Chuches',
@@ -131,7 +132,7 @@ const CONFIG = {
       glucagons:  1,
       length:     9000,
       holePct:    0.12,
-      slopePct:   0.40,
+      slopePct:   0.70,
     },
     {
       id: 5, name: 'Nivel Final',
@@ -146,7 +147,7 @@ const CONFIG = {
       glucagons:  1,
       length:     10000,
       holePct:    0.14,
-      slopePct:   0.45,
+      slopePct:   0.75,
     },
   ],
 };
