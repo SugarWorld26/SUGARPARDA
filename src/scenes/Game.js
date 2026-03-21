@@ -28,8 +28,8 @@ class GameScene extends Phaser.Scene {
     this._buildBackground(lvl);
 
     // ── Sistemas ──
-    this._glucose = new Glucose();
-    this._score   = new Score();
+    this._glucose   = new Glucose();
+    this._score     = new Score();
     this._glucagons = lvl.glucagons;
 
     // ── Mundo ──
@@ -50,7 +50,7 @@ class GameScene extends Phaser.Scene {
 
     // ── HUD ──
     this._hud = new HUD(this, this._glucagons, this._fastLeft);
-    this._hud.onJump(()        => this._player.jump(this._glucose));
+    this._hud.onJump(() => this._player.jump(this._glucose));
     this._hud.onSlowInsulin(() => {
       this._glucose.useSlowInsulin();
       this._float(this._player.x, this._player.y - 45, '💉 Bajando...', '#43A047');
@@ -74,21 +74,16 @@ class GameScene extends Phaser.Scene {
     this._metaX = lvl.length - 160;
     this._buildMeta(lvl);
 
-    // Soporte multitáctil
     this.input.addPointer(3);
-
     this._lvl = lvl;
   }
 
-  // ── FONDO ────────────────────────────────────────────────────
   _buildBackground(lvl) {
-    const W = CONFIG.W, H = CONFIG.H, L = lvl.length;
+    const L  = lvl.length;
     const GY = CONFIG.GROUND_Y;
-
-    const g = this.add.graphics().setScrollFactor(0.15).setDepth(0);
+    const g  = this.add.graphics().setScrollFactor(0.15).setDepth(0);
 
     if (lvl.skyColor === 0x87CEEB) {
-      // Ciudad — edificios
       g.fillStyle(0x90A4AE, 1);
       for (let bx = 60; bx < L; bx += 220) {
         const bh = Phaser.Math.Between(70, 180);
@@ -101,7 +96,6 @@ class GameScene extends Phaser.Scene {
         g.fillStyle(0x90A4AE, 1);
       }
     } else {
-      // Genérico — silueta de árboles/montañas
       const tc = (lvl.skyColor === 0x2E7D32) ? 0x1B5E20
                : (lvl.skyColor === 0x78909C) ? 0x37474F
                : (lvl.skyColor === 0xF48FB1) ? 0xAD1457
@@ -115,7 +109,6 @@ class GameScene extends Phaser.Scene {
     }
   }
 
-  // ── META ─────────────────────────────────────────────────────
   _buildMeta(lvl) {
     const GY = CONFIG.GROUND_Y;
     const mx = this._metaX;
@@ -128,17 +121,14 @@ class GameScene extends Phaser.Scene {
     }).setDepth(4);
   }
 
-  // ── ÍTEMS ─────────────────────────────────────────────────────
   _buildPickups(lvl) {
     const GY = CONFIG.GROUND_Y;
 
-    // Manzanas
     this._apples = this.physics.add.staticGroup();
     for (let i = 0; i < lvl.apples; i++) {
       let ax, tries = 0;
       do { ax = Phaser.Math.Between(600, lvl.length - 400); tries++; }
       while (!this._ground.isSolidAt(ax) && tries < 20);
-
       if (!this.textures.exists('_apple')) this._makeAppleTex();
       const a = this._apples.create(ax, GY - 52, '_apple');
       a.setDepth(7);
@@ -151,7 +141,6 @@ class GameScene extends Phaser.Scene {
       this._float(this._player.x, this._player.y - 50, '🍎 +azúcar', '#43A047');
     });
 
-    // Checkpoints
     this._cps = this.physics.add.staticGroup();
     const sp  = lvl.length / (lvl.checkpoints + 1);
     for (let i = 1; i <= lvl.checkpoints; i++) {
@@ -176,7 +165,7 @@ class GameScene extends Phaser.Scene {
     const S = 4;
     g.fillStyle(0x4CAF50, 1).fillRect(4*S, 0, 2*S, 2*S);
     g.fillStyle(0xC62828, 1).fillRect(1*S, 2*S, 8*S, 7*S);
-    g.fillStyle(0xC62828, 1).fillRect(0,   3*S, 10*S, 5*S);
+    g.fillStyle(0xC62828, 1).fillRect(0, 3*S, 10*S, 5*S);
     g.fillStyle(0xE53935, 1).fillRect(2*S, 3*S, 6*S, 5*S);
     g.fillStyle(0xFF8A80, 1).fillRect(2*S, 3*S, 2*S, 2*S);
     g.generateTexture('_apple', 10*S, 9*S);
@@ -192,7 +181,6 @@ class GameScene extends Phaser.Scene {
     g.destroy();
   }
 
-  // ── ACELERÓMETRO ─────────────────────────────────────────────
   _buildAccelerometer() {
     if (!window.DeviceMotionEvent) return;
     this._motionHandler = (e) => {
@@ -207,7 +195,6 @@ class GameScene extends Phaser.Scene {
     window.addEventListener('devicemotion', this._motionHandler);
   }
 
-  // ── IMPACTO CON ENEMIGO ──────────────────────────────────────
   _onEnemyHit(type) {
     this._glucose.onEnemyHit(type);
     if (type === 'cupcake') this._player.applySlow();
@@ -216,7 +203,6 @@ class GameScene extends Phaser.Scene {
     this._float(this._player.x, this._player.y - 40, `+${raise} 📈`, '#FF5252');
   }
 
-  // ── HIPOGLUCEMIA ─────────────────────────────────────────────
   _triggerHypo() {
     if (this._dead) return;
     this._dead = true;
@@ -258,24 +244,22 @@ class GameScene extends Phaser.Scene {
     }
   }
 
-  // ── FIN DE NIVEL ─────────────────────────────────────────────
   _finish() {
     if (this._done) return;
     this._done = true;
     if (this._motionHandler) window.removeEventListener('devicemotion', this._motionHandler);
     const bonus = this._score.finish();
     this.scene.start('Result', {
-      score: this._score.total,
-      secs:  this._score.elapsedSecs,
-      tir:   this._score.timeInRange,
-      rng:   this._score.rangazoPct,
+      score:  this._score.total,
+      secs:   this._score.elapsedSecs,
+      tir:    this._score.timeInRange,
+      rng:    this._score.rangazoPct,
       bonus,
       lvlIdx: this._lvlIdx,
       name:   window.PLAYER_NAME,
     });
   }
 
-  // ── HELPERS ──────────────────────────────────────────────────
   _flash(color, dur) {
     const f = this.add.graphics().setScrollFactor(0).setDepth(200);
     f.fillStyle(color, 0.28).fillRect(0, 0, CONFIG.W, CONFIG.H);
@@ -290,7 +274,6 @@ class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: t, y: y - 50, alpha: 0, duration: 1200, onComplete: () => t.destroy() });
   }
 
-  // ── UPDATE ───────────────────────────────────────────────────
   update(time, delta) {
     if (this._dead || this._done) return;
 
@@ -303,12 +286,18 @@ class GameScene extends Phaser.Scene {
     }
 
     // Caída en agujero
-    if (this._player.y > CONFIG.H + 60) {
+    const overHole = !this._ground.isSolidAt(this._player.x) &&
+                     this._player.sprite.body.blocked.down === false &&
+                     this._player.y > CONFIG.GROUND_Y - 10;
+    if (overHole || this._player.y > CONFIG.H + 40) {
       this._glucose.v = CONFIG.HYPO_THRESH - 1;
     }
 
+    // Detectar cuesta
+    const onSlope = this._ground.isSlopeAt(this._player.x);
+
     // Actualizar glucosa
-    this._glucose.tick(dt, true, this._fast);
+    this._glucose.tick(dt, true, this._fast, onSlope);
 
     // Hipoglucemia
     if (this._glucose.isHypo) {
@@ -325,6 +314,6 @@ class GameScene extends Phaser.Scene {
     if (this._player.x >= this._metaX) this._finish();
 
     // HUD
-    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast);
+    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope);
   }
 }
