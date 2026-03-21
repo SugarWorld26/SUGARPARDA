@@ -31,7 +31,7 @@ class Ground {
       const sw = Phaser.Math.Between(350, 850);
       const w  = Math.min(sw, L - 600 - x);
       if (w > 50) {
-        const isSlope = w > 300 && Math.random() < (lvl.slopePct || 0.3);
+        const isSlope = w > 200 && Math.random() < (lvl.slopePct || 0.3);
         this.segments.push({ x, w, slope: isSlope });
         if (isSlope) this.slopes.push({ x, w });
       }
@@ -47,7 +47,7 @@ class Ground {
     this.segments.forEach(seg => {
       if (seg.slope) {
         const steps = Math.floor(seg.w / 40);
-        const rise  = 28;
+        const rise  = 70;
         for (let i = 0; i < steps; i++) {
           const sx  = seg.x + i * (seg.w / steps);
           const sw2 = seg.w / steps + 1;
