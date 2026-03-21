@@ -35,10 +35,10 @@ const CONFIG = {
   HYPER_THRESH:    180,
 
   // caídas de glucosa por movimiento (mg/dL por segundo)
-  DROP_RUN:        1.8,
-  DROP_FAST:       3.5,
-  DROP_JUMP:       2.5,
-  DROP_SLOPE:      2.8,
+  DROP_RUN:        3.5,
+DROP_FAST:       6.0,
+DROP_JUMP:       4.0,
+DROP_SLOPE:      5.0,
 
   // ── Insulina ─────────────────────────────────────────────────
   INS_SLOW_DPS:    2,
