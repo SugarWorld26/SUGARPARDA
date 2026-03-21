@@ -54,25 +54,15 @@ class Ground {
           gfx.fillStyle(lvl.groundEdge, 1)
              .fillRect(sx, GY - dy, sw + 1, 8);
 
-          const body = scene.physics.add.image(
-            sx + sw / 2,
-            (GY - dy) + GH / 2,
-            '__DEFAULT'
-          );
-          body.setVisible(false);
-          body.setImmovable(true);
+          // Usamos rectangle con setOrigin(0,0) para que top-left = (sx, GY-dy)
+          // Así no hay desalineación entre el collider y la superficie visible.
+          const body = scene.add.rectangle(sx, GY - dy, sw + 1, GH, 0x000000, 0);
+          body.setOrigin(0, 0);
+          scene.physics.add.existing(body, true); // true = static body
           body.body.allowGravity = false;
-          body.body.setSize(sw + 1, GH);
-          body.refreshBody();
           this._bodies.push(body);
         }
-
-        gfx.fillStyle(0xFFFFFF, 0.15);
-        gfx.fillTriangle(
-          seg.x + 30,         GY - 30,
-          seg.x + seg.w - 30, GY - RISE - 30,
-          seg.x + seg.w - 30, GY - 30
-        );
+        // (triángulo decorativo eliminado: causaba artefacto visual descentrado)
 
       } else {
         gfx.fillStyle(lvl.groundColor, 1).fillRect(seg.x, GY, seg.w, GH);
