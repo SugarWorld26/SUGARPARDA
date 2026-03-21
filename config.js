@@ -36,9 +36,9 @@ const CONFIG = {
 
   // caídas de glucosa por movimiento (mg/dL por segundo)
   DROP_RUN:        3.5,
-DROP_FAST:       6.0,
-DROP_JUMP:       4.0,
-DROP_SLOPE:      5.0,
+  DROP_FAST:       6.0,
+  DROP_JUMP:       4.0,
+  DROP_SLOPE:      5.0,
 
   // ── Insulina ─────────────────────────────────────────────────
   INS_SLOW_DPS:    1,     // bajado de 2 → baja más despacio
