@@ -90,6 +90,24 @@ class Ground {
     return this.segments.some(s => x >= s.x && x < s.x + s.w);
   }
 
+  // Devuelve la Y de la superficie visible en la coordenada X dada.
+  // En suelo plano = GROUND_Y. En cuesta = GROUND_Y - dy interpolado.
+  getSurfaceY(x) {
+    const GY   = CONFIG.GROUND_Y;
+    const RISE = 80;
+    const STEP = 24;
+    for (const seg of this.segments) {
+      if (x >= seg.x && x < seg.x + seg.w) {
+        if (!seg.slope) return GY;
+        const steps = Math.ceil(seg.w / STEP);
+        const i     = Math.floor((x - seg.x) / STEP);
+        const dy    = Math.round((i / steps) * RISE);
+        return GY - dy;
+      }
+    }
+    return GY;
+  }
+
   isSlopeAt(x) {
     return this.slopes.some(s => x >= s.x && x < s.x + s.w);
   }
