@@ -52,6 +52,7 @@ DROP_SLOPE:      5.0,
     cake:     200,
     choco:     70,
   },
+  CUPCAKE_SLOW_MS: 2000,  // mantenido para compatibilidad con Player.js
 
   // ── Ítems ────────────────────────────────────────────────────
   APPLE_DPS:     4,
