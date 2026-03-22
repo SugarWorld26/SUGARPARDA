@@ -36,9 +36,9 @@ const CONFIG = {
 
   // caídas de glucosa por movimiento (mg/dL por segundo)
   DROP_RUN:        3.5,
-  DROP_FAST:       6.0,
-  DROP_JUMP:       4.0,
-  DROP_SLOPE:      5.0,
+DROP_FAST:       6.0,
+DROP_JUMP:       4.0,
+DROP_SLOPE:      5.0,
 
   // ── Insulina ─────────────────────────────────────────────────
   INS_SLOW_DPS:    1,     // bajado de 2 → baja más despacio
@@ -57,6 +57,8 @@ const CONFIG = {
   // ── Ítems ────────────────────────────────────────────────────
   APPLE_DPS:     4,
   APPLE_MS:   5000,
+  BACKPACK_START: 3,   // manzanas con las que empieza el jugador
+  BACKPACK_MAX:   6,   // máximo de manzanas en la mochila
   GLUCAGON_MAX:  2,
   GLUCAGON_VAL: 80,
 
