@@ -1,6 +1,5 @@
 // ================================================================
-//  Game.js — Escena principal. Solo orquesta módulos.
-//  La lógica vive en Glucose, Score, Player, Spawner, Ground, HUD.
+//  Game.js — Escena principal.
 // ================================================================
 class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -12,32 +11,27 @@ class GameScene extends Phaser.Scene {
   create() {
     const lvl = CONFIG.LEVELS[this._lvlIdx];
 
-    // ── Estado de partida ──
     this._fast      = false;
     this._fastTimer = 0;
     this._dead      = false;
     this._done      = false;
     this._fastLeft  = CONFIG.INS_FAST_MAX;
 
-    // ── Física ──
     this.physics.world.gravity.y = CONFIG.GRAVITY;
     this.physics.world.setBounds(0, 0, lvl.length, CONFIG.H + 200);
 
-    // ── Fondo ──
     this.cameras.main.setBackgroundColor(lvl.skyColor);
     this._buildBackground(lvl);
 
-    // ── Sistemas ──
-    this._glucose   = new Glucose();
-    // Tiempo de referencia = cuánto tardarías corriendo sin parar a velocidad normal
+    // Tiempo de referencia para el bonus de velocidad
     const refSecs   = Math.round(lvl.length / CONFIG.SPD_NORMAL);
+    this._glucose   = new Glucose();
     this._score     = new Score(refSecs);
     this._glucagons = lvl.glucagons;
+    this._backpack  = CONFIG.BACKPACK_START;
 
-    // ── Mundo ──
     this._ground = new Ground(this, lvl);
 
-    // ── Entidades ──
     const startY = CONFIG.GROUND_Y - 30;
     this._player = new Player(this, 200, startY);
     this._player.addToGround(this._ground);
@@ -47,15 +41,13 @@ class GameScene extends Phaser.Scene {
       this._onEnemyHit(type);
     });
 
-    // ── Ítems ──
     this._buildPickups(lvl);
 
-    // ── HUD ──
-    this._hud = new HUD(this, this._glucagons, this._fastLeft);
+    this._hud = new HUD(this, this._glucagons, this._fastLeft, this._backpack);
     this._hud.onJump(() => this._player.jump(this._glucose));
     this._hud.onSlowInsulin(() => {
       this._glucose.useSlowInsulin();
-      this._float(this._player.x, this._player.y - 45, '💉 Bajando...', '#43A047');
+      this._float(this._player.x, this._player.y - 45, '💉 -5/s x5s', '#43A047');
     });
     this._hud.onFastInsulin(() => {
       if (this._fastLeft <= 0) return;
@@ -63,16 +55,19 @@ class GameScene extends Phaser.Scene {
       this._glucose.useFastInsulin();
       this._float(this._player.x, this._player.y - 45, `⚡ -${CONFIG.INS_FAST_DROP}`, '#FF6F00');
     });
+    this._hud.onEatApple(() => {
+      if (this._backpack <= 0) return;
+      this._backpack--;
+      this._glucose.eatApple();
+      this._float(this._player.x, this._player.y - 45, `🍎 +${CONFIG.APPLE_RAISE}`, '#A5D6A7');
+    });
 
-    // ── Cámara ──
     this.cameras.main.setBounds(0, 0, lvl.length, CONFIG.H);
     this.cameras.main.startFollow(this._player.sprite, false, 0.1, 1);
     this.cameras.main.setFollowOffset(-CONFIG.W * 0.25, 0);
 
-    // ── Acelerómetro ──
     this._buildAccelerometer();
 
-    // ── Meta ──
     this._metaX = lvl.length - 160;
     this._buildMeta(lvl);
 
@@ -126,6 +121,7 @@ class GameScene extends Phaser.Scene {
   _buildPickups(lvl) {
     const GY = CONFIG.GROUND_Y;
 
+    // ── Manzanas: van a la mochila ──
     this._apples = this.physics.add.staticGroup();
     for (let i = 0; i < lvl.apples; i++) {
       let ax, tries = 0;
@@ -139,10 +135,17 @@ class GameScene extends Phaser.Scene {
     }
     this.physics.add.overlap(this._player.sprite, this._apples, (_, a) => {
       a.destroy();
-      this._glucose.eatApple();
-      this._float(this._player.x, this._player.y - 50, '🍎 +azúcar', '#43A047');
+      if (this._backpack < CONFIG.BACKPACK_MAX) {
+        this._backpack++;
+        this._float(this._player.x, this._player.y - 50, `🎒 Mochila: ${this._backpack}`, '#FFC107');
+      } else {
+        // Mochila llena: se come directamente
+        this._glucose.eatApple();
+        this._float(this._player.x, this._player.y - 50, `🍎 +${CONFIG.APPLE_RAISE}`, '#A5D6A7');
+      }
     });
 
+    // ── Checkpoints ──
     this._cps = this.physics.add.staticGroup();
     const sp  = lvl.length / (lvl.checkpoints + 1);
     for (let i = 1; i <= lvl.checkpoints; i++) {
@@ -199,7 +202,6 @@ class GameScene extends Phaser.Scene {
 
   _onEnemyHit(type) {
     this._glucose.onEnemyHit(type);
-    if (type === 'cupcake') this._player.applySlow();
     this._flash(0xFF0000, 160);
     const raise = CONFIG.ENEMY_RAISE[type] || 0;
     this._float(this._player.x, this._player.y - 40, `+${raise} 📈`, '#FF5252');
@@ -222,7 +224,7 @@ class GameScene extends Phaser.Scene {
       fontSize: '26px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#4FC3F7', stroke: '#000', strokeThickness: 3,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
-    this.add.text(W/2, H*0.54, `Glucagones restantes: ${this._glucagons}`, {
+    this.add.text(W/2, H*0.54, `Glucagones: ${this._glucagons}`, {
       fontSize: '15px', fontFamily: 'monospace', fill: '#fff',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
 
@@ -235,10 +237,8 @@ class GameScene extends Phaser.Scene {
       btn.on('pointerdown', () => {
         this._glucagons--;
         this._glucose.useGlucagon();
-        // Teletransportar al jugador a suelo sólido cercano para evitar re-trigger
+        // Volver a suelo sólido plano cercano
         const safeX = this._findSafeX(this._player.x);
-        this._player.sprite.x = safeX;
-        this._player.sprite.y = CONFIG.GROUND_Y - 30;
         this._player.sprite.body.reset(safeX, CONFIG.GROUND_Y - 30);
         this._dead = false;
         ov.destroy();
@@ -252,13 +252,13 @@ class GameScene extends Phaser.Scene {
     }
   }
 
-  // Busca la X de suelo sólido más cercana hacia atrás
   _findSafeX(fromX) {
     for (let dx = 0; dx < 800; dx += 20) {
-      if (this._ground.isSolidAt(fromX - dx) && !this._ground.isSlopeAt(fromX - dx))
-        return fromX - dx;
+      const tx = fromX - dx;
+      if (tx > 0 && this._ground.isSolidAt(tx) && !this._ground.isSlopeAt(tx))
+        return tx;
     }
-    return 300; // fallback al inicio
+    return 300;
   }
 
   _finish() {
@@ -296,41 +296,33 @@ class GameScene extends Phaser.Scene {
 
     const dt = delta / 1000;
 
-    // Fast timer
     if (this._fast) {
       this._fastTimer -= delta;
       if (this._fastTimer <= 0) this._fast = false;
     }
 
-    // Caída en agujero — solo actuar si no estamos ya en hypo
+    // Caída en agujero — no actuar si ya estamos en hypo
     const overHole = !this._ground.isSolidAt(this._player.x) &&
                      this._player.sprite.body.blocked.down === false &&
                      this._player.y > CONFIG.GROUND_Y - 10;
-    if ((overHole || this._player.y > CONFIG.H + 40) && !this._dead) {
+    if (overHole || this._player.y > CONFIG.H + 40) {
       this._glucose.v = CONFIG.HYPO_THRESH - 1;
     }
 
-    // Detectar cuesta
     const onSlope = this._ground.isSlopeAt(this._player.x);
-
-    // Actualizar glucosa
     this._glucose.tick(dt, true, this._fast, onSlope);
 
-    // Hipoglucemia
     if (this._glucose.isHypo) {
       this._triggerHypo();
       return;
     }
 
-    // Actualizar entidades
     this._player.update(delta, this._fast);
     this._player.applyGlucoseVFX(this._glucose.state, time);
     this._spawner.update(delta);
 
-    // Meta
     if (this._player.x >= this._metaX) this._finish();
 
-    // HUD
-    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope);
+    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope, this._backpack);
   }
 }
