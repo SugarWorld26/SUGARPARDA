@@ -41,7 +41,7 @@ const CONFIG = {
   DROP_SLOPE:      2.5,
 
   // ── Insulina ─────────────────────────────────────────────────
-  INS_SLOW_DPS:    1,     // bajado de 2 → baja más despacio
+  INS_SLOW_DPS:    4,     // mg/dL/s — acumulable con cada pulsación
   INS_SLOW_MS:  8000,
   INS_FAST_DROP:  25,     // bajado de 40 → baja más despacio
   INS_FAST_MAX:    3,
@@ -87,7 +87,8 @@ const CONFIG = {
       glucagons:  2,
       length:     7000,
       holePct:    0.06,
-      slopePct:   0.20,
+      slopePct:   0.00,  // sin cuestas
+      slopeRise:  0,
     },
     {
       id: 2, name: 'Bosque',
@@ -102,7 +103,8 @@ const CONFIG = {
       glucagons:  2,
       length:     8000,
       holePct:    0.08,
-      slopePct:   0.25,
+      slopePct:   0.15,  // cuestas cortas y suaves
+      slopeRise:  40,
     },
     {
       id: 3, name: 'Montaña',
@@ -117,7 +119,8 @@ const CONFIG = {
       glucagons:  1,
       length:     8500,
       holePct:    0.10,
-      slopePct:   0.30,
+      slopePct:   0.22,  // cuestas medianas
+      slopeRise:  60,
     },
     {
       id: 4, name: 'Mundo Chuches',
@@ -132,7 +135,8 @@ const CONFIG = {
       glucagons:  1,
       length:     9000,
       holePct:    0.12,
-      slopePct:   0.30,
+      slopePct:   0.28,  // cuestas largas
+      slopeRise:  80,
     },
     {
       id: 5, name: 'Nivel Final',
@@ -147,7 +151,8 @@ const CONFIG = {
       glucagons:  1,
       length:     10000,
       holePct:    0.14,
-      slopePct:   0.35,
+      slopePct:   0.35,  // cuestas largas e inclinadas
+      slopeRise:  100,
     },
   ],
 };
