@@ -31,6 +31,7 @@ class GameScene extends Phaser.Scene {
     this._glucose   = new Glucose();
     this._score     = new Score();
     this._glucagons = lvl.glucagons;
+    this._backpack  = CONFIG.BACKPACK_START;  // manzanas en mochila
 
     // ── Mundo ──
     this._ground = new Ground(this, lvl);
@@ -49,7 +50,7 @@ class GameScene extends Phaser.Scene {
     this._buildPickups(lvl);
 
     // ── HUD ──
-    this._hud = new HUD(this, this._glucagons, this._fastLeft);
+    this._hud = new HUD(this, this._glucagons, this._fastLeft, this._backpack);
     this._hud.onJump(() => this._player.jump(this._glucose));
     this._hud.onSlowInsulin(() => {
       this._glucose.useSlowInsulin();
@@ -60,6 +61,12 @@ class GameScene extends Phaser.Scene {
       this._fastLeft--;
       this._glucose.useFastInsulin();
       this._float(this._player.x, this._player.y - 45, `⚡ -${CONFIG.INS_FAST_DROP}`, '#FF6F00');
+    });
+    this._hud.onEatApple(() => {
+      if (this._backpack <= 0) return;
+      this._backpack--;
+      this._glucose.eatApple();
+      this._float(this._player.x, this._player.y - 45, '🍎 +azúcar', '#43A047');
     });
 
     // ── Cámara ──
@@ -136,9 +143,17 @@ class GameScene extends Phaser.Scene {
       this.tweens.add({ targets: a, y: GY - 62, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
     this.physics.add.overlap(this._player.sprite, this._apples, (_, a) => {
-      a.destroy();
-      this._glucose.eatApple();
-      this._float(this._player.x, this._player.y - 50, '🍎 +azúcar', '#43A047');
+      if (this._backpack >= CONFIG.BACKPACK_MAX) {
+        // Mochila llena — se come directamente
+        a.destroy();
+        this._glucose.eatApple();
+        this._float(this._player.x, this._player.y - 50, '🍎 +azúcar', '#43A047');
+      } else {
+        // Va a la mochila
+        a.destroy();
+        this._backpack++;
+        this._float(this._player.x, this._player.y - 50, `🎒 Mochila: ${this._backpack}`, '#FFC107');
+      }
     });
 
     this._cps = this.physics.add.staticGroup();
@@ -314,6 +329,6 @@ class GameScene extends Phaser.Scene {
     if (this._player.x >= this._metaX) this._finish();
 
     // HUD
-    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope);
+    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope, this._backpack);
   }
 }
