@@ -69,6 +69,9 @@ class GameScene extends Phaser.Scene {
       this._float(this._player.x, this._player.y - 45, '🍎 +azúcar', '#43A047');
     });
 
+    // ── Minimapa ──
+    this._hud.buildMinimap(this._ground, lvl.length);
+
     // ── Cámara ──
     this.cameras.main.setBounds(0, 0, lvl.length, CONFIG.H);
     this.cameras.main.startFollow(this._player.sprite, false, 0.1, 1);
@@ -329,6 +332,6 @@ class GameScene extends Phaser.Scene {
     if (this._player.x >= this._metaX) this._finish();
 
     // HUD
-    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope, this._backpack);
+    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope, this._backpack, this._player.x);
   }
 }
