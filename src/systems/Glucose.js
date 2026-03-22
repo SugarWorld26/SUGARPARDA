@@ -13,7 +13,6 @@ class Glucose {
     if (slope && running) {
       this.v -= CONFIG.DROP_SLOPE * dt;
     }
-    // Insulina lenta acumulable: descuenta mientras quede tiempo activo
     if (performance.now() < this._slowEnd) {
       this.v -= CONFIG.INS_SLOW_DPS * dt;
     }
@@ -23,7 +22,7 @@ class Glucose {
   onJump()         { this.v -= CONFIG.DROP_JUMP; }
   onEnemyHit(type) { this.v += CONFIG.ENEMY_RAISE[type] || 20; }
 
-  // Cada dosis SUMA tiempo al contador — no sobrescribe
+  // Cada pulsación SUMA 5s al tiempo activo — no sobrescribe
   useSlowInsulin() {
     const now       = performance.now();
     const remaining = Math.max(0, this._slowEnd - now);
