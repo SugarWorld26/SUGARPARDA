@@ -13,18 +13,21 @@ class Glucose {
     if (slope && running) {
       this.v -= CONFIG.DROP_SLOPE * dt;
     }
-    const now = performance.now();
-    if (now < this._slowEnd) this.v -= CONFIG.INS_SLOW_DPS * dt;
+    // Insulina lenta acumulable: descuenta mientras quede tiempo activo
+    if (performance.now() < this._slowEnd) {
+      this.v -= CONFIG.INS_SLOW_DPS * dt;
+    }
     this.v = Math.max(CONFIG.GLUCOSE_MIN, Math.min(CONFIG.GLUCOSE_MAX, this.v));
   }
 
   onJump()         { this.v -= CONFIG.DROP_JUMP; }
   onEnemyHit(type) { this.v += CONFIG.ENEMY_RAISE[type] || 20; }
 
+  // Cada dosis SUMA tiempo al contador — no sobrescribe
   useSlowInsulin() {
-    const now = performance.now();
+    const now       = performance.now();
     const remaining = Math.max(0, this._slowEnd - now);
-    this._slowEnd = now + remaining + CONFIG.INS_SLOW_MS;
+    this._slowEnd   = now + remaining + CONFIG.INS_SLOW_MS;
   }
 
   useFastInsulin() { this.v -= CONFIG.INS_FAST_DROP; }
