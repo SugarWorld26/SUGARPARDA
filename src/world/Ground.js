@@ -18,7 +18,7 @@ class Ground {
     this.segments = [];
     let x = 0;
 
-    this.segments.push({ x: 0, w: 700, slope: false });
+    this.segments.push({ x: 0, w: 700, slope: false, rise: 0 });
     x = 700;
 
     while (x < L - 600) {
@@ -26,7 +26,7 @@ class Ground {
       const w  = Math.min(sw, L - 600 - x);
       if (w > 50) {
         const isSlope = w > 300 && Math.random() < (lvl.slopePct || 0.3);
-        this.segments.push({ x, w, slope: isSlope });
+        this.segments.push({ x, w, slope: isSlope, rise: lvl.slopeRise || 80 });
         if (isSlope) this.slopes.push({ x, w });
       }
       x += w;
@@ -37,7 +37,7 @@ class Ground {
     if (x < L) this.segments.push({ x, w: L - x, slope: false });
 
     const gfx  = scene.add.graphics().setDepth(1);
-    const RISE = 80;
+    const RISE = lvl.slopeRise || 80;
     const STEP = 24;
 
     this.segments.forEach(seg => {
@@ -54,15 +54,12 @@ class Ground {
           gfx.fillStyle(lvl.groundEdge, 1)
              .fillRect(sx, GY - dy, sw + 1, 8);
 
-          // Usamos rectangle con setOrigin(0,0) para que top-left = (sx, GY-dy)
-          // Así no hay desalineación entre el collider y la superficie visible.
           const body = scene.add.rectangle(sx, GY - dy, sw + 1, GH, 0x000000, 0);
           body.setOrigin(0, 0);
-          scene.physics.add.existing(body, true); // true = static body
+          scene.physics.add.existing(body, true);
           body.body.allowGravity = false;
           this._bodies.push(body);
         }
-        // (triángulo decorativo eliminado: causaba artefacto visual descentrado)
 
       } else {
         gfx.fillStyle(lvl.groundColor, 1).fillRect(seg.x, GY, seg.w, GH);
@@ -90,15 +87,13 @@ class Ground {
     return this.segments.some(s => x >= s.x && x < s.x + s.w);
   }
 
-  // Devuelve la Y de la superficie visible en la coordenada X dada.
-  // En suelo plano = GROUND_Y. En cuesta = GROUND_Y - dy interpolado.
   getSurfaceY(x) {
     const GY   = CONFIG.GROUND_Y;
-    const RISE = 80;
     const STEP = 24;
     for (const seg of this.segments) {
       if (x >= seg.x && x < seg.x + seg.w) {
         if (!seg.slope) return GY;
+        const RISE  = seg.rise || 80;
         const steps = Math.ceil(seg.w / STEP);
         const i     = Math.floor((x - seg.x) / STEP);
         const dy    = Math.round((i / steps) * RISE);
