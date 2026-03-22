@@ -21,8 +21,7 @@ class Glucose {
       this.v -= CONFIG.DROP_SLOPE * dt;
     }
     const now = performance.now();
-    if (now < this._slowEnd)  this.v -= CONFIG.INS_SLOW_DPS * dt;
-    if (now < this._appleEnd) this.v += CONFIG.APPLE_DPS    * dt;
+    if (now < this._slowEnd) this.v -= CONFIG.INS_SLOW_DPS * dt;
     this.v = Math.max(CONFIG.GLUCOSE_MIN, Math.min(CONFIG.GLUCOSE_MAX, this.v));
   }
 
@@ -30,7 +29,7 @@ class Glucose {
   onEnemyHit(type) { this.v += CONFIG.ENEMY_RAISE[type] || 20; }
   useSlowInsulin() { this._slowEnd  = performance.now() + CONFIG.INS_SLOW_MS; }
   useFastInsulin() { this.v -= CONFIG.INS_FAST_DROP; }
-  eatApple()       { this._appleEnd = performance.now() + CONFIG.APPLE_MS; }
+  eatApple()       { this.v += CONFIG.APPLE_RAISE; }
   useGlucagon()    { this.v = CONFIG.GLUCAGON_VAL; this._slowEnd = 0; }
 
   get state() {
