@@ -1,5 +1,5 @@
 // ================================================================
-//  HUD.js — Glucómetro + botones de control.
+//  HUD.js — Glucómetro + botones de control + minimapa.
 //  Todo en coordenadas fijas 800×450.
 // ================================================================
 class HUD {
@@ -8,10 +8,75 @@ class HUD {
     this._build(glucagons, fastLeft, backpack);
   }
 
+  // Llamar una vez al crear el HUD para dibujar el minimapa estático
+  buildMinimap(ground, levelLength) {
+    const W   = CONFIG.W;
+    const MH  = 18;   // alto del minimapa en px
+    const MY  = 58;   // Y donde empieza (justo debajo del glucómetro)
+    const MX  = 0;
+
+    // Fondo
+    const bg = this._scene.add.graphics().setScrollFactor(0).setDepth(93);
+    bg.fillStyle(0x000000, 0.55).fillRect(MX, MY, W, MH);
+
+    // Orografía — dibujar la línea de suelo escalada al ancho del minimapa
+    const gfx = this._scene.add.graphics().setScrollFactor(0).setDepth(94);
+    const scaleX = W / levelLength;
+
+    // Suelo base
+    gfx.fillStyle(0x546E7A, 1).fillRect(MX, MY + MH - 4, W, 4);
+
+    // Cuestas y agujeros
+    ground.segments.forEach(seg => {
+      const sx = Math.round(seg.x * scaleX);
+      const sw = Math.max(1, Math.round(seg.w * scaleX));
+
+      if (!seg.slope) {
+        // suelo plano — línea baja
+        gfx.fillStyle(0x78909C, 1).fillRect(MX + sx, MY + MH - 4, sw, 4);
+      } else {
+        // cuesta — triángulo ascendente
+        const RISE = seg.rise || 80;
+        const maxDy = Math.round(RISE / (CONFIG.GROUND_H * 2) * (MH - 4));
+        gfx.fillStyle(0xB0BEC5, 1);
+        for (let px = 0; px < sw; px++) {
+          const frac  = px / sw;
+          const barH  = Math.max(1, Math.round(frac * maxDy) + 2);
+          gfx.fillRect(MX + sx + px, MY + MH - barH - 2, 1, barH);
+        }
+      }
+    });
+
+    // Agujeros — marcar en rojo oscuro las zonas sin suelo
+    gfx.fillStyle(0xB71C1C, 0.7);
+    let prevEnd = 0;
+    ground.segments.forEach(seg => {
+      if (seg.x > prevEnd) {
+        const hx = Math.round(prevEnd * scaleX);
+        const hw = Math.max(1, Math.round((seg.x - prevEnd) * scaleX));
+        gfx.fillRect(MX + hx, MY, hw, MH);
+      }
+      prevEnd = seg.x + seg.w;
+    });
+
+    // Marcador de meta
+    const metaX = Math.round((levelLength - 160) * scaleX);
+    gfx.fillStyle(0xFFD700, 1).fillRect(MX + metaX - 1, MY, 3, MH);
+
+    // Marcador de posición del jugador (se actualiza en refresh)
+    this._minimapX  = MX;
+    this._minimapY  = MY;
+    this._minimapW  = W;
+    this._minimapH  = MH;
+    this._minimapScale = scaleX;
+    this._minimapMarker = this._scene.add.graphics().setScrollFactor(0).setDepth(95);
+    this._levelLength   = levelLength;
+  }
+
   _build(glucagons, fastLeft, backpack) {
     const W = CONFIG.W, H = CONFIG.H;
 
-    // ── Fondo HUD ──
+    // ── Fondo HUD glucosa ──
     const bg = this._scene.add.graphics().setScrollFactor(0).setDepth(90);
     bg.fillStyle(0x000000, 0.65).fillRoundedRect(W/2 - 130, 2, 260, 54, 8);
 
@@ -75,17 +140,14 @@ class HUD {
   _buildButtons(backpack) {
     const W = CONFIG.W, H = CONFIG.H;
 
-    // Saltar
     this._jumpBtn = this._makeBtn(52, H - 52, 38, 0x1565C0, 0x4FC3F7, '▲');
     this._jumpCb  = null;
     this._jumpBtn.on('pointerdown', () => { if (this._jumpCb) this._jumpCb(); });
 
-    // Insulina lenta
     this._slowBtn = this._makeBtn(W - 96, H - 52, 38, 0x1B5E20, 0x43A047, '💉\nLENTA');
     this._slowCb  = null;
     this._slowBtn.on('pointerdown', () => { if (this._slowCb) this._slowCb(); });
 
-    // Insulina rápida
     this._fastBtn = this._makeBtn(W - 40, H - 40, 26, 0xBF360C, 0xFF6F00, '⚡');
     this._fastLbl = this._scene.add.text(W - 40, H - 21, `x${CONFIG.INS_FAST_MAX}`, {
       fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFE0B2',
@@ -93,7 +155,6 @@ class HUD {
     this._fastCb  = null;
     this._fastBtn.on('pointerdown', () => { if (this._fastCb) this._fastCb(); });
 
-    // Manzana (mochila) — botón verde pequeño junto al salto
     this._appleBtn = this._makeBtn(52, H - 112, 24, 0x388E3C, 0xA5D6A7, '🍎');
     this._appleLbl = this._scene.add.text(52, H - 136, `x${backpack}`, {
       fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#A5D6A7',
@@ -130,7 +191,7 @@ class HUD {
   onFastInsulin(cb){ this._fastCb = cb; }
   onEatApple(cb)   { this._appleCb = cb; }
 
-  refresh(glucose, glucagons, fastLeft, fast, slope = false, backpack = 0) {
+  refresh(glucose, glucagons, fastLeft, fast, slope = false, backpack = 0, playerX = 0) {
     const v   = Math.round(glucose.v);
     const col = glucose.color;
 
@@ -148,6 +209,17 @@ class HUD {
     this._appleLbl.setText(`x${backpack}`);
     this._sprintTxt.setText(slope ? '⛰ CUESTA' : fast ? '🏃 SPRINT!' : '');
     this._fastLbl.setText(`x${fastLeft}`);
+
+    // Actualizar marcador de posición en minimapa
+    if (this._minimapMarker) {
+      const mx = this._minimapX + Math.round(playerX * this._minimapScale);
+      this._minimapMarker.clear();
+      this._minimapMarker.fillStyle(0xFFFFFF, 1).fillTriangle(
+        mx, this._minimapY + 2,
+        mx - 3, this._minimapY + 9,
+        mx + 3, this._minimapY + 9
+      );
+    }
 
     this._hyperOv.clear();
     if (glucose.isHyper) {
