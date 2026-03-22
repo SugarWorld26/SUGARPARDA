@@ -55,8 +55,7 @@ DROP_SLOPE:      5.0,
   CUPCAKE_SLOW_MS: 2000,  // mantenido para compatibilidad con Player.js
 
   // ── Ítems ────────────────────────────────────────────────────
-  APPLE_DPS:     4,
-  APPLE_MS:   5000,
+  APPLE_RAISE:   40,   // mg/dL que sube comer una manzana de la mochila (instantáneo)
   BACKPACK_START: 3,   // manzanas con las que empieza el jugador
   BACKPACK_MAX:   6,   // máximo de manzanas en la mochila
   GLUCAGON_MAX:  2,
