@@ -14,6 +14,8 @@ class Ground {
     const L     = lvl.length;
     const GY    = CONFIG.GROUND_Y;
     const GH    = CONFIG.GROUND_H;
+    const RISE  = lvl.slopeRise || 80;
+    const STEP  = 24;
 
     this.segments = [];
     let x = 0;
@@ -25,8 +27,8 @@ class Ground {
       const sw = Phaser.Math.Between(400, 900);
       const w  = Math.min(sw, L - 600 - x);
       if (w > 50) {
-        const isSlope = w > 300 && Math.random() < (lvl.slopePct || 0.3);
-        this.segments.push({ x, w, slope: isSlope, rise: lvl.slopeRise || 80 });
+        const isSlope = RISE > 0 && w > 300 && Math.random() < (lvl.slopePct || 0);
+        this.segments.push({ x, w, slope: isSlope, rise: RISE });
         if (isSlope) this.slopes.push({ x, w });
       }
       x += w;
@@ -34,11 +36,9 @@ class Ground {
         x += Phaser.Math.Between(130, 210);
     }
 
-    if (x < L) this.segments.push({ x, w: L - x, slope: false });
+    if (x < L) this.segments.push({ x, w: L - x, slope: false, rise: 0 });
 
-    const gfx  = scene.add.graphics().setDepth(1);
-    const RISE = lvl.slopeRise || 80;
-    const STEP = 24;
+    const gfx = scene.add.graphics().setDepth(1);
 
     this.segments.forEach(seg => {
       if (seg.slope) {
@@ -47,7 +47,7 @@ class Ground {
         for (let i = 0; i < steps; i++) {
           const sx = seg.x + i * STEP;
           const sw = Math.min(STEP, seg.x + seg.w - sx);
-          const dy = Math.round((i / steps) * RISE);
+          const dy = Math.round((i / steps) * seg.rise);
 
           gfx.fillStyle(lvl.groundColor, 1)
              .fillRect(sx, GY - dy, sw + 1, GH + dy);
@@ -93,10 +93,9 @@ class Ground {
     for (const seg of this.segments) {
       if (x >= seg.x && x < seg.x + seg.w) {
         if (!seg.slope) return GY;
-        const RISE  = seg.rise || 80;
         const steps = Math.ceil(seg.w / STEP);
         const i     = Math.floor((x - seg.x) / STEP);
-        const dy    = Math.round((i / steps) * RISE);
+        const dy    = Math.round((i / steps) * seg.rise);
         return GY - dy;
       }
     }
