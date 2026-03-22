@@ -3,12 +3,12 @@
 //  Todo en coordenadas fijas 800×450.
 // ================================================================
 class HUD {
-  constructor(scene, glucagons, fastLeft) {
+  constructor(scene, glucagons, fastLeft, backpack) {
     this._scene = scene;
-    this._build(glucagons, fastLeft);
+    this._build(glucagons, fastLeft, backpack);
   }
 
-  _build(glucagons, fastLeft) {
+  _build(glucagons, fastLeft, backpack) {
     const W = CONFIG.W, H = CONFIG.H;
 
     // ── Fondo HUD ──
@@ -55,6 +55,11 @@ class HUD {
       fill: '#4FC3F7', stroke: '#000', strokeThickness: 2,
     }).setScrollFactor(0).setDepth(92);
 
+    this._backpackTxt = this._scene.add.text(8, 36, `🎒 x${backpack}`, {
+      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#A5D6A7', stroke: '#000', strokeThickness: 2,
+    }).setScrollFactor(0).setDepth(92);
+
     this._sprintTxt = this._scene.add.text(W - 8, 4, '', {
       fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FFC107', stroke: '#000', strokeThickness: 2,
@@ -64,26 +69,37 @@ class HUD {
     this._hyperOv = this._scene.add.graphics().setScrollFactor(0).setDepth(88);
 
     // ── Botones ──
-    this._buildButtons();
+    this._buildButtons(backpack);
   }
 
-  _buildButtons() {
+  _buildButtons(backpack) {
     const W = CONFIG.W, H = CONFIG.H;
 
+    // Saltar
     this._jumpBtn = this._makeBtn(52, H - 52, 38, 0x1565C0, 0x4FC3F7, '▲');
     this._jumpCb  = null;
     this._jumpBtn.on('pointerdown', () => { if (this._jumpCb) this._jumpCb(); });
 
+    // Insulina lenta
     this._slowBtn = this._makeBtn(W - 96, H - 52, 38, 0x1B5E20, 0x43A047, '💉\nLENTA');
     this._slowCb  = null;
     this._slowBtn.on('pointerdown', () => { if (this._slowCb) this._slowCb(); });
 
+    // Insulina rápida
     this._fastBtn = this._makeBtn(W - 40, H - 40, 26, 0xBF360C, 0xFF6F00, '⚡');
     this._fastLbl = this._scene.add.text(W - 40, H - 21, `x${CONFIG.INS_FAST_MAX}`, {
       fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFE0B2',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
     this._fastCb  = null;
     this._fastBtn.on('pointerdown', () => { if (this._fastCb) this._fastCb(); });
+
+    // Manzana (mochila) — botón verde pequeño junto al salto
+    this._appleBtn = this._makeBtn(52, H - 112, 24, 0x388E3C, 0xA5D6A7, '🍎');
+    this._appleLbl = this._scene.add.text(52, H - 136, `x${backpack}`, {
+      fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#A5D6A7',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
+    this._appleCb  = null;
+    this._appleBtn.on('pointerdown', () => { if (this._appleCb) this._appleCb(); });
   }
 
   _makeBtn(cx, cy, r, fill, stroke, label) {
@@ -112,8 +128,9 @@ class HUD {
   onJump(cb)       { this._jumpCb = cb; }
   onSlowInsulin(cb){ this._slowCb = cb; }
   onFastInsulin(cb){ this._fastCb = cb; }
+  onEatApple(cb)   { this._appleCb = cb; }
 
-  refresh(glucose, glucagons, fastLeft, fast, slope = false) {
+  refresh(glucose, glucagons, fastLeft, fast, slope = false, backpack = 0) {
     const v   = Math.round(glucose.v);
     const col = glucose.color;
 
@@ -127,6 +144,8 @@ class HUD {
 
     this._fastTxt.setText(`⚡ x${fastLeft}`);
     this._glucTxt.setText(`💉 x${glucagons}`);
+    this._backpackTxt.setText(`🎒 x${backpack}`);
+    this._appleLbl.setText(`x${backpack}`);
     this._sprintTxt.setText(slope ? '⛰ CUESTA' : fast ? '🏃 SPRINT!' : '');
     this._fastLbl.setText(`x${fastLeft}`);
 
