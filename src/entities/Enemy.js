@@ -164,7 +164,7 @@ class Spawner {
       do {
         ex = Phaser.Math.Between(800, lvl.length - 300);
         tries++;
-      } while ((!this._ground.isSolidAt(ex) || this._ground.isSlopeAt(ex)) && tries < 30);
+      } while ((!this._ground.isSolidAt(ex) || this._ground.isSlopeAt(ex)) && tries < 60);
       if (!this._ground.isSolidAt(ex) || this._ground.isSlopeAt(ex)) continue;
 
       const surfY = this._ground.getSurfaceY(ex);
