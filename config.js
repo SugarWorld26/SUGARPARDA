@@ -30,8 +30,8 @@ const CONFIG = {
   DROP_JUMP:       2.0,
   DROP_SLOPE:      2.5,
 
-  INS_SLOW_DPS:    4,
-  INS_SLOW_MS:  8000,
+  INS_SLOW_DPS:    5,  // 5 mg/dL por segundo
+  INS_SLOW_MS:  5000,  // 5 segundos por dosis
   INS_FAST_DROP:  25,
   INS_FAST_MAX:    3,
 
