@@ -1,29 +1,20 @@
-// ================================================================
-//  config.js — ÚNICA FUENTE DE VERDAD
-//  Cambia cualquier valor aquí. Nunca en otro fichero.
-// ================================================================
 const CONFIG = {
 
-  // ── Supabase ────────────────────────────────────────────────
   SUPABASE_URL: 'https://hicrocsgqcfwilpuhqoo.supabase.co',
   SUPABASE_KEY: 'sb_publishable_2ppgnZ9CetTDMOY1g3XgFA_B8Ggb_l7',
 
-  // ── Pantalla (no cambiar) ────────────────────────────────────
   W: 800,
   H: 450,
 
-  // ── Física ──────────────────────────────────────────────────
   GRAVITY:      900,
   JUMP_VY:     -520,
 
-  // ── Velocidad jugadora ───────────────────────────────────────
   SPD_NORMAL:   230,
   SPD_FAST:     380,
   SPD_SLOW:      90,
   FAST_MS:     3000,
   SHAKE_G:       14,
 
-  // ── Glucosa ──────────────────────────────────────────────────
   GLUCOSE_INIT:    100,
   GLUCOSE_MIN:      20,
   GLUCOSE_MAX:     400,
@@ -34,45 +25,39 @@ const CONFIG = {
   HYPO_THRESH:      50,
   HYPER_THRESH:    180,
 
-  // caídas de glucosa por movimiento (mg/dL por segundo)
   DROP_RUN:        2.0,
   DROP_FAST:       4.0,
   DROP_JUMP:       2.0,
   DROP_SLOPE:      2.5,
 
-  // ── Insulina ─────────────────────────────────────────────────
-  INS_SLOW_DPS:    4,     // mg/dL/s — acumulable con cada pulsación
+  INS_SLOW_DPS:    4,
   INS_SLOW_MS:  8000,
-  INS_FAST_DROP:  25,     // bajado de 40 → baja más despacio
+  INS_FAST_DROP:  25,
   INS_FAST_MAX:    3,
 
-  // ── Enemigos ─────────────────────────────────────────────────
   ENEMY_RAISE: {
     lollipop:  30,
     cake:     200,
     choco:     70,
   },
-  CUPCAKE_SLOW_MS: 2000,  // mantenido para compatibilidad con Player.js
+  CUPCAKE_SLOW_MS: 2000,
 
-  // ── Ítems ────────────────────────────────────────────────────
-  APPLE_RAISE:   40,   // mg/dL que sube comer una manzana de la mochila (instantáneo)
-  BACKPACK_START: 3,   // manzanas con las que empieza el jugador
-  BACKPACK_MAX:   6,   // máximo de manzanas en la mochila
+  APPLE_RAISE:   40,
+  BACKPACK_START: 3,
+  BACKPACK_MAX:   6,
+
   GLUCAGON_MAX:  2,
   GLUCAGON_VAL: 80,
 
-  // ── Puntuación ───────────────────────────────────────────────
   PTS_RANGAZO:   100,
   PTS_IN_RANGE:   60,
   PTS_OUT:        10,
   SPEED_BONUS:   500,
   SPEED_REF_S:    90,
 
-  // ── Suelo ────────────────────────────────────────────────────
   GROUND_Y:      390,
   GROUND_H:       60,
 
-  // ── Niveles ──────────────────────────────────────────────────
   LEVELS: [
     {
       id: 1, name: 'Ciudad',
@@ -87,7 +72,7 @@ const CONFIG = {
       glucagons:  2,
       length:     7000,
       holePct:    0.06,
-      slopePct:   0.00,  // sin cuestas
+      slopePct:   0.00,
       slopeRise:  0,
     },
     {
@@ -103,7 +88,7 @@ const CONFIG = {
       glucagons:  2,
       length:     8000,
       holePct:    0.08,
-      slopePct:   0.15,  // cuestas cortas y suaves
+      slopePct:   0.15,
       slopeRise:  40,
     },
     {
@@ -119,7 +104,7 @@ const CONFIG = {
       glucagons:  1,
       length:     8500,
       holePct:    0.10,
-      slopePct:   0.22,  // cuestas medianas
+      slopePct:   0.22,
       slopeRise:  60,
     },
     {
@@ -135,7 +120,7 @@ const CONFIG = {
       glucagons:  1,
       length:     9000,
       holePct:    0.12,
-      slopePct:   0.28,  // cuestas largas
+      slopePct:   0.28,
       slopeRise:  80,
     },
     {
@@ -151,7 +136,7 @@ const CONFIG = {
       glucagons:  1,
       length:     10000,
       holePct:    0.14,
-      slopePct:   0.35,  // cuestas largas e inclinadas
+      slopePct:   0.35,
       slopeRise:  100,
     },
   ],
