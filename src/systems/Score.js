@@ -1,12 +1,12 @@
-// ================================================================
-//  Score.js — Sistema de puntuación puro.
-// ================================================================
 class Score {
-  constructor() {
-    this.total = 0;
-    this._cps  = [];
-    this._t0   = performance.now();
-    this._t1   = null;
+  constructor(refSecs) {
+    this.total  = 0;
+    this._cps   = [];
+    this._t0    = performance.now();
+    this._t1    = null;
+    // Tiempo de referencia: cuánto tardarías a velocidad normal
+    // Si terminas más rápido (sprint) obtienes bonus, si tardas más, menos bonus
+    this._refSecs = refSecs || CONFIG.SPEED_REF_S;
   }
 
   checkpoint(glucoseValue) {
@@ -22,9 +22,10 @@ class Score {
   finish() {
     this._t1 = performance.now();
     const secs  = this.elapsedSecs;
-    const bonus = Math.min(
-      CONFIG.SPEED_BONUS,
-      Math.round(CONFIG.SPEED_BONUS * CONFIG.SPEED_REF_S / Math.max(secs, 1))
+    // Bonus solo si llegas ANTES del tiempo de referencia (por haber sprintado)
+    // Si llegas en el tiempo normal o más, bonus = 0
+    const bonus = secs >= this._refSecs ? 0 : Math.round(
+      CONFIG.SPEED_BONUS * (this._refSecs - secs) / this._refSecs
     );
     this.total += bonus;
     return bonus;
