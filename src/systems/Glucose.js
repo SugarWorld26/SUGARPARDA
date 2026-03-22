@@ -1,7 +1,3 @@
-// ================================================================
-//  Glucose.js — Sistema de glucosa puro.
-//  Sin dependencias de Phaser. Testeable de forma aislada.
-// ================================================================
 class Glucose {
   constructor() { this.reset(); }
 
@@ -10,26 +6,21 @@ class Glucose {
     this._slowEnd = 0;
   }
 
-  // Llamado cada frame con delta en segundos
   tick(dt, running, fast, slope = false) {
     if (running) {
       this.v -= (fast ? CONFIG.DROP_FAST : CONFIG.DROP_RUN) * dt;
     }
-    // Cuesta arriba — esfuerzo extra
     if (slope && running) {
       this.v -= CONFIG.DROP_SLOPE * dt;
     }
-    // Insulina lenta acumulable: resta mientras quede tiempo activo
     const now = performance.now();
     if (now < this._slowEnd) this.v -= CONFIG.INS_SLOW_DPS * dt;
-
     this.v = Math.max(CONFIG.GLUCOSE_MIN, Math.min(CONFIG.GLUCOSE_MAX, this.v));
   }
 
   onJump()         { this.v -= CONFIG.DROP_JUMP; }
   onEnemyHit(type) { this.v += CONFIG.ENEMY_RAISE[type] || 20; }
 
-  // Acumula tiempo: cada pulsación AÑADE 8s al tiempo restante, sin límite
   useSlowInsulin() {
     const now = performance.now();
     const remaining = Math.max(0, this._slowEnd - now);
