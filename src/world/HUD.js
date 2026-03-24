@@ -115,27 +115,23 @@ class HUD {
   onFastInsulin(cb) { this._fastCb  = cb; }
   onEatApple(cb)    { this._appleCb = cb; }
 
-  // Llámalo una vez después de crear el HUD para dibujar el minimapa estático
   buildMinimap(ground, levelLength) {
     const W  = CONFIG.W;
-    const MY = 58;   // justo bajo el glucómetro
+    const MY = 58;
     const MH = 16;
     const sc = W / levelLength;
 
-    // Fondo
     this._scene.add.graphics().setScrollFactor(0).setDepth(93)
-      .fillStyle(0x000000, 0.55).fillRect(0, MY, W, MH);
+      .fillStyle(0x000000, 0.60).fillRect(0, MY, W, MH);
 
-    // Orografía estática
     const gfx = this._scene.add.graphics().setScrollFactor(0).setDepth(94);
 
     ground.segments.forEach(seg => {
       const sx = Math.round(seg.x * sc);
       const sw = Math.max(1, Math.round(seg.w * sc));
       if (seg.slope) {
-        // cuesta — triángulo ascendente
+        gfx.fillStyle(0xCFD8DC, 1);
         const maxH = Math.round((seg.rise || 80) / 160 * (MH - 3));
-        gfx.fillStyle(0xB0BEC5, 1);
         for (let px = 0; px < sw; px++) {
           const h = Math.max(1, Math.round((px / sw) * maxH) + 2);
           gfx.fillRect(sx + px, MY + MH - h - 1, 1, h);
@@ -145,23 +141,19 @@ class HUD {
       }
     });
 
-    // Agujeros en rojo
-    gfx.fillStyle(0xB71C1C, 0.8);
     let prevEnd = 0;
     ground.segments.forEach(seg => {
       if (seg.x > prevEnd) {
         const hx = Math.round(prevEnd * sc);
-        const hw = Math.max(1, Math.round((seg.x - prevEnd) * sc));
-        gfx.fillRect(hx, MY, hw, MH);
+        const hw = Math.max(2, Math.round((seg.x - prevEnd) * sc));
+        gfx.fillStyle(0xB71C1C, 1).fillRect(hx, MY, hw, MH);
       }
       prevEnd = seg.x + seg.w;
     });
 
-    // Meta en dorado
-    gfx.fillStyle(0xFFD700, 1).fillRect(Math.round((levelLength - 160) * sc), MY, 2, MH);
+    gfx.fillStyle(0xFFD700, 1).fillRect(Math.round((levelLength - 160) * sc), MY, 3, MH);
 
-    // Marcador jugador (triángulo blanco, se actualiza en refresh)
-    this._mmScale  = sc;
+    this._mmSc     = sc;
     this._mmY      = MY;
     this._mmH      = MH;
     this._mmMarker = this._scene.add.graphics().setScrollFactor(0).setDepth(95);
@@ -192,12 +184,11 @@ class HUD {
       this._hyperOv.fillStyle(0xFF0000, a).fillRect(0, 0, CONFIG.W, CONFIG.H);
     }
 
-    // Actualizar marcador de posición en el minimapa
     if (this._mmMarker) {
-      const mx = Math.round(playerX * this._mmScale);
+      const mx = Math.round(playerX * this._mmSc);
       this._mmMarker.clear();
       this._mmMarker.fillStyle(0xFFFFFF, 1)
-        .fillTriangle(mx, this._mmY + 2, mx - 3, this._mmY + 9, mx + 3, this._mmY + 9);
+        .fillTriangle(mx, this._mmY + 2, mx - 3, this._mmY + this._mmH - 2, mx + 3, this._mmY + this._mmH - 2);
     }
   }
 }
