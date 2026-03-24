@@ -58,6 +58,20 @@ class HUD {
 
     this._hyperOv = this._scene.add.graphics().setScrollFactor(0).setDepth(88);
 
+    // ── Panel insulina activa (esquina superior derecha) ──
+    const ipx = CONFIG.W - 6, ipy = 62;
+    this._scene.add.graphics().setScrollFactor(0).setDepth(89)
+      .fillStyle(0x000000, 0.60).fillRoundedRect(ipx - 116, ipy - 2, 122, 44, 6);
+    this._scene.add.text(ipx - 114, ipy, 'INSULINA ACTIVA', {
+      fontSize: '8px', fontFamily: 'monospace', fill: '#777',
+    }).setScrollFactor(0).setDepth(90);
+    this._insSlowTxt = this._scene.add.text(ipx - 114, ipy + 12, '💉 LENTA   0s', {
+      fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#555',
+    }).setScrollFactor(0).setDepth(90);
+    this._insFastTxt = this._scene.add.text(ipx - 114, ipy + 26, '⚡ RÁPIDA  x3', {
+      fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FF6F00',
+    }).setScrollFactor(0).setDepth(90);
+
     this._buildButtons(fastLeft, backpack);
   }
 
@@ -115,51 +129,7 @@ class HUD {
   onFastInsulin(cb) { this._fastCb  = cb; }
   onEatApple(cb)    { this._appleCb = cb; }
 
-  buildMinimap(ground, levelLength) {
-    const W  = CONFIG.W;
-    const MY = 58;
-    const MH = 16;
-    const sc = W / levelLength;
-
-    this._scene.add.graphics().setScrollFactor(0).setDepth(93)
-      .fillStyle(0x000000, 0.60).fillRect(0, MY, W, MH);
-
-    const gfx = this._scene.add.graphics().setScrollFactor(0).setDepth(94);
-
-    ground.segments.forEach(seg => {
-      const sx = Math.round(seg.x * sc);
-      const sw = Math.max(1, Math.round(seg.w * sc));
-      if (seg.slope) {
-        gfx.fillStyle(0xCFD8DC, 1);
-        const maxH = Math.round((seg.rise || 80) / 160 * (MH - 3));
-        for (let px = 0; px < sw; px++) {
-          const h = Math.max(1, Math.round((px / sw) * maxH) + 2);
-          gfx.fillRect(sx + px, MY + MH - h - 1, 1, h);
-        }
-      } else {
-        gfx.fillStyle(0x78909C, 1).fillRect(sx, MY + MH - 3, sw, 3);
-      }
-    });
-
-    let prevEnd = 0;
-    ground.segments.forEach(seg => {
-      if (seg.x > prevEnd) {
-        const hx = Math.round(prevEnd * sc);
-        const hw = Math.max(2, Math.round((seg.x - prevEnd) * sc));
-        gfx.fillStyle(0xB71C1C, 1).fillRect(hx, MY, hw, MH);
-      }
-      prevEnd = seg.x + seg.w;
-    });
-
-    gfx.fillStyle(0xFFD700, 1).fillRect(Math.round((levelLength - 160) * sc), MY, 3, MH);
-
-    this._mmSc     = sc;
-    this._mmY      = MY;
-    this._mmH      = MH;
-    this._mmMarker = this._scene.add.graphics().setScrollFactor(0).setDepth(95);
-  }
-
-  refresh(glucose, glucagons, fastLeft, fast, slope = false, backpack = 0, playerX = 0) {
+  refresh(glucose, glucagons, fastLeft, fast, slope = false, backpack = 0) {
     const v   = Math.round(glucose.v);
     const col = glucose.color;
 
@@ -182,6 +152,15 @@ class HUD {
     if (glucose.isHyper) {
       const a = 0.06 + 0.04 * Math.sin(Date.now() / 200);
       this._hyperOv.fillStyle(0xFF0000, a).fillRect(0, 0, CONFIG.W, CONFIG.H);
+    }
+
+    if (this._insSlowTxt) {
+      this._insSlowTxt.setText('💉 LENTA   ' + slowSecs + 's')
+        .setStyle({ fill: slowSecs > 0 ? '#43A047' : '#555' });
+    }
+    if (this._insFastTxt) {
+      this._insFastTxt.setText('⚡ RÁPIDA  x' + fastLeft)
+        .setStyle({ fill: fastLeft > 0 ? '#FF6F00' : '#555' });
     }
 
     if (this._mmMarker) {
