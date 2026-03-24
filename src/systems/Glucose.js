@@ -67,4 +67,9 @@ class Glucose {
 
   get isHypo()  { return this.v <= CONFIG.HYPO_THRESH; }
   get isHyper() { return this.v >= CONFIG.HYPER_THRESH; }
+
+  // Segundos de insulina lenta acumulados que quedan activos
+  get slowSecsLeft() {
+    return Math.max(0, Math.ceil((this._slowEnd - performance.now()) / 1000));
+  }
 }
