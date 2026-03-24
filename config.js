@@ -34,7 +34,7 @@ const CONFIG = {
   DROP_SLOPE:      2.5,
 
   // Insulina lenta: 5 mg/dL/s durante 5s por dosis — acumulable
-  INS_SLOW_DPS:    5,
+  INS_SLOW_DPS:    3,
   INS_SLOW_MS:  5000,
   INS_FAST_DROP:  25,
   INS_FAST_MAX:    3,
