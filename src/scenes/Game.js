@@ -65,6 +65,7 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, lvl.length, CONFIG.H);
     this.cameras.main.startFollow(this._player.sprite, false, 0.1, 1);
     this.cameras.main.setFollowOffset(-CONFIG.W * 0.25, 0);
+    this._hud.buildMinimap(this._ground, lvl.length);
 
     this._buildAccelerometer();
 
