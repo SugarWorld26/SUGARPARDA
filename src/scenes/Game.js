@@ -64,7 +64,6 @@ class GameScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0, 0, lvl.length, CONFIG.H);
     this.cameras.main.startFollow(this._player.sprite, false, 0.1, 1);
-    this._hud.buildMinimap(this._ground, lvl.length);
     this.cameras.main.setFollowOffset(-CONFIG.W * 0.25, 0);
 
     this._buildAccelerometer();
@@ -208,6 +207,29 @@ class GameScene extends Phaser.Scene {
     this._float(this._player.x, this._player.y - 40, `+${raise} 📈`, '#FF5252');
   }
 
+  _triggerHole() {
+    if (this._dead || this._done) return;
+    this._dead = true;
+    this._player.sprite.body.setVelocityX(0);
+    this._player.sprite.body.setVelocityY(0);
+    this._flash(0xB71C1C, 600);
+
+    const W = CONFIG.W, H = CONFIG.H;
+    const ov = this.add.graphics().setScrollFactor(0).setDepth(300);
+    ov.fillStyle(0x000820, 0.92).fillRect(0, 0, W, H);
+
+    this.add.text(W/2, H*0.25, '💀', { fontSize: '52px' })
+      .setOrigin(0.5).setScrollFactor(0).setDepth(301);
+    this.add.text(W/2, H*0.45, '¡CAÍDA AL VACÍO!', {
+      fontSize: '26px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#FF5252', stroke: '#000', strokeThickness: 3,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+    this.add.text(W/2, H*0.60, 'Fin del nivel', {
+      fontSize: '15px', fontFamily: 'monospace', fill: '#fff',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+    this.time.delayedCall(2200, () => this._finish());
+  }
+
   _triggerHypo() {
     if (this._dead) return;
     this._dead = true;
@@ -302,12 +324,13 @@ class GameScene extends Phaser.Scene {
       if (this._fastTimer <= 0) this._fast = false;
     }
 
-    // Caída en agujero — no actuar si ya estamos en hypo
+    // Caída en agujero = fin de partida inmediato
     const overHole = !this._ground.isSolidAt(this._player.x) &&
                      this._player.sprite.body.blocked.down === false &&
                      this._player.y > CONFIG.GROUND_Y - 10;
     if (overHole || this._player.y > CONFIG.H + 40) {
-      this._glucose.v = CONFIG.HYPO_THRESH - 1;
+      this._triggerHole();
+      return;
     }
 
     const onSlope = this._ground.isSlopeAt(this._player.x);
@@ -324,6 +347,6 @@ class GameScene extends Phaser.Scene {
 
     if (this._player.x >= this._metaX) this._finish();
 
-    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope, this._backpack, this._player.x);
+    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope, this._backpack, this._player.x, this._glucose.slowSecsLeft);
   }
 }
