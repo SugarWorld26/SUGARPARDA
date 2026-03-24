@@ -66,6 +66,9 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this._player.sprite, false, 0.1, 1);
     this.cameras.main.setFollowOffset(-CONFIG.W * 0.25, 0);
 
+    // Minimapa — se dibuja una vez con la orografía completa
+    this._hud.buildMinimap(this._ground, lvl.length);
+
     this._buildAccelerometer();
 
     this._metaX = lvl.length - 160;
@@ -323,6 +326,6 @@ class GameScene extends Phaser.Scene {
 
     if (this._player.x >= this._metaX) this._finish();
 
-    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope, this._backpack);
+    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope, this._backpack, this._player.x);
   }
 }
