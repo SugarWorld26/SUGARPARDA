@@ -63,9 +63,9 @@ class HUD {
       fill: '#FFC107', stroke: '#000', strokeThickness: 2,
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(92);
 
-    // Panel insulina activa — solo muestra insulina LENTA
+    // Panel insulina activa — solo lenta
     this._scene.add.graphics().setScrollFactor(0).setDepth(89)
-      .fillStyle(0x000000, 0.60).fillRoundedRect(W - 122, 58, 120, 28, 6);
+      .fillStyle(0x000000, 0.60).fillRoundedRect(W - 122, 58, 120, 26, 6);
     this._scene.add.text(W - 120, 60, 'INSULINA ACTIVA', {
       fontSize: '8px', fontFamily: 'monospace', fill: '#777',
     }).setScrollFactor(0).setDepth(90);
@@ -199,10 +199,9 @@ class HUD {
     this._fastLbl.setText(`x${fastLeft}`);
     this._sprintTxt.setText(slope ? '⛰ CUESTA' : fast ? '🏃 SPRINT!' : '');
 
-    // Panel insulina activa — solo lenta
+    // Panel insulina activa
     this._insSlowTxt.setText('💉 LENTA   ' + slowSecs + 's')
       .setStyle({ fill: slowSecs > 0 ? '#43A047' : '#555' });
-    // Dosis rápidas en mochila
     if (this._fastDosesTxt) this._fastDosesTxt.setText('⚡ x' + fastLeft)
       .setStyle({ fill: fastLeft > 0 ? '#FF6F00' : '#555' });
 
