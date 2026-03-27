@@ -53,22 +53,24 @@ class HUD {
       fill: '#A5D6A7', stroke: '#000', strokeThickness: 2,
     }).setScrollFactor(0).setDepth(92);
 
+    this._fastDosesTxt = this._scene.add.text(8, 52, `⚡ x${fastLeft}`, {
+      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#FF6F00', stroke: '#000', strokeThickness: 2,
+    }).setScrollFactor(0).setDepth(92);
+
     this._sprintTxt = this._scene.add.text(W - 8, 4, '', {
       fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FFC107', stroke: '#000', strokeThickness: 2,
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(92);
 
-    // Panel insulina activa (esquina superior derecha)
+    // Panel insulina activa — solo muestra insulina LENTA
     this._scene.add.graphics().setScrollFactor(0).setDepth(89)
-      .fillStyle(0x000000, 0.60).fillRoundedRect(W - 122, 58, 120, 42, 6);
+      .fillStyle(0x000000, 0.60).fillRoundedRect(W - 122, 58, 120, 28, 6);
     this._scene.add.text(W - 120, 60, 'INSULINA ACTIVA', {
       fontSize: '8px', fontFamily: 'monospace', fill: '#777',
     }).setScrollFactor(0).setDepth(90);
     this._insSlowTxt = this._scene.add.text(W - 120, 72, '💉 LENTA   0s', {
       fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#555',
-    }).setScrollFactor(0).setDepth(90);
-    this._insFastTxt = this._scene.add.text(W - 120, 86, `⚡ RÁPIDA  x${fastLeft}`, {
-      fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FF6F00',
     }).setScrollFactor(0).setDepth(90);
 
     this._hyperOv = this._scene.add.graphics().setScrollFactor(0).setDepth(88);
@@ -197,10 +199,11 @@ class HUD {
     this._fastLbl.setText(`x${fastLeft}`);
     this._sprintTxt.setText(slope ? '⛰ CUESTA' : fast ? '🏃 SPRINT!' : '');
 
-    // Panel insulina activa
+    // Panel insulina activa — solo lenta
     this._insSlowTxt.setText('💉 LENTA   ' + slowSecs + 's')
       .setStyle({ fill: slowSecs > 0 ? '#43A047' : '#555' });
-    this._insFastTxt.setText('⚡ RÁPIDA  x' + fastLeft)
+    // Dosis rápidas en mochila
+    if (this._fastDosesTxt) this._fastDosesTxt.setText('⚡ x' + fastLeft)
       .setStyle({ fill: fastLeft > 0 ? '#FF6F00' : '#555' });
 
     this._hyperOv.clear();
