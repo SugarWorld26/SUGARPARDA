@@ -17,6 +17,7 @@ class GameScene extends Phaser.Scene {
     this._done        = false;
     this._fastLeft    = CONFIG.INS_FAST_MAX;
     this._slopeJump   = false;  // true mientras salta en rampa
+    this._wasOnSlope  = false;  // para detectar entrada en rampa
 
     this.physics.world.gravity.y = CONFIG.GRAVITY;
     this.physics.world.setBounds(0, 0, lvl.length, CONFIG.H + 200);
@@ -385,26 +386,30 @@ class GameScene extends Phaser.Scene {
     if (onSlope) {
       const sprite  = this._player.sprite;
       const surfY   = this._ground.getSurfaceY(this._player.x);
-      const feetY   = sprite.y + sprite.body.height / 2;
+      const targetY = surfY - 22; // 22 = distancia sprite.y al suelo en llano
 
       if (this._slopeJump) {
-        // Está saltando en rampa — dejar que la física actúe normal
-        // Cuando vuelva a bajar y toque la superficie, desactivar el salto
-        if (sprite.body.velocity.y >= 0 && feetY >= surfY - 4) {
+        // Saltando: física normal hasta bajar a la superficie
+        if (sprite.body.velocity.y >= 0 && sprite.y >= targetY - 2) {
           this._slopeJump = false;
         }
       }
 
       if (!this._slopeJump) {
-        // Pegarlo a la superficie: quitar gravedad, poner Y exacta
+        // Pegar al suelo: sin gravedad, Y exacta cada frame
         sprite.body.allowGravity = false;
         sprite.body.setVelocityY(0);
-        sprite.setY(surfY - sprite.body.height / 2);
+        sprite.y = targetY;
       }
+      this._wasOnSlope = true;
     } else {
-      // Fuera de rampa: gravedad normal
       this._player.sprite.body.allowGravity = true;
-      this._slopeJump = false;
+      if (this._wasOnSlope) {
+        // Acaba de salir de la rampa — snap al suelo plano para no flotar
+        this._player.sprite.body.setVelocityY(0);
+      }
+      this._slopeJump  = false;
+      this._wasOnSlope = false;
     }
     // ──────────────────────────────────────────────────────────────
 
