@@ -1,437 +1,217 @@
 // ================================================================
-//  Game.js — Escena principal.
+//  Boot.js — Carga de assets
 // ================================================================
-class GameScene extends Phaser.Scene {
-  constructor() { super('Game'); }
+class BootScene extends Phaser.Scene {
+  constructor() { super('Boot'); }
 
-  init(data) {
-    this._lvlIdx = (data && data.lvl != null) ? data.lvl : 0;
+  preload() {
+    this.cameras.main.setBackgroundColor('#0a1628');
+
+    // Barra de carga
+    const W = CONFIG.W, H = CONFIG.H;
+    const barBg = this.add.graphics();
+    barBg.fillStyle(0x1a2a3a).fillRoundedRect(W/2 - 160, H/2 - 14, 320, 28, 6);
+    const bar = this.add.graphics();
+    this.load.on('progress', v => {
+      bar.clear().fillStyle(0x43A047).fillRoundedRect(W/2 - 158, H/2 - 12, 316 * v, 24, 5);
+    });
+    this.add.text(W/2, H/2 - 40, 'Cargando...', {
+      fontSize: '14px', fontFamily: 'monospace', fill: '#546E7A',
+    }).setOrigin(0.5);
+
+    this.load.image('logo', 'assets/logo.png');
+    this.load.spritesheet('sugargirl', 'assets/sugargirl.png', {
+      frameWidth: 80,
+      frameHeight: 102,
+    });
   }
 
   create() {
-    const lvl = CONFIG.LEVELS[this._lvlIdx];
-
-    this._fast        = false;
-    this._fastTimer   = 0;
-    this._dead        = false;
-    this._done        = false;
-    this._fastLeft    = CONFIG.INS_FAST_MAX;
-    this._slopeJump   = false;  // true mientras salta en rampa
-    this._wasOnSlope  = false;  // para detectar entrada en rampa
-
-    this.physics.world.gravity.y = CONFIG.GRAVITY;
-    this.physics.world.setBounds(0, 0, lvl.length, CONFIG.H + 200);
-
-    this.cameras.main.setBackgroundColor(lvl.skyColor);
-    this._buildBackground(lvl);
-
-    // Tiempo de referencia para el bonus de velocidad
-    const refSecs   = Math.round(lvl.length / CONFIG.SPD_NORMAL);
-    this._glucose   = new Glucose();
-    this._score     = new Score(refSecs);
-    this._glucagons = lvl.glucagons;
-    this._backpack  = CONFIG.BACKPACK_START;
-
-    this._ground = new Ground(this, lvl);
-
-    const startY = CONFIG.GROUND_Y - 49;  // ajustado para sprite 102px alto
-    this._player = new Player(this, 200, startY);
-    this._player.addToGround(this._ground);
-
-    this._spawner = new Spawner(this, lvl, this._ground);
-    this._spawner.addOverlap(this._player.sprite, (type) => {
-      this._onEnemyHit(type);
-    });
-
-    this._buildPickups(lvl);
-
-    this._hud = new HUD(this, this._glucagons, this._fastLeft, this._backpack);
-    this._hud.onJump(() => {
-      const slope  = this._ground.isSlopeAt(this._player.x);
-      const jumped = this._player.jump(this._glucose, slope);
-      if (jumped && slope) {
-        this._slopeJump = true;
-      }
-    });
-    this._hud.onSlowInsulin(() => {
-      this._glucose.useSlowInsulin();
-      this._float(this._player.x, this._player.y - 45, '💉 -5/s x5s', '#43A047');
-    });
-    this._hud.onFastInsulin(() => {
-      if (this._fastLeft <= 0) return;
-      this._fastLeft--;
-      this._glucose.useFastInsulin();
-      this._float(this._player.x, this._player.y - 45, `⚡ -${CONFIG.INS_FAST_DROP}`, '#FF6F00');
-    });
-    this._hud.onEatApple(() => {
-      if (this._backpack <= 0) return;
-      this._backpack--;
-      this._glucose.eatApple();
-      this._float(this._player.x, this._player.y - 45, `🍎 +${CONFIG.APPLE_RAISE}`, '#A5D6A7');
-    });
-
-    this.cameras.main.setBounds(0, 0, lvl.length, CONFIG.H);
-    this.cameras.main.startFollow(this._player.sprite, false, 0.1, 1);
-    this.cameras.main.setFollowOffset(-CONFIG.W * 0.25, 0);
-    this._hud.buildMinimap(this._ground, lvl.length);
-
-    this._buildAccelerometer();
-
-    this._metaX = lvl.length - 160;
-    this._buildMeta(lvl);
-
-    this.input.addPointer(3);
-    this._lvl = lvl;
-  }
-
-  _buildBackground(lvl) {
-    const L  = lvl.length;
-    const GY = CONFIG.GROUND_Y;
-    const g  = this.add.graphics().setScrollFactor(0.15).setDepth(0);
-
-    if (lvl.skyColor === 0x87CEEB) {
-      g.fillStyle(0x90A4AE, 1);
-      for (let bx = 60; bx < L; bx += 220) {
-        const bh = Phaser.Math.Between(70, 180);
-        const bw = Phaser.Math.Between(40, 80);
-        g.fillRect(bx, GY - bh, bw, bh);
-        g.fillStyle(0xFFF9C4, 0.65);
-        for (let wy = GY - bh + 8; wy < GY - 6; wy += 16)
-          for (let wx = bx + 5; wx < bx + bw - 5; wx += 13)
-            g.fillRect(wx, wy, 7, 9);
-        g.fillStyle(0x90A4AE, 1);
-      }
-    } else {
-      const tc = (lvl.skyColor === 0x2E7D32) ? 0x1B5E20
-               : (lvl.skyColor === 0x78909C) ? 0x37474F
-               : (lvl.skyColor === 0xF48FB1) ? 0xAD1457
-               : 0x283593;
-      g.fillStyle(tc, 1);
-      for (let tx = 40; tx < L; tx += 150) {
-        const th = Phaser.Math.Between(40, 90);
-        g.fillTriangle(tx, GY, tx + 22, GY - th, tx + 44, GY);
-        g.fillTriangle(tx + 10, GY, tx + 22, GY - th * 0.65, tx + 34, GY);
-      }
-    }
-  }
-
-  _buildMeta(lvl) {
-    const GY = CONFIG.GROUND_Y;
-    const mx = this._metaX;
-    const g  = this.add.graphics().setDepth(3);
-    g.fillStyle(0xFFD700, 1).fillRect(mx, GY - 88, 6, 88);
-    g.fillStyle(0xFFC107, 1).fillTriangle(mx + 6, GY - 88, mx + 6, GY - 52, mx + 52, GY - 70);
-    this.add.text(mx + 2, GY - 104, 'META', {
-      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#FFD700', stroke: '#000', strokeThickness: 2,
-    }).setDepth(4);
-  }
-
-  _buildPickups(lvl) {
-    const GY = CONFIG.GROUND_Y;
-
-    // ── Manzanas: van a la mochila ──
-    this._apples = this.physics.add.staticGroup();
-    for (let i = 0; i < lvl.apples; i++) {
-      let ax, tries = 0;
-      do { ax = Phaser.Math.Between(600, lvl.length - 400); tries++; }
-      while (!this._ground.isSolidAt(ax) && tries < 20);
-      if (!this.textures.exists('_apple')) this._makeAppleTex();
-      const a = this._apples.create(ax, GY - 52, '_apple');
-      a.setDepth(7);
-      a.refreshBody();
-      this.tweens.add({ targets: a, y: GY - 62, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    }
-    this.physics.add.overlap(this._player.sprite, this._apples, (_, a) => {
-      a.destroy();
-      if (this._backpack < CONFIG.BACKPACK_MAX) {
-        this._backpack++;
-        this._float(this._player.x, this._player.y - 50, `🎒 Mochila: ${this._backpack}`, '#FFC107');
-      } else {
-        // Mochila llena: se come directamente
-        this._glucose.eatApple();
-        this._float(this._player.x, this._player.y - 50, `🍎 +${CONFIG.APPLE_RAISE}`, '#A5D6A7');
-      }
-    });
-
-    // ── Checkpoints — se activan al cruzar la X, saltando o corriendo ──
-    this._cpData = [];  // { x, sprite, done }
-    const sp = lvl.length / (lvl.checkpoints + 1);
-    for (let i = 1; i <= lvl.checkpoints; i++) {
-      const cx = Math.round(sp * i);
-      if (!this.textures.exists('_cp')) this._makeCpTex();
-      const cpSprite = this.add.image(cx, GY - 28, '_cp').setDepth(6);
-      this._cpData.push({ x: cx, sprite: cpSprite, done: false });
-    }
-
-    // ── 1 pickup de insulina rápida por nivel ──
-    this._fastPickups = this.physics.add.staticGroup();
-    let fpx, fpTries = 0;
-    do {
-      fpx = Phaser.Math.Between(Math.round(lvl.length * 0.3), Math.round(lvl.length * 0.7));
-      fpTries++;
-    } while (!this._ground.isSolidAt(fpx) && fpTries < 30);
-    if (this._ground.isSolidAt(fpx)) {
-      if (!this.textures.exists('_fastpickup')) this._makeFastPickupTex();
-      const fp = this._fastPickups.create(fpx, GY - 52, '_fastpickup');
-      fp.setDepth(7);
-      fp.refreshBody();
-      this.tweens.add({ targets: fp, y: GY - 62, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    }
-    this.physics.add.overlap(this._player.sprite, this._fastPickups, (_, fp) => {
-      fp.destroy();
-      this._fastLeft++;
-      this._float(this._player.x, this._player.y - 50, '⚡ +1 dosis', '#FF6F00');
-    });
-  }
-
-  _makeAppleTex() {
-    const g = this.make.graphics({ add: false });
-    const S = 4;
-    g.fillStyle(0x4CAF50, 1).fillRect(4*S, 0, 2*S, 2*S);
-    g.fillStyle(0xC62828, 1).fillRect(1*S, 2*S, 8*S, 7*S);
-    g.fillStyle(0xC62828, 1).fillRect(0, 3*S, 10*S, 5*S);
-    g.fillStyle(0xE53935, 1).fillRect(2*S, 3*S, 6*S, 5*S);
-    g.fillStyle(0xFF8A80, 1).fillRect(2*S, 3*S, 2*S, 2*S);
-    g.generateTexture('_apple', 10*S, 9*S);
-    g.destroy();
-  }
-
-  _makeCpTex() {
-    const g = this.make.graphics({ add: false });
-    const S = 3;
-    g.fillStyle(0x546E7A, 1).fillRect(3*S, 0, 2*S, 20*S);
-    g.fillStyle(0xFFC107, 1).fillRect(4*S, 2*S, 6*S, 3*S).fillRect(4*S, 5*S, 6*S, 1*S);
-    g.generateTexture('_cp', 10*S, 20*S);
-    g.destroy();
-  }
-
-  _makeCpDoneTex() {
-    const g = this.make.graphics({ add: false });
-    const S = 3;
-    g.fillStyle(0x546E7A, 1).fillRect(3*S, 0, 2*S, 20*S);
-    g.fillStyle(0x00E676, 1).fillRect(4*S, 2*S, 6*S, 3*S).fillRect(4*S, 5*S, 6*S, 1*S);
-    g.generateTexture('_cp_done', 10*S, 20*S);
-    g.destroy();
-  }
-
-  _makeFastPickupTex() {
-    const g = this.make.graphics({ add: false });
-    const S = 4;
-    g.fillStyle(0xFF6F00, 1).fillRect(3*S, 1*S, 5*S, 8*S);
-    g.fillStyle(0xFFE0B2, 1).fillRect(4*S, 0, 3*S, 2*S);
-    g.fillStyle(0xBF360C, 1).fillRect(3*S, 7*S, 5*S, 2*S);
-    g.fillStyle(0xFFFFFF, 1).fillRect(4*S, 2*S, 1*S, 4*S);
-    g.fillStyle(0xFFD54F, 1).fillRect(0, 3*S, 2*S, 2*S).fillRect(9*S, 3*S, 2*S, 2*S);
-    g.generateTexture('_fastpickup', 11*S, 10*S);
-    g.destroy();
-  }
-
-  _buildAccelerometer() {
-    if (!window.DeviceMotionEvent) return;
-    this._motionHandler = (e) => {
-      if (this._dead || this._done) return;
-      const a = e.accelerationIncludingGravity;
-      if (!a) return;
-      if (Math.sqrt(a.x**2 + a.y**2 + a.z**2) > CONFIG.SHAKE_G) {
-        this._fast      = true;
-        this._fastTimer = CONFIG.FAST_MS;
-      }
-    };
-    window.addEventListener('devicemotion', this._motionHandler);
-  }
-
-  _onEnemyHit(type) {
-    this._glucose.onEnemyHit(type);
-    this._flash(0xFF0000, 160);
-    const raise = CONFIG.ENEMY_RAISE[type] || 0;
-    this._float(this._player.x, this._player.y - 40, `+${raise} 📈`, '#FF5252');
-  }
-
-  _triggerHole() {
-    if (this._dead || this._done) return;
-    this._dead = true;
-    this._player.sprite.body.setVelocityX(0);
-    this._player.sprite.body.setVelocityY(0);
-    this._flash(0xB71C1C, 600);
-
-    const W = CONFIG.W, H = CONFIG.H;
-    const ov = this.add.graphics().setScrollFactor(0).setDepth(300);
-    ov.fillStyle(0x000820, 0.92).fillRect(0, 0, W, H);
-
-    this.add.text(W/2, H*0.25, '💀', { fontSize: '52px' })
-      .setOrigin(0.5).setScrollFactor(0).setDepth(301);
-    this.add.text(W/2, H*0.45, '¡CAÍDA AL VACÍO!', {
-      fontSize: '26px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#FF5252', stroke: '#000', strokeThickness: 3,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
-    this.add.text(W/2, H*0.60, 'Fin del nivel', {
-      fontSize: '15px', fontFamily: 'monospace', fill: '#fff',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
-    this.time.delayedCall(2200, () => this._finish());
-  }
-
-  _triggerHypo() {
-    if (this._dead) return;
-    this._dead = true;
-    this._player.sprite.body.setVelocityX(0);
-    this._player.sprite.body.setVelocityY(0);
-    this._flash(0x1565C0, 500);
-
-    const W = CONFIG.W, H = CONFIG.H;
-    const ov = this.add.graphics().setScrollFactor(0).setDepth(300);
-    ov.fillStyle(0x000820, 0.9).fillRect(0, 0, W, H);
-
-    this.add.text(W/2, H*0.20, '😵', { fontSize: '52px' })
-      .setOrigin(0.5).setScrollFactor(0).setDepth(301);
-    this.add.text(W/2, H*0.40, 'HIPOGLUCEMIA', {
-      fontSize: '26px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#4FC3F7', stroke: '#000', strokeThickness: 3,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
-    this.add.text(W/2, H*0.54, `Glucagones: ${this._glucagons}`, {
-      fontSize: '15px', fontFamily: 'monospace', fill: '#fff',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
-
-    if (this._glucagons > 0) {
-      const btn = this.add.text(W/2, H*0.70, '💉 USAR GLUCAGÓN', {
-        fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold',
-        fill: '#000', backgroundColor: '#43A047', padding: { x: 18, y: 10 },
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(301)
-        .setInteractive({ useHandCursor: true });
-      btn.on('pointerdown', () => {
-        this._glucagons--;
-        this._glucose.useGlucagon();
-        // Volver a suelo sólido plano cercano
-        const safeX = this._findSafeX(this._player.x);
-        this._player.sprite.body.reset(safeX, CONFIG.GROUND_Y - 49);
-        this._dead = false;
-        ov.destroy();
-        btn.destroy();
+    // Crear animaciones del spritesheet aquí, ya cargado
+    if (this.textures.exists('sugargirl')) {
+      this.anims.create({
+        key: 'run',
+        frames: this.anims.generateFrameNumbers('sugargirl', { start: 0, end: 3 }),
+        frameRate: 10,
+        repeat: -1,
       });
+      this.anims.create({
+        key: 'jump',
+        frames: this.anims.generateFrameNumbers('sugargirl', { start: 4, end: 4 }),
+        frameRate: 1,
+        repeat: 0,
+      });
+    }
+    this.scene.start('Menu');
+  }
+}
+
+// ================================================================
+//  Menu.js — Menú principal
+// ================================================================
+class MenuScene extends Phaser.Scene {
+  constructor() { super('Menu'); }
+
+  async create() {
+    const W = CONFIG.W, H = CONFIG.H;
+    this.cameras.main.setBackgroundColor('#0a1628');
+
+    // Fondo gradiente
+    this.add.graphics()
+      .fillGradientStyle(0x0a1628, 0x0a1628, 0x0d2040, 0x0d2040, 1)
+      .fillRect(0, 0, W, H);
+
+    // Logo
+    if (this.textures.exists('logo')) {
+      const logo = this.add.image(W/2, H * 0.18, 'logo').setOrigin(0.5);
+      logo.setScale(Math.min(280 / logo.width, 100 / logo.height));
+    }
+
+    // Separador
+    this.add.graphics()
+      .lineStyle(1, 0x43A047, 0.2)
+      .lineBetween(W * 0.1, H * 0.33, W * 0.9, H * 0.33);
+
+    const name = window.PLAYER_NAME || '?';
+    this.add.text(W/2, H * 0.39, `¡Hola, ${name}!`, {
+      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#fff',
+    }).setOrigin(0.5);
+
+    // Botón JUGAR
+    const btn = this.add.text(W/2, H * 0.52, '▶  JUGAR', {
+      fontSize: '22px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#43A047', padding: { x: 28, y: 12 },
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    btn.on('pointerover',  () => btn.setStyle({ backgroundColor: '#66BB6A' }));
+    btn.on('pointerout',   () => btn.setStyle({ backgroundColor: '#43A047' }));
+    btn.on('pointerdown',  () => this.scene.start('Game', { lvl: 0 }));
+
+    // Cambiar nombre
+    this.add.text(W/2, H * 0.63, '✎ Cambiar nombre', {
+      fontSize: '13px', fontFamily: 'monospace', fill: '#546E7A',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        window.PLAYER_NAME = null;
+        localStorage.removeItem('sg_name');
+        location.reload();
+      });
+
+    // Ranking
+    this.add.text(W/2, H * 0.71, '🏆 RANKING GLOBAL', {
+      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
+    }).setOrigin(0.5);
+
+    const rows = await DB.top(6);
+    if (!rows.length) {
+      this.add.text(W/2, H * 0.80, '¡Sé el primero!', {
+        fontSize: '12px', fontFamily: 'monospace', fill: '#444',
+      }).setOrigin(0.5);
     } else {
-      this.add.text(W/2, H*0.70, 'Sin glucagón — fin del nivel', {
-        fontSize: '15px', fontFamily: 'monospace', fill: '#FF5252',
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
-      this.time.delayedCall(2500, () => this._finish());
+      rows.forEach((r, i) => {
+        const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+        const isMe  = r.player_name === name;
+        this.add.text(W/2, H * 0.78 + i * 22,
+          `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
+          {
+            fontSize: '12px', fontFamily: 'monospace',
+            fill: isMe ? '#43A047' : i < 3 ? '#FFC107' : '#666',
+            fontStyle: isMe ? 'bold' : 'normal',
+          }
+        ).setOrigin(0.5);
+      });
     }
   }
+}
 
-  _findSafeX(fromX) {
-    for (let dx = 0; dx < 800; dx += 20) {
-      const tx = fromX - dx;
-      if (tx > 0 && this._ground.isSolidAt(tx) && !this._ground.isSlopeAt(tx))
-        return tx;
+// ================================================================
+//  Result.js — Pantalla de resultados
+// ================================================================
+class ResultScene extends Phaser.Scene {
+  constructor() { super('Result'); }
+
+  async create(data) {
+    const W = CONFIG.W, H = CONFIG.H;
+    this.cameras.main.setBackgroundColor('#0a1628');
+    const { score, secs, tir, rng, bonus, lvlIdx, name } = data;
+    const lvl = CONFIG.LEVELS[lvlIdx];
+
+    await DB.save({ name, score, secs, tir, rng, level: lvl.id });
+
+    // Logo
+    if (this.textures.exists('logo')) {
+      const logo = this.add.image(W/2, H * 0.10, 'logo').setOrigin(0.5);
+      logo.setScale(Math.min(220 / logo.width, 75 / logo.height));
     }
-    return 300;
-  }
 
-  _finish() {
-    if (this._done) return;
-    this._done = true;
-    if (this._motionHandler) window.removeEventListener('devicemotion', this._motionHandler);
-    const bonus = this._score.finish();
-    this.scene.start('Result', {
-      score:  this._score.total,
-      secs:   this._score.elapsedSecs,
-      tir:    this._score.timeInRange,
-      rng:    this._score.rangazoPct,
-      bonus,
-      lvlIdx: this._lvlIdx,
-      name:   window.PLAYER_NAME,
+    this.add.text(W/2, H * 0.21, '📊 RESULTADOS', {
+      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
+    }).setOrigin(0.5);
+
+    this.add.text(W/2, H * 0.29, `${name} — Nivel ${lvl.id}: ${lvl.name}`, {
+      fontSize: '13px', fontFamily: 'monospace', fill: '#888',
+    }).setOrigin(0.5);
+
+    // Puntuación
+    this.add.text(W/2, H * 0.41, String(score), {
+      fontSize: '46px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#43A047', stroke: '#1B5E20', strokeThickness: 4,
+    }).setOrigin(0.5);
+    this.add.text(W/2, H * 0.51, 'PUNTOS', {
+      fontSize: '11px', fontFamily: 'monospace', fill: '#444',
+    }).setOrigin(0.5);
+
+    // Stats
+    const stats = [
+      { label: 'Tiempo en rango', value: `${tir}%`,   color: tir >= 70 ? '#43A047' : '#FFC107' },
+      { label: '★ RANGAZO',       value: `${rng}%`,   color: rng >= 50 ? '#FFD700' : '#888' },
+      { label: 'Tiempo',          value: `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`, color: '#fff' },
+      { label: 'Bonus velocidad', value: `+${bonus}`, color: '#FF6F00' },
+    ];
+    stats.forEach((s, i) => {
+      const x = i % 2 === 0 ? W * 0.26 : W * 0.74;
+      const y = H * 0.62 + Math.floor(i / 2) * H * 0.11;
+      this.add.graphics()
+        .fillStyle(0x0d1f3c, 1)
+        .fillRoundedRect(x - W * 0.19, y - H * 0.042, W * 0.38, H * 0.082, 7);
+      this.add.text(x, y - H * 0.012, s.label, {
+        fontSize: '10px', fontFamily: 'monospace', fill: '#555',
+      }).setOrigin(0.5);
+      this.add.text(x, y + H * 0.018, s.value, {
+        fontSize: '17px', fontFamily: 'monospace', fontStyle: 'bold', fill: s.color,
+      }).setOrigin(0.5);
     });
-  }
 
-  _flash(color, dur) {
-    const f = this.add.graphics().setScrollFactor(0).setDepth(200);
-    f.fillStyle(color, 0.28).fillRect(0, 0, CONFIG.W, CONFIG.H);
-    this.time.delayedCall(dur, () => f.destroy());
-  }
-
-  _float(x, y, text, color) {
-    const t = this.add.text(x, y, text, {
-      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: color, stroke: '#000', strokeThickness: 2,
-    }).setOrigin(0.5).setDepth(150);
-    this.tweens.add({ targets: t, y: y - 50, alpha: 0, duration: 1200, onComplete: () => t.destroy() });
-  }
-
-  update(time, delta) {
-    if (this._dead || this._done) return;
-
-    const dt = delta / 1000;
-
-    if (this._fast) {
-      this._fastTimer -= delta;
-      if (this._fastTimer <= 0) this._fast = false;
-    }
-
-    // Caída en agujero = fin de partida inmediato
-    const overHole = !this._ground.isSolidAt(this._player.x) &&
-                     this._player.sprite.body.blocked.down === false &&
-                     this._player.y > CONFIG.GROUND_Y - 10;
-    if (overHole || this._player.y > CONFIG.H + 40) {
-      this._triggerHole();
-      return;
-    }
-
-    const onSlope = this._ground.isSlopeAt(this._player.x);
-    this._glucose.tick(dt, true, this._fast, onSlope);
-
-    if (this._glucose.isHypo) {
-      this._triggerHypo();
-      return;
-    }
-
-    // ── Lógica de rampa sin física ──────────────────────────────
-    if (onSlope) {
-      const sprite  = this._player.sprite;
-      const surfY   = this._ground.getSurfaceY(this._player.x);
-      const targetY = surfY - 22; // 22 = distancia sprite.y al suelo en llano
-
-      if (this._slopeJump) {
-        // Saltando: física normal hasta bajar a la superficie
-        if (sprite.body.velocity.y >= 0 && sprite.y >= targetY - 2) {
-          this._slopeJump = false;
+    // Ranking
+    this.add.text(W/2, H * 0.78, '🏆 RANKING', {
+      fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
+    }).setOrigin(0.5);
+    const rows = await DB.top(5);
+    rows.forEach((r, i) => {
+      const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+      const isMe  = r.player_name === name;
+      this.add.text(W/2, H * 0.84 + i * 21,
+        `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
+        {
+          fontSize: '12px', fontFamily: 'monospace',
+          fill: isMe ? '#43A047' : i < 3 ? '#FFC107' : '#666',
+          fontStyle: isMe ? 'bold' : 'normal',
         }
-      }
+      ).setOrigin(0.5);
+    });
 
-      if (!this._slopeJump) {
-        // Pegar al suelo: sin gravedad, Y exacta cada frame
-        sprite.body.allowGravity = false;
-        sprite.body.setVelocityY(0);
-        sprite.y = targetY;
-      }
-      this._wasOnSlope = true;
-    } else {
-      this._player.sprite.body.allowGravity = true;
-      if (this._wasOnSlope) {
-        // Acaba de salir de la rampa — snap al suelo plano para no flotar
-        this._player.sprite.body.setVelocityY(0);
-      }
-      this._slopeJump  = false;
-      this._wasOnSlope = false;
+    // Botones
+    const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length;
+    if (hasNext) {
+      this.add.text(W * 0.30, H * 0.94, '▶ SIGUIENTE', {
+        fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#43A047', padding: { x: 14, y: 9 },
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => this.scene.start('Game', { lvl: lvlIdx + 1 }));
     }
-    // ──────────────────────────────────────────────────────────────
-
-    this._player.update(delta, this._fast);
-    this._player.applyGlucoseVFX(this._glucose.state, time);
-    this._spawner.update(delta);
-
-    // Checkpoints por X — cuenta aunque el jugador salte por encima
-    if (this._cpData) {
-      for (const cp of this._cpData) {
-        if (!cp.done && this._player.x >= cp.x) {
-          cp.done = true;
-          if (!this.textures.exists('_cp_done')) this._makeCpDoneTex();
-          cp.sprite.setTexture('_cp_done');
-          const { pts } = this._score.checkpoint(this._glucose.v);
-          this._float(this._player.x, this._player.y - 60, `+${pts} pts`, '#FFC107');
-        }
-      }
-    }
-
-    if (this._player.x >= this._metaX) this._finish();
-
-    this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope, this._backpack, this._player.x, this._glucose.slowSecsLeft);
+    this.add.text(hasNext ? W * 0.72 : W/2, H * 0.94, '⟵ MENÚ', {
+      fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FFC107', padding: { x: 14, y: 9 },
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.scene.start('Menu'));
   }
 }
