@@ -15,7 +15,7 @@ class Ground {
     const GY    = CONFIG.GROUND_Y;
     const GH    = CONFIG.GROUND_H;
     const RISE  = lvl.slopeRise || 80;
-    const STEP  = 48;  // escalones más anchos = menos atasco
+    const STEP  = 96;  // escalones anchos = rampa suave, menos atasco
 
     this.segments = [];
     let x = 0;
@@ -89,7 +89,7 @@ class Ground {
 
   getSurfaceY(x) {
     const GY   = CONFIG.GROUND_Y;
-    const STEP = 48;
+    const STEP = 96;
     for (const seg of this.segments) {
       if (x >= seg.x && x < seg.x + seg.w) {
         if (!seg.slope) return GY;
