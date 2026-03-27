@@ -41,29 +41,17 @@ class Ground {
 
     this.segments.forEach(seg => {
       if (seg.slope) {
-        // Visual: píxel a píxel para que sea suave
-        const VSTEP = 2;
-        const vsteps = Math.ceil(seg.w / VSTEP);
-        for (let i = 0; i < vsteps; i++) {
-          const sx = seg.x + i * VSTEP;
-          const sw = Math.min(VSTEP, seg.x + seg.w - sx);
-          const dy = Math.round((i / vsteps) * seg.rise);
-          gfx.fillStyle(lvl.groundColor, 1).fillRect(sx, GY - dy, sw + 1, GH + dy);
-          gfx.fillStyle(lvl.groundEdge,  1).fillRect(sx, GY - dy, sw + 1, 8);
+        // Visual suave: columnas de 1px para rampa perfectamente lisa
+        for (let px = 0; px < seg.w; px++) {
+          const dy = Math.round((px / seg.w) * seg.rise);
+          gfx.fillStyle(lvl.groundColor, 1).fillRect(seg.x + px, GY - dy, 1, GH + dy);
         }
-
-        // Físico: UN SOLO cuerpo plano al nivel del suelo normal (GY).
-        // El personaje "sube" porque lo movemos por código en update(),
-        // no por física. Así no hay escalones ni botes.
-        const body = scene.physics.add.image(
-          seg.x + seg.w / 2, GY + GH / 2, '__DEFAULT'
-        );
-        body.setVisible(false);
-        body.setImmovable(true);
-        body.body.allowGravity = false;
-        body.body.setSize(seg.w, GH);
-        body.refreshBody();
-        this._bodies.push(body);
+        // Borde superior suave
+        for (let px = 0; px < seg.w; px++) {
+          const dy = Math.round((px / seg.w) * seg.rise);
+          gfx.fillStyle(lvl.groundEdge, 1).fillRect(seg.x + px, GY - dy, 1, 8);
+        }
+        // SIN cuerpo físico — la rampa se maneja por código en Game.update()
 
       } else {
         gfx.fillStyle(lvl.groundColor, 1).fillRect(seg.x, GY, seg.w, GH);
@@ -89,6 +77,7 @@ class Ground {
     return this.segments.some(s => x >= s.x && x < s.x + s.w);
   }
 
+  // Y exacta de la superficie en cualquier X (interpolación lineal)
   getSurfaceY(x) {
     const GY = CONFIG.GROUND_Y;
     for (const seg of this.segments) {
@@ -105,6 +94,7 @@ class Ground {
     return this.slopes.some(s => x >= s.x && x < s.x + s.w);
   }
 
+  // Solo añadir colisores de segmentos planos (las rampas no tienen cuerpo)
   addCollider(sprite) {
     this._bodies.forEach(b =>
       this._scene.physics.add.collider(sprite, b)
