@@ -154,24 +154,15 @@ class GameScene extends Phaser.Scene {
       }
     });
 
-    // ── Checkpoints ──
-    this._cps = this.physics.add.staticGroup();
-    const sp  = lvl.length / (lvl.checkpoints + 1);
+    // ── Checkpoints — se activan al cruzar la X, saltando o corriendo ──
+    this._cpData = [];  // { x, sprite, done }
+    const sp = lvl.length / (lvl.checkpoints + 1);
     for (let i = 1; i <= lvl.checkpoints; i++) {
-      const cx = sp * i;
+      const cx = Math.round(sp * i);
       if (!this.textures.exists('_cp')) this._makeCpTex();
-      const cp = this._cps.create(cx, GY - 28, '_cp');
-      cp.setDepth(6);
-      cp.setData('done', false);
-      cp.refreshBody();
+      const cpSprite = this.add.image(cx, GY - 28, '_cp').setDepth(6);
+      this._cpData.push({ x: cx, sprite: cpSprite, done: false });
     }
-    this.physics.add.overlap(this._player.sprite, this._cps, (_, cp) => {
-      if (cp.getData('done')) return;
-      cp.setData('done', true);
-      cp.setTint(0x00E676);
-      const { pts } = this._score.checkpoint(this._glucose.v);
-      this._float(this._player.x, this._player.y - 60, `+${pts} pts`, '#FFC107');
-    });
 
     // ── 1 pickup de insulina rápida por nivel ──
     this._fastPickups = this.physics.add.staticGroup();
@@ -416,6 +407,18 @@ class GameScene extends Phaser.Scene {
     this._player.update(delta, this._fast);
     this._player.applyGlucoseVFX(this._glucose.state, time);
     this._spawner.update(delta);
+
+    // Checkpoints por X — cuenta aunque el jugador salte por encima
+    if (this._cpData) {
+      for (const cp of this._cpData) {
+        if (!cp.done && this._player.x >= cp.x) {
+          cp.done = true;
+          cp.sprite.setTint(0x00E676);
+          const { pts } = this._score.checkpoint(this._glucose.v);
+          this._float(this._player.x, this._player.y - 60, `+${pts} pts`, '#FFC107');
+        }
+      }
+    }
 
     if (this._player.x >= this._metaX) this._finish();
 
