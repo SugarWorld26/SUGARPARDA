@@ -15,9 +15,6 @@ class Ground {
     const GY    = CONFIG.GROUND_Y;
     const GH    = CONFIG.GROUND_H;
     const RISE  = lvl.slopeRise || 0;
-    // STEP = ancho del personaje (26px) para que cada escalón
-    // nunca forme una pared más alta que el personaje puede saltar
-    const STEP  = 24;
 
     this.segments = [];
     let x = 0;
@@ -44,31 +41,29 @@ class Ground {
 
     this.segments.forEach(seg => {
       if (seg.slope) {
-        const steps = Math.ceil(seg.w / STEP);
-
-        for (let i = 0; i < steps; i++) {
-          const sx  = seg.x + i * STEP;
-          const sw  = Math.min(STEP, seg.x + seg.w - sx);
-          const dy  = Math.round((i / steps) * seg.rise);
-          const dy1 = Math.round(((i + 1) / steps) * seg.rise);
-
-          // Visual: rectángulo que va de dy a dy1 (gradiente suave)
-          gfx.fillStyle(lvl.groundColor, 1)
-             .fillRect(sx, GY - dy, sw + 1, GH + dy);
-          gfx.fillStyle(lvl.groundEdge, 1)
-             .fillRect(sx, GY - dy, sw + 1, 8);
-
-          // Cuerpo físico: top-left exactamente en la superficie
-          // Altura del cuerpo = GH + diferencia entre dy y dy1
-          // para que no haya gap ni pared lateral
-          const bodyTopY = GY - dy;
-          const bodyH    = GH + dy;
-          const body = scene.add.rectangle(sx, bodyTopY, sw + 2, bodyH, 0x000000, 0);
-          body.setOrigin(0, 0);
-          scene.physics.add.existing(body, true);
-          body.body.allowGravity = false;
-          this._bodies.push(body);
+        // Visual: píxel a píxel para que sea suave
+        const VSTEP = 2;
+        const vsteps = Math.ceil(seg.w / VSTEP);
+        for (let i = 0; i < vsteps; i++) {
+          const sx = seg.x + i * VSTEP;
+          const sw = Math.min(VSTEP, seg.x + seg.w - sx);
+          const dy = Math.round((i / vsteps) * seg.rise);
+          gfx.fillStyle(lvl.groundColor, 1).fillRect(sx, GY - dy, sw + 1, GH + dy);
+          gfx.fillStyle(lvl.groundEdge,  1).fillRect(sx, GY - dy, sw + 1, 8);
         }
+
+        // Físico: UN SOLO cuerpo plano al nivel del suelo normal (GY).
+        // El personaje "sube" porque lo movemos por código en update(),
+        // no por física. Así no hay escalones ni botes.
+        const body = scene.physics.add.image(
+          seg.x + seg.w / 2, GY + GH / 2, '__DEFAULT'
+        );
+        body.setVisible(false);
+        body.setImmovable(true);
+        body.body.allowGravity = false;
+        body.body.setSize(seg.w, GH);
+        body.refreshBody();
+        this._bodies.push(body);
 
       } else {
         gfx.fillStyle(lvl.groundColor, 1).fillRect(seg.x, GY, seg.w, GH);
@@ -95,15 +90,12 @@ class Ground {
   }
 
   getSurfaceY(x) {
-    const GY   = CONFIG.GROUND_Y;
-    const STEP = 24;
+    const GY = CONFIG.GROUND_Y;
     for (const seg of this.segments) {
       if (x >= seg.x && x < seg.x + seg.w) {
         if (!seg.slope) return GY;
-        const steps = Math.ceil(seg.w / STEP);
-        const i     = Math.min(Math.floor((x - seg.x) / STEP), steps - 1);
-        const dy    = Math.round((i / steps) * seg.rise);
-        return GY - dy;
+        const frac = (x - seg.x) / seg.w;
+        return GY - Math.round(frac * seg.rise);
       }
     }
     return GY;
