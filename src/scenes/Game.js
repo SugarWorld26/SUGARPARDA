@@ -11,11 +11,12 @@ class GameScene extends Phaser.Scene {
   create() {
     const lvl = CONFIG.LEVELS[this._lvlIdx];
 
-    this._fast      = false;
-    this._fastTimer = 0;
-    this._dead      = false;
-    this._done      = false;
-    this._fastLeft  = CONFIG.INS_FAST_MAX;
+    this._fast        = false;
+    this._fastTimer   = 0;
+    this._dead        = false;
+    this._done        = false;
+    this._fastLeft    = CONFIG.INS_FAST_MAX;
+    this._slopeJump   = false;  // true mientras salta en rampa
 
     this.physics.world.gravity.y = CONFIG.GRAVITY;
     this.physics.world.setBounds(0, 0, lvl.length, CONFIG.H + 200);
@@ -44,7 +45,13 @@ class GameScene extends Phaser.Scene {
     this._buildPickups(lvl);
 
     this._hud = new HUD(this, this._glucagons, this._fastLeft, this._backpack);
-    this._hud.onJump(() => this._player.jump(this._glucose));
+    this._hud.onJump(() => {
+      const slope  = this._ground.isSlopeAt(this._player.x);
+      const jumped = this._player.jump(this._glucose, slope);
+      if (jumped && slope) {
+        this._slopeJump = true;
+      }
+    });
     this._hud.onSlowInsulin(() => {
       this._glucose.useSlowInsulin();
       this._float(this._player.x, this._player.y - 45, '💉 -5/s x5s', '#43A047');
@@ -342,19 +349,32 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Rampa: cuando el sprite toca el suelo en zona de cuesta,
-    // desactivamos la gravedad y lo pegamos suavemente a la superficie.
-    // Así el personaje desliza sin botes ni escalones.
-    const body = this._player.sprite.body;
-    if (onSlope && body.blocked.down) {
+    // ── Lógica de rampa sin física ──────────────────────────────
+    if (onSlope) {
+      const sprite  = this._player.sprite;
       const surfY   = this._ground.getSurfaceY(this._player.x);
-      const targetY = surfY - this._player.sprite.height / 2;
-      body.allowGravity = false;
-      body.setVelocityY(0);
-      this._player.sprite.setY(targetY);
+      const feetY   = sprite.y + sprite.height / 2;
+
+      if (this._slopeJump) {
+        // Está saltando en rampa — dejar que la física actúe normal
+        // Cuando vuelva a bajar y toque la superficie, desactivar el salto
+        if (sprite.body.velocity.y >= 0 && feetY >= surfY - 4) {
+          this._slopeJump = false;
+        }
+      }
+
+      if (!this._slopeJump) {
+        // Pegarlo a la superficie: quitar gravedad, poner Y exacta
+        sprite.body.allowGravity = false;
+        sprite.body.setVelocityY(0);
+        sprite.setY(surfY - sprite.height / 2);
+      }
     } else {
-      body.allowGravity = true;
+      // Fuera de rampa: gravedad normal
+      this._player.sprite.body.allowGravity = true;
+      this._slopeJump = false;
     }
+    // ──────────────────────────────────────────────────────────────
 
     this._player.update(delta, this._fast);
     this._player.applyGlucoseVFX(this._glucose.state, time);
