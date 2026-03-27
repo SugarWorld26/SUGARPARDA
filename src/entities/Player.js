@@ -1,44 +1,16 @@
-// ================================================================
-//  Player.js — SugarGirl con spritesheet PNG generado por IA.
-//  Spritesheet: 480x102px, 6 frames de 80x102px
-//  Frames: 0-3 correr, 4 salto, 5 idle
-// ================================================================
 class Player {
   constructor(scene, x, y) {
     this._scene = scene;
-
-    // Crear animaciones a partir del spritesheet
-    if (!scene.textures.exists('sugargirl')) {
-      // El spritesheet se carga en BootScene
-    }
-
-    // Crear frames manualmente desde el spritesheet
-    if (!scene.anims.exists('run')) {
-      scene.anims.create({
-        key: 'run',
-        frames: [
-          { key: 'sugargirl', frame: 0 },
-          { key: 'sugargirl', frame: 1 },
-          { key: 'sugargirl', frame: 2 },
-          { key: 'sugargirl', frame: 3 },
-        ],
-        frameRate: 10,
-        repeat: -1,
-      });
-      scene.anims.create({
-        key: 'jump',
-        frames: [{ key: 'sugargirl', frame: 4 }],
-        frameRate: 1,
-        repeat: 0,
-      });
-    }
-
     this.sprite = scene.physics.add.sprite(x, y, 'sugargirl', 0);
     this.sprite.setDepth(10);
-    this.sprite.body.setSize(36, 80);
-    this.sprite.body.setOffset(22, 16);
+    // Sprite: 80x104px. Body cubre el personaje de offsetY hacia abajo.
+    // offsetY=8 => body top en pixel 8 del sprite
+    // bodyH=90  => body bottom en pixel 98 del sprite
+    // sprite.y (centro) = GROUND_Y - (90/2 + 8 - 104/2) = GROUND_Y - 1
+    // => startY en Game.js = GROUND_Y - 1
+    this.sprite.body.setSize(40, 90);
+    this.sprite.body.setOffset(20, 8);
 
-    this._onGround = false;
     this.isSlowed  = false;
     this._slowTimer= 0;
   }
