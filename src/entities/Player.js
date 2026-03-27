@@ -110,8 +110,9 @@ class Player {
     ground.addCollider(this.sprite);
   }
 
-  jump(glucose) {
-    if (!this.sprite.body.blocked.down) return false;
+  jump(glucose, onSlope = false) {
+    if (!this.sprite.body.blocked.down && !onSlope) return false;
+    this.sprite.body.allowGravity = true;
     this.sprite.body.setVelocityY(CONFIG.JUMP_VY);
     glucose.onJump();
     return true;
