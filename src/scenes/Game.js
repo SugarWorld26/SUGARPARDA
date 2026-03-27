@@ -179,9 +179,10 @@ class GameScene extends Phaser.Scene {
       fp.refreshBody();
       this.tweens.add({ targets: fp, y: GY - 62, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
+    // Sin tope: el jugador puede acumular todas las dosis que consiga coger
     this.physics.add.overlap(this._player.sprite, this._fastPickups, (_, fp) => {
       fp.destroy();
-      this._fastLeft = Math.min(this._fastLeft + 1, CONFIG.INS_FAST_MAX);
+      this._fastLeft++;
       this._float(this._player.x, this._player.y - 50, '⚡ +1 dosis', '#FF6F00');
     });
   }
@@ -374,10 +375,14 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
-    // En rampas: empujar al jugador hacia la superficie visualmente
+    // Rampa: cuando el sprite está sobre suelo sólido en zona de cuesta,
+    // lo pegamos a la superficie exacta para que no bote ni se atasque.
     if (onSlope && this._player.sprite.body.blocked.down) {
-      const targetY = this._ground.getSurfaceY(this._player.x) - this._player.sprite.height / 2;
-      this._player.sprite.y = Phaser.Math.Linear(this._player.sprite.y, targetY, 0.25);
+      const surfY   = this._ground.getSurfaceY(this._player.x);
+      const targetY = surfY - this._player.sprite.height / 2;
+      if (Math.abs(this._player.sprite.y - targetY) > 1) {
+        this._player.sprite.body.reset(this._player.sprite.x, targetY);
+      }
     }
 
     this._player.update(delta, this._fast);
