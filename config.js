@@ -34,10 +34,12 @@ const CONFIG = {
   DROP_SLOPE:      2.5,
 
   // Insulina lenta: 5 mg/dL/s durante 5s por dosis — acumulable
-  INS_SLOW_DPS:    3,
+  INS_SLOW_DPS:    6,
   INS_SLOW_MS:  5000,
   INS_FAST_DROP:  25,
   INS_FAST_MAX:    3,
+  INS_FAST_PICKUP: 1,   // dosis que da cada pickup de insulina rápida
+  INS_FAST_RECHARGE_MAX: 3, // máximo al recargar
 
   ENEMY_RAISE: {
     lollipop:  30,
