@@ -20,6 +20,10 @@ class BootScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.load.image('logo', 'assets/logo.png');
+    this.load.spritesheet('sugargirl', 'assets/sugargirl.png', {
+      frameWidth: 80,
+      frameHeight: 102,
+    });
   }
 
   create() {
