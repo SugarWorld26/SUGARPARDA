@@ -14,8 +14,7 @@ class Ground {
     const L     = lvl.length;
     const GY    = CONFIG.GROUND_Y;
     const GH    = CONFIG.GROUND_H;
-    const RISE  = lvl.slopeRise || 80;
-    const STEP  = 96;  // escalones anchos = rampa suave, menos atasco
+    const RISE  = lvl.slopeRise || 0;
 
     this.segments = [];
     let x = 0;
@@ -42,24 +41,31 @@ class Ground {
 
     this.segments.forEach(seg => {
       if (seg.slope) {
+        // Dibujar la rampa visualmente con píxeles finos
+        const STEP = 4; // solo visual, no física
         const steps = Math.ceil(seg.w / STEP);
-
         for (let i = 0; i < steps; i++) {
           const sx = seg.x + i * STEP;
           const sw = Math.min(STEP, seg.x + seg.w - sx);
           const dy = Math.round((i / steps) * seg.rise);
-
-          gfx.fillStyle(lvl.groundColor, 1)
-             .fillRect(sx, GY - dy, sw + 1, GH + dy);
-          gfx.fillStyle(lvl.groundEdge, 1)
-             .fillRect(sx, GY - dy, sw + 1, 8);
-
-          const body = scene.add.rectangle(sx, GY - dy, sw + 1, GH, 0x000000, 0);
-          body.setOrigin(0, 0);
-          scene.physics.add.existing(body, true);
-          body.body.allowGravity = false;
-          this._bodies.push(body);
+          gfx.fillStyle(lvl.groundColor, 1).fillRect(sx, GY - dy, sw + 1, GH + dy);
+          gfx.fillStyle(lvl.groundEdge,  1).fillRect(sx, GY - dy, sw + 1, 8);
         }
+
+        // UN SOLO cuerpo físico plano a la altura del punto MÁS ALTO
+        // El jugador sube visualmente pero físicamente el suelo está arriba
+        // Usamos el nivel del suelo normal — el jugador se empuja hacia arriba en update
+        const body = scene.physics.add.image(
+          seg.x + seg.w / 2,
+          GY + GH / 2,
+          '__DEFAULT'
+        );
+        body.setVisible(false);
+        body.setImmovable(true);
+        body.body.allowGravity = false;
+        body.body.setSize(seg.w, GH);
+        body.refreshBody();
+        this._bodies.push(body);
 
       } else {
         gfx.fillStyle(lvl.groundColor, 1).fillRect(seg.x, GY, seg.w, GH);
@@ -89,12 +95,12 @@ class Ground {
 
   getSurfaceY(x) {
     const GY   = CONFIG.GROUND_Y;
-    const STEP = 96;
+    const STEP = 4;
     for (const seg of this.segments) {
       if (x >= seg.x && x < seg.x + seg.w) {
         if (!seg.slope) return GY;
         const steps = Math.ceil(seg.w / STEP);
-        const i     = Math.floor((x - seg.x) / STEP);
+        const i     = Math.min(Math.floor((x - seg.x) / STEP), steps - 1);
         const dy    = Math.round((i / steps) * seg.rise);
         return GY - dy;
       }
