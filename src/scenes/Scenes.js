@@ -27,6 +27,21 @@ class BootScene extends Phaser.Scene {
   }
 
   create() {
+    // Crear animaciones del spritesheet aquí, ya cargado
+    if (this.textures.exists('sugargirl')) {
+      this.anims.create({
+        key: 'run',
+        frames: this.anims.generateFrameNumbers('sugargirl', { start: 0, end: 3 }),
+        frameRate: 10,
+        repeat: -1,
+      });
+      this.anims.create({
+        key: 'jump',
+        frames: this.anims.generateFrameNumbers('sugargirl', { start: 4, end: 4 }),
+        frameRate: 1,
+        repeat: 0,
+      });
+    }
     this.scene.start('Menu');
   }
 }
