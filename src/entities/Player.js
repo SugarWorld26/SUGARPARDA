@@ -8,7 +8,7 @@ class Player {
     // bodyH=90  => body bottom en pixel 98 del sprite
     // sprite.y (centro) = GROUND_Y - (90/2 + 8 - 104/2) = GROUND_Y - 1
     // => startY en Game.js = GROUND_Y - 1
-    this.sprite.body.setSize(40, 96);
+    this.sprite.body.setSize(40, 98);
     this.sprite.body.setOffset(20, 5);
 
     this.isSlowed  = false;
