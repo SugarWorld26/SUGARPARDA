@@ -7,32 +7,6 @@ class Player {
   constructor(scene, x, y) {
     this._scene = scene;
 
-    // Crear animaciones a partir del spritesheet
-    if (!scene.textures.exists('sugargirl')) {
-      // El spritesheet se carga en BootScene
-    }
-
-    // Crear frames manualmente desde el spritesheet
-    if (!scene.anims.exists('run')) {
-      scene.anims.create({
-        key: 'run',
-        frames: [
-          { key: 'sugargirl', frame: 0 },
-          { key: 'sugargirl', frame: 1 },
-          { key: 'sugargirl', frame: 2 },
-          { key: 'sugargirl', frame: 3 },
-        ],
-        frameRate: 10,
-        repeat: -1,
-      });
-      scene.anims.create({
-        key: 'jump',
-        frames: [{ key: 'sugargirl', frame: 4 }],
-        frameRate: 1,
-        repeat: 0,
-      });
-    }
-
     this.sprite = scene.physics.add.sprite(x, y, 'sugargirl', 0);
     this.sprite.setDepth(10);
     this.sprite.body.setSize(36, 72);
