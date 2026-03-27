@@ -206,6 +206,15 @@ class GameScene extends Phaser.Scene {
     g.destroy();
   }
 
+  _makeCpDoneTex() {
+    const g = this.make.graphics({ add: false });
+    const S = 3;
+    g.fillStyle(0x546E7A, 1).fillRect(3*S, 0, 2*S, 20*S);
+    g.fillStyle(0x00E676, 1).fillRect(4*S, 2*S, 6*S, 3*S).fillRect(4*S, 5*S, 6*S, 1*S);
+    g.generateTexture('_cp_done', 10*S, 20*S);
+    g.destroy();
+  }
+
   _makeFastPickupTex() {
     const g = this.make.graphics({ add: false });
     const S = 4;
@@ -413,7 +422,8 @@ class GameScene extends Phaser.Scene {
       for (const cp of this._cpData) {
         if (!cp.done && this._player.x >= cp.x) {
           cp.done = true;
-          cp.sprite.setTint(0x00E676);
+          if (!this.textures.exists('_cp_done')) this._makeCpDoneTex();
+          cp.sprite.setTexture('_cp_done');
           const { pts } = this._score.checkpoint(this._glucose.v);
           this._float(this._player.x, this._player.y - 60, `+${pts} pts`, '#FFC107');
         }
