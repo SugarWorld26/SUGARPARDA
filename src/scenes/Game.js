@@ -164,6 +164,27 @@ class GameScene extends Phaser.Scene {
       const { pts } = this._score.checkpoint(this._glucose.v);
       this._float(this._player.x, this._player.y - 60, `+${pts} pts`, '#FFC107');
     });
+
+    // ── Pickups insulina rápida ──
+    this._fastPickups = this.physics.add.staticGroup();
+    const numFast = lvl.checkpoints; // uno por checkpoint aproximadamente
+    const spFast  = lvl.length / (numFast + 1);
+    for (let i = 1; i <= numFast; i++) {
+      let fx = Math.round(spFast * i + Phaser.Math.Between(-200, 200));
+      fx = Math.max(600, Math.min(lvl.length - 400, fx));
+      // Solo en suelo sólido
+      if (!this._ground.isSolidAt(fx)) continue;
+      if (!this.textures.exists('_fastpickup')) this._makeFastPickupTex();
+      const fp = this._fastPickups.create(fx, GY - 48, '_fastpickup');
+      fp.setDepth(7);
+      fp.refreshBody();
+      this.tweens.add({ targets: fp, y: GY - 58, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    this.physics.add.overlap(this._player.sprite, this._fastPickups, (_, fp) => {
+      fp.destroy();
+      this._fastLeft = Math.min(this._fastLeft + CONFIG.INS_FAST_PICKUP, CONFIG.INS_FAST_RECHARGE_MAX);
+      this._float(this._player.x, this._player.y - 50, `⚡ +${CONFIG.INS_FAST_PICKUP} dosis`, '#FF6F00');
+    });
   }
 
   _makeAppleTex() {
@@ -184,6 +205,22 @@ class GameScene extends Phaser.Scene {
     g.fillStyle(0x546E7A, 1).fillRect(3*S, 0, 2*S, 20*S);
     g.fillStyle(0xFFC107, 1).fillRect(4*S, 2*S, 6*S, 3*S).fillRect(4*S, 5*S, 6*S, 1*S);
     g.generateTexture('_cp', 10*S, 20*S);
+    g.destroy();
+  }
+
+  _makeFastPickupTex() {
+    const g = this.make.graphics({ add: false });
+    const S = 4;
+    // Jeringa naranja con destello
+    g.fillStyle(0xFF6F00, 1).fillRect(3*S, 1*S, 5*S, 8*S);
+    g.fillStyle(0xFFE0B2, 1).fillRect(4*S, 0, 3*S, 2*S);
+    g.fillStyle(0xBF360C, 1).fillRect(3*S, 7*S, 5*S, 2*S);
+    g.fillStyle(0xFFFFFF, 1).fillRect(4*S, 2*S, 1*S, 4*S);
+    g.fillStyle(0xFFD54F, 1);
+    g.fillRect(0, 3*S, 2*S, 2*S);
+    g.fillRect(9*S, 3*S, 2*S, 2*S);
+    g.fillRect(4*S, 0, 3*S, 1*S);
+    g.generateTexture('_fastpickup', 11*S, 10*S);
     g.destroy();
   }
 
