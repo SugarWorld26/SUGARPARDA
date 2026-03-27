@@ -34,7 +34,7 @@ class GameScene extends Phaser.Scene {
 
     this._ground = new Ground(this, lvl);
 
-    const startY = CONFIG.GROUND_Y - 1;
+    const startY = CONFIG.GROUND_Y - 50;
     this._player = new Player(this, 200, startY);
     this._player.addToGround(this._ground);
 
@@ -303,7 +303,7 @@ class GameScene extends Phaser.Scene {
         this._glucose.useGlucagon();
         // Volver a suelo sólido plano cercano
         const safeX = this._findSafeX(this._player.x);
-        this._player.sprite.body.reset(safeX, CONFIG.GROUND_Y - 1);
+        this._player.sprite.body.reset(safeX, CONFIG.GROUND_Y - 50);
         this._dead = false;
         ov.destroy();
         btn.destroy();
@@ -386,7 +386,7 @@ class GameScene extends Phaser.Scene {
     if (onSlope) {
       const sprite  = this._player.sprite;
       const surfY   = this._ground.getSurfaceY(this._player.x);
-      const targetY = surfY - 1; // 22 = distancia sprite.y al suelo en llano
+      const targetY = surfY - 50; // 22 = distancia sprite.y al suelo en llano
 
       if (this._slopeJump) {
         // Saltando: física normal hasta bajar a la superficie
