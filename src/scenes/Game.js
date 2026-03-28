@@ -5,8 +5,9 @@ class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
 
   init(data) {
-    this._lvlIdx   = (data && data.lvl      != null) ? data.lvl      : 0;
-    this._prevScore = (data && data.prevScore != null) ? data.prevScore : 0;
+    this._lvlIdx    = (data && data.lvl       != null) ? data.lvl       : 0;
+    this._prevScore = (data && data.prevScore  != null) ? data.prevScore  : 0;
+    this._prevFast  = (data && data.prevFast   != null) ? data.prevFast   : 4;
   }
 
   create() {
@@ -16,7 +17,7 @@ class GameScene extends Phaser.Scene {
     this._fastTimer   = 0;
     this._dead        = false;
     this._done        = false;
-    this._fastLeft    = CONFIG.INS_FAST_MAX;
+    this._fastLeft    = this._prevFast;
     this._slopeJump   = false;  // true mientras salta en rampa
     this._wasOnSlope  = false;  // para detectar entrada en rampa
 
@@ -322,13 +323,14 @@ class GameScene extends Phaser.Scene {
     if (this._motionHandler) window.removeEventListener('devicemotion', this._motionHandler);
     const bonus = this._score.finish();
     this.scene.start('Result', {
-      score:  this._score.total + this._prevScore,
-      secs:   this._score.elapsedSecs,
-      tir:    this._score.timeInRange,
-      rng:    this._score.rangazoPct,
+      score:    this._score.total + this._prevScore,
+      secs:     this._score.elapsedSecs,
+      tir:      this._score.timeInRange,
+      rng:      this._score.rangazoPct,
       bonus,
-      lvlIdx: this._lvlIdx,
-      name:   window.PLAYER_NAME,
+      lvlIdx:   this._lvlIdx,
+      name:     window.PLAYER_NAME,
+      prevFast: this._fastLeft,
     });
   }
 
@@ -391,16 +393,22 @@ class GameScene extends Phaser.Scene {
         sprite.body.allowGravity = false;
         sprite.body.setVelocityY(0);
         sprite.y = targetY;
+      } else {
+        // Saltando en rampa: física normal, sin límite de techo
+        sprite.body.allowGravity = true;
       }
       this._wasOnSlope = true;
     } else {
       this._player.sprite.body.allowGravity = true;
-      if (this._wasOnSlope) {
+      if (this._wasOnSlope && !this._slopeJump) {
         // Acaba de salir de la rampa — snap al suelo plano para no flotar
         this._player.sprite.body.setVelocityY(0);
       }
-      this._slopeJump  = false;
       this._wasOnSlope = false;
+      // Solo resetear slopeJump cuando está en suelo plano
+      if (this._player.sprite.body.blocked.down) {
+        this._slopeJump = false;
+      }
     }
     // ──────────────────────────────────────────────────────────────
 
