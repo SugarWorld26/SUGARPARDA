@@ -18,14 +18,18 @@ class HUD {
       bg.fillStyle(0x000000, 0.65).fillRoundedRect(W/2 - 130, 4, 260, 80, 8);
     }
 
+    // Pantalla blanca del glucómetro
+    this._scene.add.graphics().setScrollFactor(0).setDepth(91)
+      .fillStyle(0xFFFFFF, 1).fillRoundedRect(W/2 - 105, gmY - 88, 160, 60, 6);
+
     // Número glucosa — en la pantalla del glucómetro
     this._valTxt = this._scene.add.text(W/2 - 22, gmY - 68, '100', {
       fontSize: '34px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#43A047', stroke: '#000', strokeThickness: 3,
+      fill: '#43A047', stroke: '#fff', strokeThickness: 1,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(92);
 
     this._scene.add.text(W/2 + 42, gmY - 60, 'mg/dL', {
-      fontSize: '10px', fontFamily: 'monospace', fill: '#888',
+      fontSize: '10px', fontFamily: 'monospace', fill: '#444',
     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(92);
 
     this._stateTxt = this._scene.add.text(W/2 - 22, gmY - 40, 'EN RANGO', {
