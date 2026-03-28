@@ -105,7 +105,8 @@ class GameScene extends Phaser.Scene {
     const mx = this._metaX;
     if (this.textures.exists('meta_flag')) {
       this.add.image(mx + 24, GY, 'meta_flag')
-        .setDepth(3).setOrigin(0.5, 1);
+        .setDepth(3).setOrigin(0.5, 1)
+        .setDisplaySize(60, 110);
     } else {
       const g = this.add.graphics().setDepth(3);
       g.fillStyle(0xFFD700, 1).fillRect(mx, GY - 88, 6, 88);
@@ -150,7 +151,7 @@ class GameScene extends Phaser.Scene {
       const cx = Math.round(sp * i);
       const cpTex = this.textures.exists('cp_off') ? 'cp_off' : '_cp';
       if (cpTex === '_cp' && !this.textures.exists('_cp')) this._makeCpTex();
-      const cpSprite = this.add.image(cx, GY - 32, cpTex, 0).setDepth(6).setOrigin(0.5, 1);
+      const cpSprite = this.add.image(cx, GY, cpTex, 0).setDepth(6).setOrigin(0.5, 1);
       this._cpData.push({ x: cx, sprite: cpSprite, done: false });
     }
 
