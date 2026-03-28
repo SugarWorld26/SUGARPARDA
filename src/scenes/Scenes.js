@@ -20,6 +20,7 @@ class BootScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.load.image('logo', 'assets/logo.png');
+    this.load.image('glucometer', 'assets/glucometer.png');
     this.load.image('btn_jump',  'assets/btn_jump.png');
     this.load.image('btn_apple', 'assets/btn_apple.png');
     this.load.image('btn_slow',  'assets/btn_slow.png');
