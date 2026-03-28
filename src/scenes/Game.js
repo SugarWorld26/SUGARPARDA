@@ -103,9 +103,14 @@ class GameScene extends Phaser.Scene {
   _buildMeta(lvl) {
     const GY = CONFIG.GROUND_Y;
     const mx = this._metaX;
-    const g  = this.add.graphics().setDepth(3);
-    g.fillStyle(0xFFD700, 1).fillRect(mx, GY - 88, 6, 88);
-    g.fillStyle(0xFFC107, 1).fillTriangle(mx + 6, GY - 88, mx + 6, GY - 52, mx + 52, GY - 70);
+    if (this.textures.exists('meta_flag')) {
+      this.add.image(mx + 24, GY - 44, 'meta_flag')
+        .setDepth(3).setOrigin(0.5, 1);
+    } else {
+      const g = this.add.graphics().setDepth(3);
+      g.fillStyle(0xFFD700, 1).fillRect(mx, GY - 88, 6, 88);
+      g.fillStyle(0xFFC107, 1).fillTriangle(mx + 6, GY - 88, mx + 6, GY - 52, mx + 52, GY - 70);
+    }
     this.add.text(mx + 2, GY - 104, 'META', {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FFD700', stroke: '#000', strokeThickness: 2,
