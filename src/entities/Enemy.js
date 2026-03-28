@@ -153,13 +153,13 @@ class Spawner {
     const count = Math.floor(lvl.length / 480 * lvl.density);
     const types = lvl.enemyTypes;
 
-    const sizes = { lollipop:{fw:64,fh:57}, cake:{fw:64,fh:45}, choco:{fw:64,fh:41} };
+    const sizes = { lollipop:{fw:90,fh:110}, cake:{fw:90,fh:88}, choco:{fw:90,fh:75} };
 
     ['lollipop','cake','choco'].forEach(type => {
       if (!this._scene.anims.exists(`${type}_anim`) && this._scene.textures.exists(type)) {
         this._scene.anims.create({
           key: `${type}_anim`,
-          frames: this._scene.anims.generateFrameNumbers(type, { start: 0, end: 1 }),
+          frames: this._scene.anims.generateFrameNumbers(type, { start: 0, end: 3 }),
           frameRate: 5, repeat: -1,
         });
       }
