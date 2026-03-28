@@ -23,10 +23,7 @@ class BootScene extends Phaser.Scene {
     this.load.spritesheet('lollipop', 'assets/lollipop.png', { frameWidth: 64, frameHeight: 57 });
     this.load.spritesheet('cake',     'assets/cake.png',     { frameWidth: 64, frameHeight: 45 });
     this.load.spritesheet('choco',    'assets/choco.png',    { frameWidth: 64, frameHeight: 41 });
-    this.load.spritesheet('sugargirl', 'assets/sugargirl.png', {
-      frameWidth: 80,
-      frameHeight: 102,
-    });
+    this.load.spritesheet('sugargirl', 'assets/sugargirl.png', { frameWidth: 120, frameHeight: 102 });
   }
 
   create() {
