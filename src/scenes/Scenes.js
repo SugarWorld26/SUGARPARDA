@@ -152,7 +152,11 @@ class ResultScene extends Phaser.Scene {
     const { score, secs, tir, rng, bonus, lvlIdx, name } = data;
     const lvl = CONFIG.LEVELS[lvlIdx];
 
-    await DB.save({ name, score, secs, tir, rng, level: lvl.id });
+    // Solo subir al ranking en el último nivel o si no hay siguiente
+    const isLastLevel = lvlIdx + 1 >= CONFIG.LEVELS.length;
+    if (isLastLevel) {
+      await DB.save({ name, score, secs, tir, rng, level: lvl.id });
+    }
 
     // Logo
     if (this.textures.exists('logo')) {
@@ -223,7 +227,7 @@ class ResultScene extends Phaser.Scene {
         fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
         fill: '#000', backgroundColor: '#43A047', padding: { x: 14, y: 9 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.scene.start('Game', { lvl: lvlIdx + 1 }));
+        .on('pointerdown', () => this.scene.start('Game', { lvl: lvlIdx + 1, prevScore: score }));
     }
     this.add.text(hasNext ? W * 0.72 : W/2, H * 0.94, '⟵ MENÚ', {
       fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
