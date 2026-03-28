@@ -37,7 +37,7 @@ const CONFIG = {
   INS_SLOW_DPS:    6,
   INS_SLOW_MS:  5000,
   INS_FAST_DROP:  80,
-  INS_FAST_MAX:    3,
+  INS_FAST_MAX:    4,
   INS_FAST_PICKUP: 1,   // dosis que da cada pickup de insulina rápida
   INS_FAST_RECHARGE_MAX: 3, // máximo al recargar
 
