@@ -153,13 +153,23 @@ class Spawner {
     const count = Math.floor(lvl.length / 480 * lvl.density);
     const types = lvl.enemyTypes;
 
-    for (let i = 0; i < count; i++) {
-      const type  = types[i % types.length];
-      const texKey= ensureEnemyTexture(this._scene, type);
-      const tex   = this._scene.textures.get(texKey);
-      const th    = tex.getSourceImage().height;
+    const sizes = { lollipop:{fw:64,fh:57}, cake:{fw:64,fh:45}, choco:{fw:64,fh:41} };
 
-      // Buscar posición sobre suelo sólido Y plano (no cuesta)
+    ['lollipop','cake','choco'].forEach(type => {
+      if (!this._scene.anims.exists(`${type}_anim`) && this._scene.textures.exists(type)) {
+        this._scene.anims.create({
+          key: `${type}_anim`,
+          frames: this._scene.anims.generateFrameNumbers(type, { start: 0, end: 1 }),
+          frameRate: 5, repeat: -1,
+        });
+      }
+    });
+
+    for (let i = 0; i < count; i++) {
+      const type = types[i % types.length];
+      const usePng = this._scene.textures.exists(type);
+      const sz   = sizes[type] || { fw: 56, fh: 56 };
+
       let ex, tries = 0;
       do {
         ex = Phaser.Math.Between(800, lvl.length - 300);
@@ -168,17 +178,33 @@ class Spawner {
       if (!this._ground.isSolidAt(ex) || this._ground.isSlopeAt(ex)) continue;
 
       const surfY = this._ground.getSurfaceY(ex);
-      const ey    = surfY - th / 2 - 2;
-      const e     = this.group.create(ex, ey, texKey);
+
+      let e;
+      if (usePng) {
+        const ey = surfY - sz.fh / 2 - 2;
+        e = this._scene.physics.add.sprite(ex, ey, type, 0);
+        e.play(`${type}_anim`);
+        this.group.add(e);
+        e.body.setImmovable(true);
+        e.body.allowGravity = false;
+        e.body.setSize(sz.fw * 0.65, sz.fh * 0.80);
+      } else {
+        const texKey = ensureEnemyTexture(this._scene, type);
+        const tex    = this._scene.textures.get(texKey);
+        const th     = tex.getSourceImage().height;
+        const ey     = surfY - th / 2 - 2;
+        e = this.group.create(ex, ey, texKey);
+        e.body.setImmovable(true);
+        e.body.setSize(tex.getSourceImage().width * 0.72, th * 0.88);
+      }
+
       e.setDepth(8);
-      e.body.setImmovable(true);
-      e.body.setSize(tex.getSourceImage().width * 0.72, th * 0.88);
-      e.setData('type',    type);
-      e.setData('startX',  ex);
-      e.setData('surfY',   surfY);   // Y de la superficie donde nació
-      e.setData('range',   Phaser.Math.Between(80, 200));
-      e.setData('speed',   lvl.enemySpd + Phaser.Math.Between(-15, 15));
-      e.setData('tick',    Phaser.Math.Between(0, 400));
+      e.setData('type',   type);
+      e.setData('startX', ex);
+      e.setData('surfY',  surfY);
+      e.setData('range',  Phaser.Math.Between(80, 200));
+      e.setData('speed',  lvl.enemySpd + Phaser.Math.Between(-15, 15));
+      e.setData('tick',   Phaser.Math.Between(0, 400));
       e.body.setVelocityX(-lvl.enemySpd);
     }
   }
@@ -190,8 +216,7 @@ class Spawner {
       const rng  = e.getData('range');
       const spd  = e.getData('speed');
       const surfY= e.getData('surfY');
-      const tex  = this._scene.textures.get(e.texture.key);
-      const th   = tex.getSourceImage().height;
+      const th   = e.height || 48;
 
       // Patrulla horizontal — se queda en el rango de su suelo plano de origen
       if (e.x < sx - rng) {
@@ -207,7 +232,7 @@ class Spawner {
       if (tk > 400) tk -= 400;
       e.setData('tick', tk);
       const bob = Math.sin((tk / 400) * Math.PI * 2) * 3;
-      e.y = surfY - th / 2 - 2 + bob;
+      e.y = surfY - th / 2 + bob;
     });
   }
 
