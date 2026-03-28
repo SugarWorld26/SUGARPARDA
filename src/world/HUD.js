@@ -7,21 +7,27 @@ class HUD {
   _build(glucagons, fastLeft, backpack) {
     const W = CONFIG.W, H = CONFIG.H;
 
-    // Glucómetro fondo
-    const bg = this._scene.add.graphics().setScrollFactor(0).setDepth(90);
-    bg.fillStyle(0x000000, 0.65).fillRoundedRect(W/2 - 130, 2, 260, 54, 8);
+    // Glucómetro PNG
+    if (this._scene.textures.exists('glucometer')) {
+      this._scene.add.image(W/2, 48, 'glucometer')
+        .setDisplaySize(260, 90).setScrollFactor(0).setDepth(90).setOrigin(0.5, 1);
+    } else {
+      const bg = this._scene.add.graphics().setScrollFactor(0).setDepth(90);
+      bg.fillStyle(0x000000, 0.65).fillRoundedRect(W/2 - 130, 2, 260, 54, 8);
+    }
 
-    this._valTxt = this._scene.add.text(W/2, 18, '100', {
-      fontSize: '28px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#43A047', stroke: '#000', strokeThickness: 3,
+    // Número glucosa — centrado en la pantalla del glucómetro
+    this._valTxt = this._scene.add.text(W/2 - 28, 20, '100', {
+      fontSize: '26px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#43A047', stroke: '#000', strokeThickness: 2,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(92);
 
-    this._scene.add.text(W/2 + 52, 22, 'mg/dL', {
-      fontSize: '10px', fontFamily: 'monospace', fill: '#666',
+    this._scene.add.text(W/2 + 32, 24, 'mg/dL', {
+      fontSize: '9px', fontFamily: 'monospace', fill: '#888',
     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(92);
 
-    this._stateTxt = this._scene.add.text(W/2, 40, 'EN RANGO', {
-      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#43A047',
+    this._stateTxt = this._scene.add.text(W/2 - 28, 38, 'EN RANGO', {
+      fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#43A047',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(92);
 
     // Barra glucosa
