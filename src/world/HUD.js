@@ -8,30 +8,32 @@ class HUD {
     const W = CONFIG.W, H = CONFIG.H;
 
     // Glucómetro PNG
+    // Glucómetro PNG — centrado arriba
+    const gmY = 95;  // borde inferior del glucómetro
     if (this._scene.textures.exists('glucometer')) {
-      this._scene.add.image(W/2, 48, 'glucometer')
-        .setDisplaySize(260, 90).setScrollFactor(0).setDepth(90).setOrigin(0.5, 1);
+      this._scene.add.image(W/2, gmY, 'glucometer')
+        .setDisplaySize(280, 100).setScrollFactor(0).setDepth(90).setOrigin(0.5, 1);
     } else {
       const bg = this._scene.add.graphics().setScrollFactor(0).setDepth(90);
-      bg.fillStyle(0x000000, 0.65).fillRoundedRect(W/2 - 130, 2, 260, 54, 8);
+      bg.fillStyle(0x000000, 0.65).fillRoundedRect(W/2 - 130, 4, 260, 80, 8);
     }
 
-    // Número glucosa — centrado en la pantalla del glucómetro
-    this._valTxt = this._scene.add.text(W/2 - 28, 20, '100', {
-      fontSize: '26px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#43A047', stroke: '#000', strokeThickness: 2,
+    // Número glucosa — en la pantalla del glucómetro
+    this._valTxt = this._scene.add.text(W/2 - 22, gmY - 68, '100', {
+      fontSize: '34px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#43A047', stroke: '#000', strokeThickness: 3,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(92);
 
-    this._scene.add.text(W/2 + 32, 24, 'mg/dL', {
-      fontSize: '9px', fontFamily: 'monospace', fill: '#888',
+    this._scene.add.text(W/2 + 42, gmY - 60, 'mg/dL', {
+      fontSize: '10px', fontFamily: 'monospace', fill: '#888',
     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(92);
 
-    this._stateTxt = this._scene.add.text(W/2 - 28, 38, 'EN RANGO', {
-      fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#43A047',
+    this._stateTxt = this._scene.add.text(W/2 - 22, gmY - 40, 'EN RANGO', {
+      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#43A047',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(92);
 
     // Barra glucosa
-    const bx = W/2 - 110, by = 48, bw = 220, bh = 5;
+    const bx = W/2 - 110, by = 98, bw = 220, bh = 6;
     const barBg = this._scene.add.graphics().setScrollFactor(0).setDepth(91);
     barBg.fillStyle(0x212121).fillRect(bx, by, bw, bh);
     const rLo  = bx + (CONFIG.RANGE_LO   / CONFIG.GLUCOSE_MAX) * bw;
