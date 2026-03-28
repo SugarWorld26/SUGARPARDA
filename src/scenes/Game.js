@@ -5,7 +5,8 @@ class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
 
   init(data) {
-    this._lvlIdx = (data && data.lvl != null) ? data.lvl : 0;
+    this._lvlIdx   = (data && data.lvl      != null) ? data.lvl      : 0;
+    this._prevScore = (data && data.prevScore != null) ? data.prevScore : 0;
   }
 
   create() {
@@ -321,7 +322,7 @@ class GameScene extends Phaser.Scene {
     if (this._motionHandler) window.removeEventListener('devicemotion', this._motionHandler);
     const bonus = this._score.finish();
     this.scene.start('Result', {
-      score:  this._score.total,
+      score:  this._score.total + this._prevScore,
       secs:   this._score.elapsedSecs,
       tir:    this._score.timeInRange,
       rng:    this._score.rangazoPct,
