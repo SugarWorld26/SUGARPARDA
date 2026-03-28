@@ -20,6 +20,10 @@ class BootScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.load.image('logo', 'assets/logo.png');
+    this.load.image('btn_jump',  'assets/btn_jump.png');
+    this.load.image('btn_apple', 'assets/btn_apple.png');
+    this.load.image('btn_slow',  'assets/btn_slow.png');
+    this.load.image('btn_fast',  'assets/btn_fast.png');
     this.load.spritesheet('cp_off',    'assets/cp_off.png',    { frameWidth: 48, frameHeight: 65 });
     this.load.spritesheet('cp_on',     'assets/cp_on.png',     { frameWidth: 48, frameHeight: 65 });
     this.load.image('meta_flag', 'assets/meta_flag.png');
