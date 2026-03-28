@@ -85,32 +85,17 @@ class GameScene extends Phaser.Scene {
   }
 
   _buildBackground(lvl) {
-    const L  = lvl.length;
-    const GY = CONFIG.GROUND_Y;
-    const g  = this.add.graphics().setScrollFactor(0.15).setDepth(0);
-
-    if (lvl.skyColor === 0x87CEEB) {
-      g.fillStyle(0x90A4AE, 1);
-      for (let bx = 60; bx < L; bx += 220) {
-        const bh = Phaser.Math.Between(70, 180);
-        const bw = Phaser.Math.Between(40, 80);
-        g.fillRect(bx, GY - bh, bw, bh);
-        g.fillStyle(0xFFF9C4, 0.65);
-        for (let wy = GY - bh + 8; wy < GY - 6; wy += 16)
-          for (let wx = bx + 5; wx < bx + bw - 5; wx += 13)
-            g.fillRect(wx, wy, 7, 9);
-        g.fillStyle(0x90A4AE, 1);
-      }
-    } else {
-      const tc = (lvl.skyColor === 0x2E7D32) ? 0x1B5E20
-               : (lvl.skyColor === 0x78909C) ? 0x37474F
-               : (lvl.skyColor === 0xF48FB1) ? 0xAD1457
-               : 0x283593;
-      g.fillStyle(tc, 1);
-      for (let tx = 40; tx < L; tx += 150) {
-        const th = Phaser.Math.Between(40, 90);
-        g.fillTriangle(tx, GY, tx + 22, GY - th, tx + 44, GY);
-        g.fillTriangle(tx + 10, GY, tx + 22, GY - th * 0.65, tx + 34, GY);
+    const bgKey = `bg${lvl.id}`;
+    if (this.textures.exists(bgKey)) {
+      // Repetir el fondo a lo largo del nivel con parallax
+      const W = CONFIG.W, H = CONFIG.H;
+      const L = lvl.length;
+      const reps = Math.ceil(L / W) + 1;
+      for (let i = 0; i < reps; i++) {
+        this.add.image(i * W + W / 2, H / 2, bgKey)
+          .setScrollFactor(0.3)
+          .setDepth(0)
+          .setDisplaySize(W, H);
       }
     }
   }
@@ -136,8 +121,7 @@ class GameScene extends Phaser.Scene {
       let ax, tries = 0;
       do { ax = Phaser.Math.Between(600, lvl.length - 400); tries++; }
       while (!this._ground.isSolidAt(ax) && tries < 20);
-      if (!this.textures.exists('_apple')) this._makeAppleTex();
-      const a = this._apples.create(ax, GY - 52, '_apple');
+      const a = this._apples.create(ax, GY - 40, 'apple');
       a.setDepth(7);
       a.refreshBody();
       this.tweens.add({ targets: a, y: GY - 62, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -172,8 +156,7 @@ class GameScene extends Phaser.Scene {
       fpTries++;
     } while (!this._ground.isSolidAt(fpx) && fpTries < 30);
     if (this._ground.isSolidAt(fpx)) {
-      if (!this.textures.exists('_fastpickup')) this._makeFastPickupTex();
-      const fp = this._fastPickups.create(fpx, GY - 52, '_fastpickup');
+      const fp = this._fastPickups.create(fpx, GY - 40, 'fastpickup');
       fp.setDepth(7);
       fp.refreshBody();
       this.tweens.add({ targets: fp, y: GY - 62, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
