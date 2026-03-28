@@ -23,7 +23,10 @@ class BootScene extends Phaser.Scene {
     this.load.spritesheet('lollipop', 'assets/lollipop.png', { frameWidth: 64, frameHeight: 57 });
     this.load.spritesheet('cake',     'assets/cake.png',     { frameWidth: 64, frameHeight: 45 });
     this.load.spritesheet('choco',    'assets/choco.png',    { frameWidth: 64, frameHeight: 41 });
-    this.load.spritesheet('sugargirl', 'assets/sugargirl.png', { frameWidth: 120, frameHeight: 102 });
+    this.load.spritesheet('sugargirl', 'assets/sugargirl.png', {
+      frameWidth: 80,
+      frameHeight: 101,
+    });
   }
 
   create() {
@@ -31,13 +34,13 @@ class BootScene extends Phaser.Scene {
     if (this.textures.exists('sugargirl')) {
       this.anims.create({
         key: 'run',
-        frames: this.anims.generateFrameNumbers('sugargirl', { start: 0, end: 3 }),
+        frames: this.anims.generateFrameNumbers('sugargirl', { start: 0, end: 2 }),
         frameRate: 10,
         repeat: -1,
       });
       this.anims.create({
         key: 'jump',
-        frames: this.anims.generateFrameNumbers('sugargirl', { start: 4, end: 4 }),
+        frames: this.anims.generateFrameNumbers('sugargirl', { start: 3, end: 3 }),
         frameRate: 1,
         repeat: 0,
       });
