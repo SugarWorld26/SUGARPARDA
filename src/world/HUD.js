@@ -128,28 +128,54 @@ class HUD {
 
   _buildButtons(fastLeft, backpack) {
     const W = CONFIG.W, H = CONFIG.H;
+    const sc = this._scene;
+    const SZ = 72;
 
-    this._jumpBtn = this._makeBtn(52, H - 52, 38, 0x1565C0, 0x4FC3F7, '▲');
+    const makeImgBtn = (key, cx, cy, size, cbName) => {
+      if (!sc.textures.exists(key)) return null;
+      const img = sc.add.image(cx, cy, key).setDisplaySize(size, size)
+        .setScrollFactor(0).setDepth(100).setInteractive();
+      img.on('pointerdown', () => { img.setAlpha(0.7); if (this[cbName]) this[cbName](); });
+      img.on('pointerup',   () => img.setAlpha(1));
+      img.on('pointerout',  () => img.setAlpha(1));
+      return img;
+    };
+
+    // Saltar — abajo izquierda
     this._jumpCb  = null;
-    this._jumpBtn.on('pointerdown', () => { if (this._jumpCb) this._jumpCb(); });
+    this._jumpBtn = makeImgBtn('btn_jump', 52, H - 52, SZ, '_jumpCb')
+                 || this._makeBtn(52, H - 52, 38, 0x1565C0, 0x4FC3F7, '▲');
+    if (!sc.textures.exists('btn_jump'))
+      this._jumpBtn.on('pointerdown', () => { if (this._jumpCb) this._jumpCb(); });
 
-    this._appleBtn = this._makeBtn(52, H - 112, 24, 0x388E3C, 0xA5D6A7, '🍎');
-    this._appleLbl = this._scene.add.text(52, H - 136, `x${backpack}`, {
-      fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#A5D6A7',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
+    // Manzana — encima del salto
     this._appleCb  = null;
-    this._appleBtn.on('pointerdown', () => { if (this._appleCb) this._appleCb(); });
-
-    this._slowBtn = this._makeBtn(W - 96, H - 52, 38, 0x1B5E20, 0x43A047, '💉\nLENTA');
-    this._slowCb  = null;
-    this._slowBtn.on('pointerdown', () => { if (this._slowCb) this._slowCb(); });
-
-    this._fastBtn = this._makeBtn(W - 40, H - 40, 26, 0xBF360C, 0xFF6F00, '⚡');
-    this._fastLbl = this._scene.add.text(W - 40, H - 21, `x${fastLeft}`, {
-      fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFE0B2',
+    this._appleBtn = makeImgBtn('btn_apple', 52, H - 134, SZ * 0.75, '_appleCb')
+                  || this._makeBtn(52, H - 112, 24, 0x388E3C, 0xA5D6A7, '🍎');
+    if (!sc.textures.exists('btn_apple'))
+      this._appleBtn.on('pointerdown', () => { if (this._appleCb) this._appleCb(); });
+    this._appleLbl = sc.add.text(52, H - 170, `x${backpack}`, {
+      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#A5D6A7', stroke: '#000', strokeThickness: 2,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
+
+    // Insulina lenta — abajo derecha
+    this._slowCb  = null;
+    this._slowBtn = makeImgBtn('btn_slow', W - 88, H - 52, SZ, '_slowCb')
+                 || this._makeBtn(W - 96, H - 52, 38, 0x1B5E20, 0x43A047, '💉\nLENTA');
+    if (!sc.textures.exists('btn_slow'))
+      this._slowBtn.on('pointerdown', () => { if (this._slowCb) this._slowCb(); });
+
+    // Insulina rápida — encima de lenta
     this._fastCb  = null;
-    this._fastBtn.on('pointerdown', () => { if (this._fastCb) this._fastCb(); });
+    this._fastBtn = makeImgBtn('btn_fast', W - 88, H - 134, SZ * 0.75, '_fastCb')
+                 || this._makeBtn(W - 40, H - 40, 26, 0xBF360C, 0xFF6F00, '⚡');
+    if (!sc.textures.exists('btn_fast'))
+      this._fastBtn.on('pointerdown', () => { if (this._fastCb) this._fastCb(); });
+    this._fastLbl = sc.add.text(W - 88, H - 170, `x${fastLeft}`, {
+      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#FFE0B2', stroke: '#000', strokeThickness: 2,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
   }
 
   _makeBtn(cx, cy, r, fill, stroke, label) {
