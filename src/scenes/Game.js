@@ -349,10 +349,10 @@ class GameScene extends Phaser.Scene {
     }
 
     // Caída en agujero = fin de partida inmediato
-    const overHole = !this._ground.isSolidAt(this._player.x) &&
-                     this._player.sprite.body.blocked.down === false &&
-                     this._player.y > CONFIG.GROUND_Y - 480;
-    if (overHole || this._player.y > CONFIG.H + 40) {
+    // Agujero: solo cuando ha caído físicamente por debajo del suelo
+    const belowGround = this._player.y > CONFIG.GROUND_Y + 80;
+    const offScreen   = this._player.y > CONFIG.H + 40;
+    if (belowGround || offScreen) {
       this._triggerHole();
       return;
     }
