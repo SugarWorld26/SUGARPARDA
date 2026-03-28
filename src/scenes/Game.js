@@ -104,7 +104,7 @@ class GameScene extends Phaser.Scene {
     const GY = CONFIG.GROUND_Y;
     const mx = this._metaX;
     if (this.textures.exists('meta_flag')) {
-      this.add.image(mx + 24, GY - 44, 'meta_flag')
+      this.add.image(mx + 24, GY, 'meta_flag')
         .setDepth(3).setOrigin(0.5, 1);
     } else {
       const g = this.add.graphics().setDepth(3);
@@ -148,8 +148,9 @@ class GameScene extends Phaser.Scene {
     const sp = lvl.length / (lvl.checkpoints + 1);
     for (let i = 1; i <= lvl.checkpoints; i++) {
       const cx = Math.round(sp * i);
-      if (!this.textures.exists('_cp')) this._makeCpTex();
-      const cpSprite = this.add.image(cx, GY - 28, '_cp').setDepth(6);
+      const cpTex = this.textures.exists('cp_off') ? 'cp_off' : '_cp';
+      if (cpTex === '_cp' && !this.textures.exists('_cp')) this._makeCpTex();
+      const cpSprite = this.add.image(cx, GY - 32, cpTex, 0).setDepth(6).setOrigin(0.5, 1);
       this._cpData.push({ x: cx, sprite: cpSprite, done: false });
     }
 
@@ -410,8 +411,9 @@ class GameScene extends Phaser.Scene {
       for (const cp of this._cpData) {
         if (!cp.done && this._player.x >= cp.x) {
           cp.done = true;
-          if (!this.textures.exists('_cp_done')) this._makeCpDoneTex();
-          cp.sprite.setTexture('_cp_done');
+          const doneTex = this.textures.exists('cp_on') ? 'cp_on' : '_cp_done';
+          if (doneTex === '_cp_done' && !this.textures.exists('_cp_done')) this._makeCpDoneTex();
+          cp.sprite.setTexture(doneTex, 0);
           const { pts } = this._score.checkpoint(this._glucose.v);
           this._float(this._player.x, this._player.y - 60, `+${pts} pts`, '#FFC107');
         }
