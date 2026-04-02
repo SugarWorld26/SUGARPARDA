@@ -378,30 +378,41 @@ class GameScene extends Phaser.Scene {
     if (onSlope) {
       const sprite  = this._player.sprite;
       const surfY   = this._ground.getSurfaceY(this._player.x);
-      const targetY = surfY - 48; // 22 = distancia sprite.y al suelo en llano
+      const targetY = surfY - 48;
 
       if (this._slopeJump) {
-        // Saltando: física normal hasta bajar a la superficie
-        if (sprite.body.velocity.y >= 0 && sprite.y >= targetY - 2) {
+        // En salto sobre rampa: física libre, sin snap
+        sprite.body.allowGravity = true;
+        // Aterriza cuando baja y está cerca del suelo
+        if (sprite.body.velocity.y >= 0 && sprite.y >= targetY - 4) {
           this._slopeJump = false;
         }
       }
 
       if (!this._slopeJump) {
-        // Pegar al suelo: sin gravedad, Y exacta cada frame
+        // En suelo de rampa: pegar Y exacta
         sprite.body.allowGravity = false;
         sprite.body.setVelocityY(0);
         sprite.y = targetY;
       }
       this._wasOnSlope = true;
+
     } else {
-      this._player.sprite.body.allowGravity = true;
-      if (this._wasOnSlope) {
-        // Acaba de salir de la rampa — snap al suelo plano para no flotar
-        this._player.sprite.body.setVelocityY(0);
+      // Fuera de rampa
+      sprite_ref: {
+        const sprite = this._player.sprite;
+        sprite.body.allowGravity = true;
+
+        if (this._wasOnSlope && !this._slopeJump) {
+          // Salió de la rampa andando (no saltando) — suavizar transición
+          sprite.body.setVelocityY(0);
+        }
+        // Solo cancelar slopeJump cuando toca suelo plano
+        if (sprite.body.blocked.down) {
+          this._slopeJump = false;
+        }
+        this._wasOnSlope = false;
       }
-      this._slopeJump  = false;
-      this._wasOnSlope = false;
     }
     // ──────────────────────────────────────────────────────────────
 
