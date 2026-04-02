@@ -1,10 +1,9 @@
 class Score {
-  constructor(refSecs) {
-    this.total    = 0;
-    this._cps     = [];
-    this._t0      = performance.now();
-    this._t1      = null;
-    this._refSecs = refSecs || CONFIG.SPEED_REF_S;
+  constructor() {
+    this.total = 0;
+    this._cps  = [];
+    this._t0   = performance.now();
+    this._t1   = null;
   }
 
   checkpoint(glucoseValue) {
@@ -18,14 +17,8 @@ class Score {
   }
 
   finish() {
-    this._t1       = performance.now();
-    const secs     = this.elapsedSecs;
-    // Bonus solo si llegas ANTES del tiempo de referencia (sprintando)
-    const bonus    = secs >= this._refSecs ? 0 : Math.round(
-      CONFIG.SPEED_BONUS * (this._refSecs - secs) / this._refSecs
-    );
-    this.total += bonus;
-    return bonus;
+    this._t1 = performance.now();
+    return 0;
   }
 
   get elapsedSecs() {
