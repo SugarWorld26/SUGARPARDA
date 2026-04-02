@@ -5,8 +5,9 @@ class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
 
   init(data) {
-    this._lvlIdx   = (data && data.lvl      != null) ? data.lvl      : 0;
-    this._prevScore = (data && data.prevScore != null) ? data.prevScore : 0;
+    this._lvlIdx    = (data && data.lvl       != null) ? data.lvl       : 0;
+    this._prevScore = (data && data.prevScore  != null) ? data.prevScore  : 0;
+    this._prevFast  = (data && data.prevFast   != null) ? data.prevFast   : CONFIG.INS_FAST_MAX;
   }
 
   create() {
@@ -16,7 +17,7 @@ class GameScene extends Phaser.Scene {
     this._fastTimer   = 0;
     this._dead        = false;
     this._done        = false;
-    this._fastLeft    = CONFIG.INS_FAST_MAX;
+    this._fastLeft    = this._prevFast;
     this._slopeJump   = false;  // true mientras salta en rampa
     this._wasOnSlope  = false;  // para detectar entrada en rampa
 
@@ -298,10 +299,10 @@ class GameScene extends Phaser.Scene {
         btn.destroy();
       });
     } else {
-      this.add.text(W/2, H*0.70, 'Sin glucagón — fin del nivel', {
+      this.add.text(W/2, H*0.70, 'Sin glucagón — fin del juego', {
         fontSize: '15px', fontFamily: 'monospace', fill: '#FF5252',
       }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
-      this.time.delayedCall(2500, () => this._finish(true));
+      this.time.delayedCall(2500, () => this.scene.start('Menu'));
     }
   }
 
