@@ -260,66 +260,66 @@ class ResultScene extends Phaser.Scene {
       }).setOrigin(0.5);
     });
 
+    // Botones — ANTES del ranking para que no queden tapados
+    const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
+    if (hasNext) {
+      this.add.text(W * 0.30, H * 0.76, '▶ SIGUIENTE', {
+        fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 14, y: 9 },
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(20)
+        .on('pointerdown', () => this.scene.start('Game', { lvl: lvlIdx + 1, prevScore: score, prevFast: data.prevFast }));
+    }
+    this.add.text(hasNext ? W * 0.72 : W/2, H * 0.76, '⟵ MENÚ', {
+      fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FFC107', padding: { x: 14, y: 9 },
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(20)
+      .on('pointerdown', () => this.scene.start('Menu'));
+
     // Posición del jugador
     const myPos = await DB.getPosition(name, score);
     if (myPos) {
       const posColor = myPos <= 10 ? '#FFD700' : myPos <= 50 ? '#FF69B4' : '#888';
-      this.add.text(W/2, H * 0.76, `Tu posición: #${myPos}`, {
-        fontSize: '14px', fontFamily: 'monospace', fontStyle: 'bold', fill: posColor,
+      this.add.text(W/2, H * 0.86, `Tu posición en el ranking: #${myPos}`, {
+        fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: posColor,
         stroke: '#000', strokeThickness: 2,
       }).setOrigin(0.5);
     }
 
-    // Ranking scrolleable
-    this.add.text(W/2, H * 0.81, '🏆 RANKING', {
+    // Ranking con cámara secundaria
+    this.add.text(W/2, H * 0.91, '🏆 RANKING GLOBAL', {
       fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
 
+    const rankY0 = Math.round(H * 0.96);
+    const rankH  = Math.round(H * 0.3);
+    const lineH  = 18;
+
+    const rankCam = this.cameras.add(0, rankY0 - rankH, W, rankH);
+    rankCam.setBackgroundColor('rgba(0,0,0,0)');
+    rankCam.scrollY = rankY0 - rankH;
+
     const rows = await DB.top(100);
-    const rankY0 = H * 0.86;
-    const rankH  = H * 0.07;
-    const lineH  = 19;
     const rankContainer = this.add.container(0, 0);
     let scrollY = 0;
 
     rows.forEach((r, i) => {
       const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
       const isMe  = r.player_name === name;
-      const t = this.add.text(W/2, rankY0 + i * lineH,
+      rankContainer.add(this.add.text(W/2, rankY0 + i * lineH,
         `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
-        {
-          fontSize: '11px', fontFamily: 'monospace',
+        { fontSize: '11px', fontFamily: 'monospace',
           fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#666',
-          fontStyle: isMe ? 'bold' : 'normal',
-        }
-      ).setOrigin(0.5);
-      rankContainer.add(t);
+          fontStyle: isMe ? 'bold' : 'normal' }
+      ).setOrigin(0.5));
     });
+
+    rankContainer.each(obj => { obj.cameraFilter = this.cameras.main.id; });
 
     const maxScroll = Math.max(0, rows.length * lineH - rankH);
     this.input.on('pointermove', (p) => {
       if (!p.isDown) return;
       scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.4, 0, maxScroll);
-      rankContainer.y = -scrollY;
+      rankCam.scrollY = (rankY0 - rankH) + scrollY;
     });
-    // Sin máscara blanca — scroll con fondos opacos
-    this.add.graphics().setDepth(10)
-      .fillStyle(0x0a1628, 1).fillRect(0, 0, W, rankY0 - 2)
-      .fillStyle(0x0a1628, 1).fillRect(0, H - 8, W, 8);
-
-    // Botones
-    const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
-    if (hasNext) {
-      this.add.text(W * 0.30, H * 0.94, '▶ SIGUIENTE', {
-        fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
-        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 14, y: 9 },
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.scene.start('Game', { lvl: lvlIdx + 1, prevScore: score, prevFast: data.prevFast }));
-    }
-    this.add.text(hasNext ? W * 0.72 : W/2, H * 0.94, '⟵ MENÚ', {
-      fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#000', backgroundColor: '#FFC107', padding: { x: 14, y: 9 },
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.scene.start('Menu'));
   }
 }
