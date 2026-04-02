@@ -13,7 +13,7 @@ class BootScene extends Phaser.Scene {
     barBg.fillStyle(0x1a2a3a).fillRoundedRect(W/2 - 160, H/2 - 14, 320, 28, 6);
     const bar = this.add.graphics();
     this.load.on('progress', v => {
-      bar.clear().fillStyle(0x43A047).fillRoundedRect(W/2 - 158, H/2 - 12, 316 * v, 24, 5);
+      bar.clear().fillStyle(0xFF69B4).fillRoundedRect(W/2 - 158, H/2 - 12, 316 * v, 24, 5);
     });
     this.add.text(W/2, H/2 - 40, 'Cargando...', {
       fontSize: '14px', fontFamily: 'monospace', fill: '#546E7A',
@@ -87,7 +87,7 @@ class MenuScene extends Phaser.Scene {
 
     // Separador
     this.add.graphics()
-      .lineStyle(1, 0x43A047, 0.2)
+      .lineStyle(1, 0xFF69B4, 0.2)
       .lineBetween(W * 0.1, H * 0.33, W * 0.9, H * 0.33);
 
     const name = window.PLAYER_NAME || '?';
@@ -98,10 +98,10 @@ class MenuScene extends Phaser.Scene {
     // Botón JUGAR
     const btn = this.add.text(W/2, H * 0.52, '▶  JUGAR', {
       fontSize: '22px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#000', backgroundColor: '#43A047', padding: { x: 28, y: 12 },
+      fill: '#000', backgroundColor: '#FF69B4', padding: { x: 28, y: 12 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    btn.on('pointerover',  () => btn.setStyle({ backgroundColor: '#66BB6A' }));
-    btn.on('pointerout',   () => btn.setStyle({ backgroundColor: '#43A047' }));
+    btn.on('pointerover',  () => btn.setStyle({ backgroundColor: '#F48FB1' }));
+    btn.on('pointerout',   () => btn.setStyle({ backgroundColor: '#FF69B4' }));
     btn.on('pointerdown',  () => this.scene.start('Game', { lvl: 0 }));
 
     // Cambiar nombre
@@ -114,30 +114,56 @@ class MenuScene extends Phaser.Scene {
         location.reload();
       });
 
-    // Ranking
+    // Ranking scrolleable top 100
     this.add.text(W/2, H * 0.71, '🏆 RANKING GLOBAL', {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
 
-    const rows = await DB.top(6);
+    const rows = await DB.top(100);
+    const rankY0 = H * 0.76;
+    const rankH  = H * 0.22;
+    const lineH  = 20;
+
+    // Zona de clip para scroll
+    const rankZone = this.add.graphics();
+    rankZone.fillStyle(0x000000, 0).fillRect(W*0.05, rankY0, W*0.9, rankH);
+
+    const rankContainer = this.add.container(0, 0);
+    let scrollY = 0;
+
     if (!rows.length) {
-      this.add.text(W/2, H * 0.80, '¡Sé el primero!', {
+      const t = this.add.text(W/2, rankY0 + 10, '¡Sé el primero!', {
         fontSize: '12px', fontFamily: 'monospace', fill: '#444',
       }).setOrigin(0.5);
+      rankContainer.add(t);
     } else {
       rows.forEach((r, i) => {
         const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
         const isMe  = r.player_name === name;
-        this.add.text(W/2, H * 0.78 + i * 22,
+        const t = this.add.text(W/2, rankY0 + i * lineH,
           `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
           {
             fontSize: '12px', fontFamily: 'monospace',
-            fill: isMe ? '#43A047' : i < 3 ? '#FFC107' : '#666',
+            fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#666',
             fontStyle: isMe ? 'bold' : 'normal',
           }
         ).setOrigin(0.5);
+        rankContainer.add(t);
       });
     }
+
+    // Scroll con drag
+    const maxScroll = Math.max(0, rows.length * lineH - rankH);
+    this.input.on('pointermove', (p) => {
+      if (!p.isDown) return;
+      scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.4, 0, maxScroll);
+      rankContainer.y = -scrollY;
+    });
+
+    // Máscara para recortar
+    const mask = this.add.graphics();
+    mask.fillStyle(0xffffff).fillRect(W*0.05, rankY0, W*0.9, rankH);
+    rankContainer.setMask(new Phaser.Display.Masks.GeometryMask(this, mask));
   }
 }
 
@@ -176,7 +202,7 @@ class ResultScene extends Phaser.Scene {
     // Puntuación
     this.add.text(W/2, H * 0.41, String(score), {
       fontSize: '46px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#43A047', stroke: '#1B5E20', strokeThickness: 4,
+      fill: '#FF69B4', stroke: '#880E4F', strokeThickness: 4,
     }).setOrigin(0.5);
     this.add.text(W/2, H * 0.51, 'PUNTOS', {
       fontSize: '11px', fontFamily: 'monospace', fill: '#444',
@@ -184,7 +210,7 @@ class ResultScene extends Phaser.Scene {
 
     // Stats
     const stats = [
-      { label: 'Tiempo en rango', value: `${tir}%`, color: tir >= 70 ? '#43A047' : '#FFC107' },
+      { label: 'Tiempo en rango', value: `${tir}%`, color: tir >= 70 ? '#FF69B4' : '#FFC107' },
       { label: '★ RANGAZO',       value: `${rng}%`, color: rng >= 50 ? '#FFD700' : '#888' },
       { label: 'Tiempo',          value: `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`, color: '#fff' },
     ];
@@ -202,30 +228,58 @@ class ResultScene extends Phaser.Scene {
       }).setOrigin(0.5);
     });
 
-    // Ranking
-    this.add.text(W/2, H * 0.78, '🏆 RANKING', {
+    // Posición del jugador
+    const myPos = await DB.getPosition(name, score);
+    if (myPos) {
+      const posColor = myPos <= 10 ? '#FFD700' : myPos <= 50 ? '#FF69B4' : '#888';
+      this.add.text(W/2, H * 0.76, `Tu posición: #${myPos}`, {
+        fontSize: '14px', fontFamily: 'monospace', fontStyle: 'bold', fill: posColor,
+        stroke: '#000', strokeThickness: 2,
+      }).setOrigin(0.5);
+    }
+
+    // Ranking scrolleable
+    this.add.text(W/2, H * 0.81, '🏆 RANKING', {
       fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
-    const rows = await DB.top(5);
+
+    const rows = await DB.top(100);
+    const rankY0 = H * 0.86;
+    const rankH  = H * 0.07;
+    const lineH  = 19;
+    const rankContainer = this.add.container(0, 0);
+    let scrollY = 0;
+
     rows.forEach((r, i) => {
       const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
       const isMe  = r.player_name === name;
-      this.add.text(W/2, H * 0.84 + i * 21,
+      const t = this.add.text(W/2, rankY0 + i * lineH,
         `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
         {
-          fontSize: '12px', fontFamily: 'monospace',
-          fill: isMe ? '#43A047' : i < 3 ? '#FFC107' : '#666',
+          fontSize: '11px', fontFamily: 'monospace',
+          fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#666',
           fontStyle: isMe ? 'bold' : 'normal',
         }
       ).setOrigin(0.5);
+      rankContainer.add(t);
     });
+
+    const maxScroll = Math.max(0, rows.length * lineH - rankH);
+    this.input.on('pointermove', (p) => {
+      if (!p.isDown) return;
+      scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.4, 0, maxScroll);
+      rankContainer.y = -scrollY;
+    });
+    const mask = this.add.graphics();
+    mask.fillStyle(0xffffff).fillRect(W*0.05, rankY0, W*0.9, rankH);
+    rankContainer.setMask(new Phaser.Display.Masks.GeometryMask(this, mask));
 
     // Botones
     const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
     if (hasNext) {
       this.add.text(W * 0.30, H * 0.94, '▶ SIGUIENTE', {
         fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
-        fill: '#000', backgroundColor: '#43A047', padding: { x: 14, y: 9 },
+        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 14, y: 9 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', { lvl: lvlIdx + 1, prevScore: score, prevFast: data.prevFast }));
     }
