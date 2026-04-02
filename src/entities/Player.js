@@ -9,7 +9,7 @@ class Player {
     // sprite.y (centro) = GROUND_Y - (90/2 + 8 - 104/2) = GROUND_Y - 1
     // => startY en Game.js = GROUND_Y - 1
     this.sprite.body.setSize(40, 94);
-    this.sprite.body.setOffset(20, 5);
+    this.sprite.body.setOffset(35, 5);
 
     this.isSlowed  = false;
     this._slowTimer= 0;
@@ -56,20 +56,9 @@ class Player {
   }
 
   applyGlucoseVFX(state, time) {
-    switch (state) {
-      case 'rangazo':
-        this.sprite.setTint(0xFFD700);
-        this.sprite.setAngle(0);
-        break;
-      case 'low':
-      case 'hypo':
-        this.sprite.setTint(0xBBDEFB);
-        this.sprite.setAngle(Math.sin(time / 80) * 5);
-        break;
-      default:
-        this.sprite.clearTint();
-        this.sprite.setAngle(0);
-    }
+    // Sin cambio de color — el personaje siempre tiene su color normal
+    this.sprite.clearTint();
+    this.sprite.setAngle(0);
   }
 
   get x() { return this.sprite.x; }
