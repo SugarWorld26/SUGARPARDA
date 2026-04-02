@@ -228,7 +228,7 @@ class ResultScene extends Phaser.Scene {
 
     // Título nivel grande
     this.add.text(W/2, H*0.08, `NIVEL ${lvl.id}`, {
-      fontSize: '18px', fontFamily: 'monospace', fill: '#888',
+      fontSize: '18px', fontFamily: 'monospace', fill: '#ffffff',
     }).setOrigin(0.5);
     this.add.text(W/2, H*0.15, lvl.name.toUpperCase(), {
       fontSize: '28px', fontFamily: 'monospace', fontStyle: 'bold',
@@ -239,7 +239,7 @@ class ResultScene extends Phaser.Scene {
     const nextLvl = CONFIG.LEVELS[lvlIdx + 1];
     if (nextLvl) {
       this.add.text(W/2, H*0.23, `PRÓXIMO: ${nextLvl.name.toUpperCase()}`, {
-        fontSize: '13px', fontFamily: 'monospace', fill: '#FFC107',
+        fontSize: '17px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
       }).setOrigin(0.5);
     }
 
@@ -277,7 +277,7 @@ class ResultScene extends Phaser.Scene {
         .strokeRoundedRect(x - bw/2, y - bh/2, bw, bh, 8);
       // Label
       this.add.text(x, y - bh*0.22, s.label, {
-        fontSize: '10px', fontFamily: 'monospace', fill: '#666',
+        fontSize: '10px', fontFamily: 'monospace', fill: '#ffffff',
       }).setOrigin(0.5);
       // Valor grande
       this.add.text(x, y + bh*0.15, s.value, {
@@ -289,7 +289,7 @@ class ResultScene extends Phaser.Scene {
     // Posición del jugador
     const myPos = await DB.getPosition(name, score);
     if (myPos) {
-      const posColor = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : myPos <= 50 ? '#aaa' : '#666';
+      const posColor = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : myPos <= 50 ? '#ffffff' : '#ffffff';
       const posText  = myPos <= 3 ? `🏆 #${myPos} DEL RANKING` : `Tu posición: #${myPos}`;
       this.add.text(W/2, H*0.72, posText, {
         fontSize: myPos <= 3 ? '20px' : '15px',
@@ -306,12 +306,14 @@ class ResultScene extends Phaser.Scene {
 
     if (hasNext) {
       const bx = W*0.10;
-      this.add.graphics().setDepth(4)
-        .fillStyle(0xFF69B4, 1).fillRoundedRect(bx, btnY - btnH/2, btnW, btnH, 12)
-        .lineStyle(2, 0xffffff, 0.4).strokeRoundedRect(bx, btnY - btnH/2, btnW, btnH, 12);
+      // Usar zona invisible interactiva sobre el botón
+      this.add.graphics().setDepth(6)
+        .fillStyle(0xFF69B4, 1).fillRoundedRect(bx, btnY-btnH/2, btnW, btnH, 12)
+        .lineStyle(2, 0xffffff, 0.5).strokeRoundedRect(bx, btnY-btnH/2, btnW, btnH, 12);
       this.add.text(bx + btnW/2, btnY, '▶  SIGUIENTE', {
         fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
-      }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true })
+      }).setOrigin(0.5).setDepth(7)
+        .setInteractive(new Phaser.Geom.Rectangle(-btnW/2, -btnH/2, btnW, btnH), Phaser.Geom.Rectangle.Contains)
         .on('pointerdown', () => this.scene.start('Game', {
           lvl: lvlIdx + 1, prevScore: score, prevFast: data.prevFast
         }));
@@ -320,12 +322,13 @@ class ResultScene extends Phaser.Scene {
     // Botón menú
     const mbx = hasNext ? W*0.54 : W*0.25;
     const mbw = hasNext ? W*0.36 : W*0.5;
-    this.add.graphics().setDepth(4)
-      .fillStyle(0xFFC107, 1).fillRoundedRect(mbx, btnY - btnH/2, mbw, btnH, 12)
-      .lineStyle(2, 0xffffff, 0.4).strokeRoundedRect(mbx, btnY - btnH/2, mbw, btnH, 12);
+    this.add.graphics().setDepth(6)
+      .fillStyle(0xFFC107, 1).fillRoundedRect(mbx, btnY-btnH/2, mbw, btnH, 12)
+      .lineStyle(2, 0xffffff, 0.5).strokeRoundedRect(mbx, btnY-btnH/2, mbw, btnH, 12);
     this.add.text(mbx + mbw/2, btnY, '⟵  MENÚ', {
       fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
-    }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true })
+    }).setOrigin(0.5).setDepth(7)
+      .setInteractive(new Phaser.Geom.Rectangle(-mbw/2, -btnH/2, mbw, btnH), Phaser.Geom.Rectangle.Contains)
       .on('pointerdown', () => this.scene.start('Menu'));
 
     // Mini ranking abajo
