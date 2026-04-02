@@ -33,25 +33,25 @@
     /* ── Pantalla nombre ── */
     #nameWrap {
       position:fixed; inset:0; background:#000000; z-index:9999;
-      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:10px 16px;
     }
-    #nameWrap img  { max-width:min(96vw,640px); max-height:42vh; object-fit:contain; }
+    #nameWrap img  { max-width:min(98vw,760px); max-height:52vh; object-fit:contain; }
     #nameWrap .frase1 { color:#FF69B4; font-family:monospace; font-size:clamp(13px,3.2vw,17px); text-align:center; line-height:1.6; font-weight:bold; }
     #nameWrap .frase2 { color:#78909C; font-family:monospace; font-size:clamp(12px,2.8vw,15px); text-align:center; line-height:1.5; }
     #nameInput {
       background:#0d1f3c; color:#FF69B4; border:2px solid #FF69B4;
       padding:13px 16px; font-size:clamp(13px,3.2vw,16px);
       font-family:monospace; border-radius:10px;
-      width:min(94vw,480px); text-align:center; outline:none; -webkit-appearance:none;
+      width:min(84vw,310px); text-align:center; outline:none; -webkit-appearance:none;
       caret-color:#FF69B4;
     }
-    #nameInput::placeholder { color:#1e3a5f; }
+    #nameInput::placeholder { color:#ffffff; opacity:0.8; }
     #nameErr { color:#EF5350; font-family:monospace; font-size:13px; min-height:16px; }
     #playBtn {
       background:#FF69B4; color:#000; border:none;
       padding:14px 0; font-size:clamp(17px,4.5vw,22px);
       font-family:monospace; font-weight:bold; border-radius:10px;
-      cursor:pointer; width:min(94vw,480px); letter-spacing:1px;
+      cursor:pointer; width:min(84vw,310px); letter-spacing:1px;
       touch-action:manipulation;
     }
     #playBtn:active { background:#C2185B; transform:scale(0.97); }
