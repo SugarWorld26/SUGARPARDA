@@ -184,10 +184,9 @@ class ResultScene extends Phaser.Scene {
 
     // Stats
     const stats = [
-      { label: 'Tiempo en rango', value: `${tir}%`,   color: tir >= 70 ? '#43A047' : '#FFC107' },
-      { label: '★ RANGAZO',       value: `${rng}%`,   color: rng >= 50 ? '#FFD700' : '#888' },
+      { label: 'Tiempo en rango', value: `${tir}%`, color: tir >= 70 ? '#43A047' : '#FFC107' },
+      { label: '★ RANGAZO',       value: `${rng}%`, color: rng >= 50 ? '#FFD700' : '#888' },
       { label: 'Tiempo',          value: `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`, color: '#fff' },
-      { label: 'Bonus velocidad', value: `+${bonus}`, color: '#FF6F00' },
     ];
     stats.forEach((s, i) => {
       const x = i % 2 === 0 ? W * 0.26 : W * 0.74;
@@ -222,7 +221,7 @@ class ResultScene extends Phaser.Scene {
     });
 
     // Botones
-    const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length;
+    const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
     if (hasNext) {
       this.add.text(W * 0.30, H * 0.94, '▶ SIGUIENTE', {
         fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
