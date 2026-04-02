@@ -74,49 +74,47 @@ class MenuScene extends Phaser.Scene {
     const W = CONFIG.W, H = CONFIG.H;
     this.cameras.main.setBackgroundColor('#000000');
 
-    // Fondo negro con destellos rosas
+    // Fondo grid rosa + bordes
     const bg = this.add.graphics();
     bg.fillStyle(0x000000, 1).fillRect(0, 0, W, H);
-    // Líneas decorativas rosas
-    bg.lineStyle(1, 0xFF69B4, 0.15);
+    bg.lineStyle(1, 0xFF69B4, 0.12);
     for (let y = 0; y < H; y += 40) bg.lineBetween(0, y, W, y);
     for (let x = 0; x < W; x += 80) bg.lineBetween(x, 0, x, H);
-    // Esquinas decorativas
-    bg.lineStyle(2, 0xFF69B4, 0.6);
-    bg.strokeRect(8, 8, W - 16, H - 16);
-    bg.lineStyle(1, 0xFF69B4, 0.3);
-    bg.strokeRect(14, 14, W - 28, H - 28);
+    bg.lineStyle(2, 0xFF69B4, 0.6).strokeRect(8, 8, W-16, H-16);
+    bg.lineStyle(1, 0xFF69B4, 0.3).strokeRect(14, 14, W-28, H-28);
+    // Separador vertical
+    bg.lineStyle(1, 0xFF69B4, 0.35).lineBetween(W*0.55, 20, W*0.55, H-20);
 
-    // Logo grande centrado arriba
+    // ── IZQUIERDA: logo + botones ──
+    const logoX = W * 0.27;
+
+    // Efecto neón detrás del logo
+    const neon = this.add.graphics();
+    neon.fillStyle(0xFF69B4, 0.08).fillEllipse(logoX, H*0.22, 280, 120);
+    neon.fillStyle(0xFF69B4, 0.05).fillEllipse(logoX, H*0.22, 360, 170);
+
     if (this.textures.exists('logo')) {
-      const logo = this.add.image(W/2, H * 0.22, 'logo').setOrigin(0.5);
-      logo.setScale(Math.min(400 / logo.width, 160 / logo.height));
+      const logo = this.add.image(logoX, H*0.22, 'logo').setOrigin(0.5);
+      logo.setScale(Math.min(300/logo.width, 120/logo.height));
     }
 
     const name = window.PLAYER_NAME || '?';
-
-    // Saludo con estilo
-    this.add.text(W/2, H * 0.42, `¡Hola, ${name}!`, {
-      fontSize: '22px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#ffffff', stroke: '#FF69B4', strokeThickness: 3,
+    this.add.text(logoX, H*0.42, `¡Hola, ${name}!`, {
+      fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#fff', stroke: '#FF69B4', strokeThickness: 2,
     }).setOrigin(0.5);
 
-    // Botón JUGAR grande y llamativo
-    const btnBg = this.add.graphics();
-    btnBg.fillStyle(0xFF69B4, 1).fillRoundedRect(W/2 - 120, H * 0.50, 240, 44, 10);
-    btnBg.lineStyle(2, 0xffffff, 0.5).strokeRoundedRect(W/2 - 120, H * 0.50, 240, 44, 10);
-    const btn = this.add.text(W/2, H * 0.50 + 22, '▶  JUGAR', {
-      fontSize: '24px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    btn.on('pointerdown', () => {
-      btnBg.clear();
-      btnBg.fillStyle(0xC2185B, 1).fillRoundedRect(W/2 - 120, H * 0.50, 240, 44, 10);
-      this.scene.start('Game', { lvl: 0 });
-    });
+    // Botón JUGAR
+    this.add.graphics()
+      .fillStyle(0xFF69B4, 1).fillRoundedRect(logoX-100, H*0.50, 200, 40, 10);
+    this.add.text(logoX, H*0.50+20, '▶  JUGAR', {
+      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.scene.start('Game', { lvl: 0 }));
 
     // Cambiar nombre
-    this.add.text(W/2, H * 0.62, '✎ Cambiar nombre', {
-      fontSize: '12px', fontFamily: 'monospace', fill: '#888',
+    this.add.text(logoX, H*0.63, '✎ Cambiar nombre', {
+      fontSize: '11px', fontFamily: 'monospace', fill: '#666',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         window.PLAYER_NAME = null;
@@ -124,53 +122,42 @@ class MenuScene extends Phaser.Scene {
         location.reload();
       });
 
-    // Título ranking
-    this.add.graphics()
-      .lineStyle(1, 0xFF69B4, 0.4)
-      .lineBetween(W * 0.05, H * 0.68, W * 0.95, H * 0.68);
-    this.add.text(W/2, H * 0.71, '🏆  RANKING GLOBAL', {
-      fontSize: '14px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
+    // ── DERECHA: ranking ──
+    const rankX = W * 0.77;
+    this.add.text(rankX, H*0.06, '🏆 RANKING', {
+      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
 
-    // Ranking scrolleable sin máscara blanca
     const rows = await DB.top(100);
-    const rankY0 = H * 0.77;
-    const lineH  = 20;
+    const rankY0 = H * 0.14;
+    const lineH  = 18;
     const rankH  = H - rankY0 - 10;
-
-    // Contenedor con scroll simple — sin máscara
     const rankContainer = this.add.container(0, 0);
     let scrollY = 0;
 
     if (!rows.length) {
-      rankContainer.add(this.add.text(W/2, rankY0 + 10, '¡Sé el primero!', {
-        fontSize: '12px', fontFamily: 'monospace', fill: '#666',
+      rankContainer.add(this.add.text(rankX, rankY0+10, '¡Sé el primero!', {
+        fontSize: '11px', fontFamily: 'monospace', fill: '#555',
       }).setOrigin(0.5));
     } else {
       rows.forEach((r, i) => {
-        const medal = ['🥇','🥈','🥉'][i] || `${String(i+1).padStart(2,' ')}.`;
+        const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
         const isMe  = r.player_name === name;
-        rankContainer.add(this.add.text(W/2, rankY0 + i * lineH,
-          `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
-          { fontSize: '12px', fontFamily: 'monospace',
-            fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#888',
+        rankContainer.add(this.add.text(rankX, rankY0 + i * lineH,
+          `${medal} ${r.player_name.substring(0,10).padEnd(10)} ${String(r.score).padStart(5)}`,
+          { fontSize: '11px', fontFamily: 'monospace',
+            fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#777',
             fontStyle: isMe ? 'bold' : 'normal' }
         ).setOrigin(0.5));
       });
     }
 
-
-
-    // Scroll drag
     const maxScroll = Math.max(0, rows.length * lineH - rankH);
     this.input.on('pointermove', (p) => {
       if (!p.isDown) return;
       scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.5, 0, maxScroll);
       rankContainer.y = -scrollY;
     });
-
-    // Camera clip para ranking
-    this.cameras.main.setRoundPixels(true);
   }
 }
 
