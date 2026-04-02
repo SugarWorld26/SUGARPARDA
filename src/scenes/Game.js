@@ -47,6 +47,7 @@ class GameScene extends Phaser.Scene {
 
     this._hud = new HUD(this, this._glucagons, this._fastLeft, this._backpack);
     this._hud.onJump(() => {
+      if (this._slopeJump) return;  // evitar saltos acumulados en cuesta
       const slope  = this._ground.isSlopeAt(this._player.x);
       const jumped = this._player.jump(this._glucose, slope);
       if (jumped && slope) {
@@ -270,18 +271,20 @@ class GameScene extends Phaser.Scene {
     this._flash(0x1565C0, 500);
 
     const W = CONFIG.W, H = CONFIG.H;
-    const ov = this.add.graphics().setScrollFactor(0).setDepth(300);
+    const ov    = this.add.graphics().setScrollFactor(0).setDepth(300);
     ov.fillStyle(0x000820, 0.9).fillRect(0, 0, W, H);
 
-    this.add.text(W/2, H*0.20, '😵', { fontSize: '52px' })
+    const t1 = this.add.text(W/2, H*0.20, '😵', { fontSize: '52px' })
       .setOrigin(0.5).setScrollFactor(0).setDepth(301);
-    this.add.text(W/2, H*0.40, 'HIPOGLUCEMIA', {
+    const t2 = this.add.text(W/2, H*0.40, 'HIPOGLUCEMIA', {
       fontSize: '26px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#4FC3F7', stroke: '#000', strokeThickness: 3,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
-    this.add.text(W/2, H*0.54, `Glucagones: ${this._glucagons}`, {
+    const t3 = this.add.text(W/2, H*0.54, `Glucagones: ${this._glucagons}`, {
       fontSize: '15px', fontFamily: 'monospace', fill: '#fff',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+    const destroyAll = () => { ov.destroy(); t1.destroy(); t2.destroy(); t3.destroy(); };
 
     if (this._glucagons > 0) {
       const btn = this.add.text(W/2, H*0.70, '💉 USAR GLUCAGÓN', {
@@ -292,11 +295,10 @@ class GameScene extends Phaser.Scene {
       btn.on('pointerdown', () => {
         this._glucagons--;
         this._glucose.useGlucagon();
-        // Volver a suelo sólido plano cercano
         const safeX = this._findSafeX(this._player.x);
         this._player.sprite.body.reset(safeX, CONFIG.GROUND_Y - 48);
         this._dead = false;
-        ov.destroy();
+        destroyAll();
         btn.destroy();
       });
     } else {
