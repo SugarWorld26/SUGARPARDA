@@ -265,9 +265,13 @@ class HUD {
         const sx    = cx + Math.cos(angle) * dist;
         const sy    = cy + Math.sin(angle) * dist * 0.4;
         const sz    = 3 + Math.sin(t / 150 + i * 1.3) * 2;
-        const alpha = 0.6 + 0.4 * Math.sin(t / 180 + i);
+        const alpha = 0.5 + 0.5 * Math.abs(Math.sin(t / 180 + i));
         this._rangazoOv.fillStyle(0xFFD700, alpha);
-        this._rangazoOv.fillStar(sx, sy, 4, sz, sz * 0.4, 0);
+        this._rangazoOv.fillCircle(sx, sy, sz);
+        // Cruz de destello
+        this._rangazoOv.fillStyle(0xFFFFFF, alpha * 0.8);
+        this._rangazoOv.fillRect(sx - sz*1.5, sy - 1, sz*3, 2);
+        this._rangazoOv.fillRect(sx - 1, sy - sz*1.5, 2, sz*3);
       }
       // Flash dorado suave en el glucómetro
       const fa = 0.08 + 0.05 * Math.sin(t / 120);
