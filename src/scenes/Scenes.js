@@ -226,23 +226,29 @@ class ResultScene extends Phaser.Scene {
     bg.lineStyle(2, 0xFF69B4, 0.5).strokeRect(8, 8, W-16, H-16);
     bg.lineStyle(1, 0xFF69B4, 0.25).strokeRect(14, 14, W-28, H-28);
 
-    // Logo pequeño
-    if (this.textures.exists('logo')) {
-      const logo = this.add.image(W/2, H*0.07, 'logo').setOrigin(0.5);
-      logo.setScale(Math.min(200/logo.width, 60/logo.height));
-    }
-
-    // Título nivel
-    this.add.text(W/2, H*0.15, `NIVEL ${lvl.id} — ${lvl.name.toUpperCase()}`, {
-      fontSize: '13px', fontFamily: 'monospace', fill: '#888',
+    // Título nivel grande
+    this.add.text(W/2, H*0.08, `NIVEL ${lvl.id}`, {
+      fontSize: '18px', fontFamily: 'monospace', fill: '#888',
+    }).setOrigin(0.5);
+    this.add.text(W/2, H*0.15, lvl.name.toUpperCase(), {
+      fontSize: '28px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#FF69B4', stroke: '#880E4F', strokeThickness: 3,
     }).setOrigin(0.5);
 
+    // Próximo nivel
+    const nextLvl = CONFIG.LEVELS[lvlIdx + 1];
+    if (nextLvl) {
+      this.add.text(W/2, H*0.23, `PRÓXIMO: ${nextLvl.name.toUpperCase()}`, {
+        fontSize: '13px', fontFamily: 'monospace', fill: '#FFC107',
+      }).setOrigin(0.5);
+    }
+
     // Puntuación grande y centrada
-    this.add.text(W/2, H*0.27, String(score), {
+    this.add.text(W/2, H*0.32, String(score), {
       fontSize: '72px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FF69B4', stroke: '#880E4F', strokeThickness: 5,
     }).setOrigin(0.5);
-    this.add.text(W/2, H*0.39, 'PUNTOS', {
+    this.add.text(W/2, H*0.43, 'PUNTOS', {
       fontSize: '14px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FF69B4',
     }).setOrigin(0.5);
@@ -250,7 +256,7 @@ class ResultScene extends Phaser.Scene {
     // Separador
     this.add.graphics()
       .lineStyle(1, 0xFF69B4, 0.4)
-      .lineBetween(W*0.1, H*0.44, W*0.9, H*0.44);
+      .lineBetween(W*0.1, H*0.48, W*0.9, H*0.48);
 
     // Stats — 3 cajas grandes y claras
     const stats = [
@@ -261,7 +267,7 @@ class ResultScene extends Phaser.Scene {
 
     stats.forEach((s, i) => {
       const x = [W*0.22, W*0.5, W*0.78][i];
-      const y = H * 0.55;
+      const y = H * 0.59;
       const bw = W * 0.26, bh = H * 0.14;
       // Caja
       this.add.graphics()
@@ -295,26 +301,31 @@ class ResultScene extends Phaser.Scene {
     // Botones grandes y claros
     const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
     const btnY = H * 0.84;
+    const btnW = hasNext ? W*0.36 : W*0.5;
+    const btnH = 48;
 
     if (hasNext) {
-      // Fondo botón siguiente
-      this.add.graphics()
-        .fillStyle(0xFF69B4, 1).fillRoundedRect(W*0.12, btnY-20, W*0.34, 42, 10);
-      this.add.text(W*0.29, btnY, '▶  SIGUIENTE', {
-        fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5)
+      const bx = W*0.10;
+      this.add.graphics().setDepth(4)
+        .fillStyle(0xFF69B4, 1).fillRoundedRect(bx, btnY - btnH/2, btnW, btnH, 12)
+        .lineStyle(2, 0xffffff, 0.4).strokeRoundedRect(bx, btnY - btnH/2, btnW, btnH, 12);
+      this.add.text(bx + btnW/2, btnY, '▶  SIGUIENTE', {
+        fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
+      }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', {
           lvl: lvlIdx + 1, prevScore: score, prevFast: data.prevFast
         }));
     }
 
     // Botón menú
-    const menuX = hasNext ? W * 0.71 : W * 0.5;
-    this.add.graphics()
-      .fillStyle(0xFFC107, 1).fillRoundedRect(menuX - W*0.17, btnY-20, W*0.34, 42, 10);
-    this.add.text(menuX, btnY, '⟵  MENÚ', {
-      fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5)
+    const mbx = hasNext ? W*0.54 : W*0.25;
+    const mbw = hasNext ? W*0.36 : W*0.5;
+    this.add.graphics().setDepth(4)
+      .fillStyle(0xFFC107, 1).fillRoundedRect(mbx, btnY - btnH/2, mbw, btnH, 12)
+      .lineStyle(2, 0xffffff, 0.4).strokeRoundedRect(mbx, btnY - btnH/2, mbw, btnH, 12);
+    this.add.text(mbx + mbw/2, btnY, '⟵  MENÚ', {
+      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
+    }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Menu'));
 
     // Mini ranking abajo
