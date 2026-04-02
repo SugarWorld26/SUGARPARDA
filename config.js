@@ -66,7 +66,7 @@ const CONFIG = {
   LEVELS: [
     {
       id: 1, name: 'Glucowood',
-      skyColor:    0x2E7D32,
+      skyColor:    0xC2185B,
       groundColor: 0x4E342E,
       groundEdge:  0x7CB342,
       enemyTypes:  ['lollipop'],
