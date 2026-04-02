@@ -49,40 +49,43 @@ class HUD {
     this._barFg = this._scene.add.graphics().setScrollFactor(0).setDepth(92);
     this._bx = bx; this._by = by; this._bw = bw; this._bh = bh;
 
-    // Indicadores izquierda
-    this._fastTxt = this._scene.add.text(8, 4, `⚡ x${fastLeft}`, {
-      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
+    // Indicadores izquierda — más grandes y claros
+    // Fondo semitransparente
+    this._scene.add.graphics().setScrollFactor(0).setDepth(89)
+      .fillStyle(0x000000, 0.55).fillRoundedRect(2, 2, 80, 68, 8);
+
+    this._fastTxt = this._scene.add.text(8, 6, `🖊 x${fastLeft}`, {
+      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FF6F00', stroke: '#000', strokeThickness: 2,
     }).setScrollFactor(0).setDepth(92);
 
-    this._glucTxt = this._scene.add.text(8, 20, `💉 x${glucagons}`, {
-      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#4FC3F7', stroke: '#000', strokeThickness: 2,
+    this._glucTxt = this._scene.add.text(8, 24, `❤️ x${glucagons}`, {
+      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#FF6B6B', stroke: '#000', strokeThickness: 2,
     }).setScrollFactor(0).setDepth(92);
 
-    this._backpackTxt = this._scene.add.text(8, 36, `🎒 x${backpack}`, {
-      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
+    this._backpackTxt = this._scene.add.text(8, 42, `🍎 x${backpack}`, {
+      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#A5D6A7', stroke: '#000', strokeThickness: 2,
     }).setScrollFactor(0).setDepth(92);
 
-    this._fastDosesTxt = this._scene.add.text(8, 52, `⚡ x${fastLeft}`, {
-      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#FF6F00', stroke: '#000', strokeThickness: 2,
-    }).setScrollFactor(0).setDepth(92);
+    this._fastDosesTxt = null;
 
     this._sprintTxt = this._scene.add.text(W - 8, 4, '', {
       fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FFC107', stroke: '#000', strokeThickness: 2,
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(92);
 
-    // Panel insulina activa — solo lenta
+    // Panel insulina activa — más grande y visible
     this._scene.add.graphics().setScrollFactor(0).setDepth(89)
-      .fillStyle(0x000000, 0.60).fillRoundedRect(W - 122, 58, 120, 26, 6);
-    this._scene.add.text(W - 120, 60, 'INSULINA ACTIVA', {
-      fontSize: '8px', fontFamily: 'monospace', fill: '#777',
+      .fillStyle(0x000000, 0.75).fillRoundedRect(W - 148, 58, 145, 38, 8);
+    this._scene.add.text(W - 144, 62, 'INSULINA ACTIVA', {
+      fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#4FC3F7',
+      stroke: '#000', strokeThickness: 2,
     }).setScrollFactor(0).setDepth(90);
-    this._insSlowTxt = this._scene.add.text(W - 120, 72, '💉 LENTA   0s', {
-      fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#555',
+    this._insSlowTxt = this._scene.add.text(W - 144, 78, '0s', {
+      fontSize: '14px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#555',
+      stroke: '#000', strokeThickness: 2,
     }).setScrollFactor(0).setDepth(90);
 
     this._hyperOv   = this._scene.add.graphics().setScrollFactor(0).setDepth(88);
@@ -232,18 +235,16 @@ class HUD {
     const pct = Math.max(0, Math.min(1, v / CONFIG.GLUCOSE_MAX));
     this._barFg.fillRect(this._bx, this._by, this._bw * pct, this._bh);
 
-    this._fastTxt.setText(`⚡ x${fastLeft}`);
-    this._glucTxt.setText(`💉 x${glucagons}`);
-    this._backpackTxt.setText(`🎒 x${backpack}`);
+    this._fastTxt.setText(`🖊 x${fastLeft}`);
+    this._glucTxt.setText(`❤️ x${glucagons}`);
+    this._backpackTxt.setText(`🍎 x${backpack}`);
     this._appleLbl.setText(`x${backpack}`);
     this._fastLbl.setText(`x${fastLeft}`);
     this._sprintTxt.setText(slope ? '⛰ CUESTA' : fast ? '🏃 SPRINT!' : '');
 
     // Panel insulina activa
-    this._insSlowTxt.setText('💉 LENTA   ' + slowSecs + 's')
+    this._insSlowTxt.setText(slowSecs > 0 ? slowSecs + 's' : '—')
       .setStyle({ fill: slowSecs > 0 ? '#43A047' : '#555' });
-    if (this._fastDosesTxt) this._fastDosesTxt.setText('⚡ x' + fastLeft)
-      .setStyle({ fill: fastLeft > 0 ? '#FF6F00' : '#555' });
 
     this._hyperOv.clear();
     if (glucose.isHyper) {
@@ -256,22 +257,25 @@ class HUD {
     if (glucose.state === 'rangazo') {
       const t   = Date.now();
       const W   = CONFIG.W;
-      const cx  = W / 2;
-      const cy  = 50;
+      const cx  = W / 2 - 22;  // centrado en el número
+      const cy  = 45;
       const num = 8;
       for (let i = 0; i < num; i++) {
         const angle = (t / 400 + i / num * Math.PI * 2);
         const dist  = 90 + Math.sin(t / 200 + i) * 15;
         const sx    = cx + Math.cos(angle) * dist;
         const sy    = cy + Math.sin(angle) * dist * 0.4;
-        const sz    = 3 + Math.sin(t / 150 + i * 1.3) * 2;
-        const alpha = 0.5 + 0.5 * Math.abs(Math.sin(t / 180 + i));
+        const sz    = 5 + Math.sin(t / 150 + i * 1.3) * 3;
+        const alpha = 0.7 + 0.3 * Math.abs(Math.sin(t / 180 + i));
         this._rangazoOv.fillStyle(0xFFD700, alpha);
         this._rangazoOv.fillCircle(sx, sy, sz);
-        // Cruz de destello
-        this._rangazoOv.fillStyle(0xFFFFFF, alpha * 0.8);
-        this._rangazoOv.fillRect(sx - sz*1.5, sy - 1, sz*3, 2);
-        this._rangazoOv.fillRect(sx - 1, sy - sz*1.5, 2, sz*3);
+        // Cruz de destello grande
+        this._rangazoOv.fillStyle(0xFFFFFF, alpha);
+        this._rangazoOv.fillRect(sx - sz*2.5, sy - 1.5, sz*5, 3);
+        this._rangazoOv.fillRect(sx - 1.5, sy - sz*2.5, 3, sz*5);
+        // Punto central brillante
+        this._rangazoOv.fillStyle(0xFFFFFF, 1);
+        this._rangazoOv.fillCircle(sx, sy, sz * 0.3);
       }
       // Flash dorado suave en el glucómetro
       const fa = 0.08 + 0.05 * Math.sin(t / 120);
