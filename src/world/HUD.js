@@ -25,7 +25,7 @@ class HUD {
     // Número glucosa — en la pantalla del glucómetro
     this._valTxt = this._scene.add.text(W/2 - 22, gmY - 68, '100', {
       fontSize: '34px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#43A047', stroke: '#fff', strokeThickness: 1,
+      fill: '#FF69B4', stroke: '#fff', strokeThickness: 1,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(92);
 
     this._scene.add.text(W/2 + 42, gmY - 60, 'mg/dL', {
@@ -33,7 +33,7 @@ class HUD {
     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(92);
 
     this._stateTxt = this._scene.add.text(W/2 - 22, gmY - 40, 'EN RANGO', {
-      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#43A047',
+      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FF69B4',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(92);
 
     // Barra glucosa
@@ -44,8 +44,8 @@ class HUD {
     const rWi  = (CONFIG.RANGE_HI - CONFIG.RANGE_LO) / CONFIG.GLUCOSE_MAX * bw;
     const rzLo = bx + (CONFIG.RANGAZO_LO / CONFIG.GLUCOSE_MAX) * bw;
     const rzWi = (CONFIG.RANGAZO_HI - CONFIG.RANGAZO_LO) / CONFIG.GLUCOSE_MAX * bw;
-    barBg.fillStyle(0x43A047, 0.25).fillRect(rLo,  by, rWi,  bh);
-    barBg.fillStyle(0x1B5E20, 0.60).fillRect(rzLo, by, rzWi, bh);
+    barBg.fillStyle(0xFF69B4, 0.25).fillRect(rLo,  by, rWi,  bh);
+    barBg.fillStyle(0x880E4F, 0.60).fillRect(rzLo, by, rzWi, bh);
     this._barFg = this._scene.add.graphics().setScrollFactor(0).setDepth(92);
     this._bx = bx; this._by = by; this._bw = bw; this._bh = bh;
 
@@ -66,7 +66,7 @@ class HUD {
 
     this._backpackTxt = this._scene.add.text(8, 42, `🍎 x${backpack}`, {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#A5D6A7', stroke: '#000', strokeThickness: 2,
+      fill: '#F8BBD9', stroke: '#000', strokeThickness: 2,
     }).setScrollFactor(0).setDepth(92);
 
     this._fastDosesTxt = null;
@@ -168,18 +168,18 @@ class HUD {
     // Manzana — encima del salto
     this._appleCb  = null;
     this._appleBtn = makeImgBtn('btn_apple', 52, H - 134, SZ * 0.75, '_appleCb')
-                  || this._makeBtn(52, H - 112, 24, 0x388E3C, 0xA5D6A7, '🍎');
+                  || this._makeBtn(52, H - 112, 24, 0x388E3C, 0xF8BBD9, '🍎');
     if (!sc.textures.exists('btn_apple'))
       this._appleBtn.on('pointerdown', () => { if (this._appleCb) this._appleCb(); });
     this._appleLbl = sc.add.text(52, H - 170, `x${backpack}`, {
       fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#A5D6A7', stroke: '#000', strokeThickness: 2,
+      fill: '#F8BBD9', stroke: '#000', strokeThickness: 2,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
 
     // Insulina lenta — abajo derecha
     this._slowCb  = null;
     this._slowBtn = makeImgBtn('btn_slow', W - 88, H - 52, SZ, '_slowCb')
-                 || this._makeBtn(W - 96, H - 52, 38, 0x1B5E20, 0x43A047, '💉\nLENTA');
+                 || this._makeBtn(W - 96, H - 52, 38, 0x880E4F, 0xFF69B4, '💉\nLENTA');
     if (!sc.textures.exists('btn_slow'))
       this._slowBtn.on('pointerdown', () => { if (this._slowCb) this._slowCb(); });
 
@@ -244,7 +244,7 @@ class HUD {
 
     // Panel insulina activa
     this._insSlowTxt.setText(slowSecs > 0 ? slowSecs + 's' : '—')
-      .setStyle({ fill: slowSecs > 0 ? '#43A047' : '#555' });
+      .setStyle({ fill: slowSecs > 0 ? '#FF69B4' : '#555' });
 
     this._hyperOv.clear();
     if (glucose.isHyper) {
