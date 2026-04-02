@@ -72,41 +72,51 @@ class MenuScene extends Phaser.Scene {
 
   async create() {
     const W = CONFIG.W, H = CONFIG.H;
-    this.cameras.main.setBackgroundColor('#0a1628');
+    this.cameras.main.setBackgroundColor('#000000');
 
-    // Fondo gradiente
-    this.add.graphics()
-      .fillGradientStyle(0x0a1628, 0x0a1628, 0x0d2040, 0x0d2040, 1)
-      .fillRect(0, 0, W, H);
+    // Fondo negro con destellos rosas
+    const bg = this.add.graphics();
+    bg.fillStyle(0x000000, 1).fillRect(0, 0, W, H);
+    // Líneas decorativas rosas
+    bg.lineStyle(1, 0xFF69B4, 0.15);
+    for (let y = 0; y < H; y += 40) bg.lineBetween(0, y, W, y);
+    for (let x = 0; x < W; x += 80) bg.lineBetween(x, 0, x, H);
+    // Esquinas decorativas
+    bg.lineStyle(2, 0xFF69B4, 0.6);
+    bg.strokeRect(8, 8, W - 16, H - 16);
+    bg.lineStyle(1, 0xFF69B4, 0.3);
+    bg.strokeRect(14, 14, W - 28, H - 28);
 
-    // Logo
+    // Logo grande centrado arriba
     if (this.textures.exists('logo')) {
-      const logo = this.add.image(W/2, H * 0.18, 'logo').setOrigin(0.5);
-      logo.setScale(Math.min(280 / logo.width, 100 / logo.height));
+      const logo = this.add.image(W/2, H * 0.22, 'logo').setOrigin(0.5);
+      logo.setScale(Math.min(400 / logo.width, 160 / logo.height));
     }
 
-    // Separador
-    this.add.graphics()
-      .lineStyle(1, 0xFF69B4, 0.2)
-      .lineBetween(W * 0.1, H * 0.33, W * 0.9, H * 0.33);
-
     const name = window.PLAYER_NAME || '?';
-    this.add.text(W/2, H * 0.39, `¡Hola, ${name}!`, {
-      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#fff',
+
+    // Saludo con estilo
+    this.add.text(W/2, H * 0.42, `¡Hola, ${name}!`, {
+      fontSize: '22px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#ffffff', stroke: '#FF69B4', strokeThickness: 3,
     }).setOrigin(0.5);
 
-    // Botón JUGAR
-    const btn = this.add.text(W/2, H * 0.52, '▶  JUGAR', {
-      fontSize: '22px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#000', backgroundColor: '#FF69B4', padding: { x: 28, y: 12 },
+    // Botón JUGAR grande y llamativo
+    const btnBg = this.add.graphics();
+    btnBg.fillStyle(0xFF69B4, 1).fillRoundedRect(W/2 - 120, H * 0.50, 240, 44, 10);
+    btnBg.lineStyle(2, 0xffffff, 0.5).strokeRoundedRect(W/2 - 120, H * 0.50, 240, 44, 10);
+    const btn = this.add.text(W/2, H * 0.50 + 22, '▶  JUGAR', {
+      fontSize: '24px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    btn.on('pointerover',  () => btn.setStyle({ backgroundColor: '#F48FB1' }));
-    btn.on('pointerout',   () => btn.setStyle({ backgroundColor: '#FF69B4' }));
-    btn.on('pointerdown',  () => this.scene.start('Game', { lvl: 0 }));
+    btn.on('pointerdown', () => {
+      btnBg.clear();
+      btnBg.fillStyle(0xC2185B, 1).fillRoundedRect(W/2 - 120, H * 0.50, 240, 44, 10);
+      this.scene.start('Game', { lvl: 0 });
+    });
 
     // Cambiar nombre
-    this.add.text(W/2, H * 0.63, '✎ Cambiar nombre', {
-      fontSize: '13px', fontFamily: 'monospace', fill: '#546E7A',
+    this.add.text(W/2, H * 0.62, '✎ Cambiar nombre', {
+      fontSize: '12px', fontFamily: 'monospace', fill: '#888',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         window.PLAYER_NAME = null;
@@ -114,56 +124,56 @@ class MenuScene extends Phaser.Scene {
         location.reload();
       });
 
-    // Ranking scrolleable top 100
-    this.add.text(W/2, H * 0.71, '🏆 RANKING GLOBAL', {
-      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
+    // Título ranking
+    this.add.graphics()
+      .lineStyle(1, 0xFF69B4, 0.4)
+      .lineBetween(W * 0.05, H * 0.68, W * 0.95, H * 0.68);
+    this.add.text(W/2, H * 0.71, '🏆  RANKING GLOBAL', {
+      fontSize: '14px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
 
+    // Ranking scrolleable sin máscara blanca
     const rows = await DB.top(100);
-    const rankY0 = H * 0.76;
-    const rankH  = H * 0.22;
+    const rankY0 = H * 0.77;
     const lineH  = 20;
+    const rankH  = H - rankY0 - 10;
 
-    // Zona de clip para scroll
-    const rankZone = this.add.graphics();
-    rankZone.fillStyle(0x000000, 0).fillRect(W*0.05, rankY0, W*0.9, rankH);
-
+    // Contenedor con scroll simple — sin máscara
     const rankContainer = this.add.container(0, 0);
     let scrollY = 0;
 
     if (!rows.length) {
-      const t = this.add.text(W/2, rankY0 + 10, '¡Sé el primero!', {
-        fontSize: '12px', fontFamily: 'monospace', fill: '#444',
-      }).setOrigin(0.5);
-      rankContainer.add(t);
+      rankContainer.add(this.add.text(W/2, rankY0 + 10, '¡Sé el primero!', {
+        fontSize: '12px', fontFamily: 'monospace', fill: '#666',
+      }).setOrigin(0.5));
     } else {
       rows.forEach((r, i) => {
-        const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+        const medal = ['🥇','🥈','🥉'][i] || `${String(i+1).padStart(2,' ')}.`;
         const isMe  = r.player_name === name;
-        const t = this.add.text(W/2, rankY0 + i * lineH,
+        rankContainer.add(this.add.text(W/2, rankY0 + i * lineH,
           `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
-          {
-            fontSize: '12px', fontFamily: 'monospace',
-            fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#666',
-            fontStyle: isMe ? 'bold' : 'normal',
-          }
-        ).setOrigin(0.5);
-        rankContainer.add(t);
+          { fontSize: '12px', fontFamily: 'monospace',
+            fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#888',
+            fontStyle: isMe ? 'bold' : 'normal' }
+        ).setOrigin(0.5));
       });
     }
 
-    // Scroll con drag
+    // Fondo opaco encima y debajo para efecto de scroll limpio
+    this.add.graphics().setDepth(10)
+      .fillStyle(0x000000, 1).fillRect(0, 0, W, rankY0 - 2)
+      .fillStyle(0x000000, 1).fillRect(0, H - 8, W, 8);
+
+    // Scroll drag
     const maxScroll = Math.max(0, rows.length * lineH - rankH);
     this.input.on('pointermove', (p) => {
       if (!p.isDown) return;
-      scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.4, 0, maxScroll);
+      scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.5, 0, maxScroll);
       rankContainer.y = -scrollY;
     });
 
-    // Máscara para recortar
-    const mask = this.add.graphics();
-    mask.fillStyle(0xffffff).fillRect(W*0.05, rankY0, W*0.9, rankH);
-    rankContainer.setMask(new Phaser.Display.Masks.GeometryMask(this, mask));
+    // Camera clip para ranking
+    this.cameras.main.setRoundPixels(true);
   }
 }
 
@@ -270,9 +280,10 @@ class ResultScene extends Phaser.Scene {
       scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.4, 0, maxScroll);
       rankContainer.y = -scrollY;
     });
-    const mask = this.add.graphics();
-    mask.fillStyle(0xffffff).fillRect(W*0.05, rankY0, W*0.9, rankH);
-    rankContainer.setMask(new Phaser.Display.Masks.GeometryMask(this, mask));
+    // Sin máscara blanca — scroll con fondos opacos
+    this.add.graphics().setDepth(10)
+      .fillStyle(0x0a1628, 1).fillRect(0, 0, W, rankY0 - 2)
+      .fillStyle(0x0a1628, 1).fillRect(0, H - 8, W, 8);
 
     // Botones
     const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
