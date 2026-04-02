@@ -218,8 +218,13 @@ class Spawner {
       const surfY= e.getData('surfY');
       const th   = e.height || 48;
 
-      // Patrulla horizontal — se queda en el rango de su suelo plano de origen
-      if (e.x < sx - rng) {
+      // Patrulla horizontal — verifica suelo sólido antes de avanzar
+      const nextX = e.x + (e.body.velocity.x > 0 ? 20 : -20);
+      const solidAhead = this._ground.isSolidAt(nextX);
+      if (!solidAhead) {
+        e.body.setVelocityX(-e.body.velocity.x);
+        e.setFlipX(e.body.velocity.x < 0);
+      } else if (e.x < sx - rng) {
         e.body.setVelocityX(spd);
         e.setFlipX(false);
       } else if (e.x > sx + rng) {
