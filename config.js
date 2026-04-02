@@ -65,7 +65,7 @@ const CONFIG = {
 
   LEVELS: [
     {
-      id: 1, name: 'Bosque',
+      id: 1, name: 'Glucowood',
       skyColor:    0x2E7D32,
       groundColor: 0x4E342E,
       groundEdge:  0x7CB342,
@@ -81,7 +81,7 @@ const CONFIG = {
       slopeRise:   0,
     },
     {
-      id: 2, name: 'Montaña',
+      id: 2, name: 'Picos de Glucosa',
       skyColor:    0x78909C,
       groundColor: 0x455A64,
       groundEdge:  0xB0BEC5,
@@ -97,7 +97,7 @@ const CONFIG = {
       slopeRise:   40,
     },
     {
-      id: 3, name: 'Ciudad',
+      id: 3, name: 'Ciudad Páncrea',
       skyColor:    0x0D0D2B,
       groundColor: 0x1A237E,
       groundEdge:  0x3949AB,
@@ -113,7 +113,7 @@ const CONFIG = {
       slopeRise:   60,
     },
     {
-      id: 4, name: 'Laboratorio',
+      id: 4, name: 'Laboratorio de Insulina',
       skyColor:    0x0A1628,
       groundColor: 0x0D2040,
       groundEdge:  0x00FF88,
@@ -129,7 +129,7 @@ const CONFIG = {
       slopeRise:   80,
     },
     {
-      id: 5, name: 'País del Dulce',
+      id: 5, name: 'Mundo del Azúcar y las Piruletas',
       skyColor:    0xF48FB1,
       groundColor: 0xAD1457,
       groundEdge:  0xFF80AB,
