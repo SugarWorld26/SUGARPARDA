@@ -207,119 +207,149 @@ class ResultScene extends Phaser.Scene {
 
   async create(data) {
     const W = CONFIG.W, H = CONFIG.H;
-    this.cameras.main.setBackgroundColor('#0a1628');
+    this.cameras.main.setBackgroundColor('#000000');
     const { score, secs, tir, rng, bonus, lvlIdx, name } = data;
     const lvl = CONFIG.LEVELS[lvlIdx];
 
-    // Solo subir al ranking en el último nivel o si no hay siguiente
+    // Solo subir al ranking en el último nivel
     const isLastLevel = lvlIdx + 1 >= CONFIG.LEVELS.length;
     if (isLastLevel) {
       await DB.save({ name, score, secs, tir, rng, level: lvl.id });
     }
 
-    // Logo
+    // Fondo grid rosa igual que el menú
+    const bg = this.add.graphics();
+    bg.fillStyle(0x000000, 1).fillRect(0, 0, W, H);
+    bg.lineStyle(1, 0xFF69B4, 0.10);
+    for (let y = 0; y < H; y += 40) bg.lineBetween(0, y, W, y);
+    for (let x = 0; x < W; x += 80) bg.lineBetween(x, 0, x, H);
+    bg.lineStyle(2, 0xFF69B4, 0.5).strokeRect(8, 8, W-16, H-16);
+    bg.lineStyle(1, 0xFF69B4, 0.25).strokeRect(14, 14, W-28, H-28);
+
+    // Logo pequeño
     if (this.textures.exists('logo')) {
-      const logo = this.add.image(W/2, H * 0.10, 'logo').setOrigin(0.5);
-      logo.setScale(Math.min(220 / logo.width, 75 / logo.height));
+      const logo = this.add.image(W/2, H*0.07, 'logo').setOrigin(0.5);
+      logo.setScale(Math.min(200/logo.width, 60/logo.height));
     }
 
-    this.add.text(W/2, H * 0.21, '📊 RESULTADOS', {
-      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
-    }).setOrigin(0.5);
-
-    this.add.text(W/2, H * 0.29, `${name} — Nivel ${lvl.id}: ${lvl.name}`, {
+    // Título nivel
+    this.add.text(W/2, H*0.15, `NIVEL ${lvl.id} — ${lvl.name.toUpperCase()}`, {
       fontSize: '13px', fontFamily: 'monospace', fill: '#888',
     }).setOrigin(0.5);
 
-    // Puntuación
-    this.add.text(W/2, H * 0.41, String(score), {
-      fontSize: '46px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#FF69B4', stroke: '#880E4F', strokeThickness: 4,
+    // Puntuación grande y centrada
+    this.add.text(W/2, H*0.27, String(score), {
+      fontSize: '72px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#FF69B4', stroke: '#880E4F', strokeThickness: 5,
     }).setOrigin(0.5);
-    this.add.text(W/2, H * 0.51, 'PUNTOS', {
-      fontSize: '11px', fontFamily: 'monospace', fill: '#444',
+    this.add.text(W/2, H*0.39, 'PUNTOS', {
+      fontSize: '14px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#FF69B4',
     }).setOrigin(0.5);
 
-    // Stats
+    // Separador
+    this.add.graphics()
+      .lineStyle(1, 0xFF69B4, 0.4)
+      .lineBetween(W*0.1, H*0.44, W*0.9, H*0.44);
+
+    // Stats — 3 cajas grandes y claras
     const stats = [
-      { label: 'Tiempo en rango', value: `${tir}%`, color: tir >= 70 ? '#FF69B4' : '#FFC107' },
-      { label: '★ RANGAZO',       value: `${rng}%`, color: rng >= 50 ? '#FFD700' : '#888' },
-      { label: 'Tiempo',          value: `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`, color: '#fff' },
+      { label: 'TIEMPO EN RANGO', value: `${tir}%`,  color: tir >= 70 ? '#FF69B4' : '#FFC107', icon: '⏱' },
+      { label: 'RANGAZO',         value: `${rng}%`,  color: rng >= 50 ? '#FFD700' : '#aaa',    icon: '⭐' },
+      { label: 'TIEMPO',          value: `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`, color: '#fff', icon: '🕐' },
     ];
+
     stats.forEach((s, i) => {
-      const x = i % 2 === 0 ? W * 0.26 : W * 0.74;
-      const y = H * 0.62 + Math.floor(i / 2) * H * 0.11;
+      const x = [W*0.22, W*0.5, W*0.78][i];
+      const y = H * 0.55;
+      const bw = W * 0.26, bh = H * 0.14;
+      // Caja
       this.add.graphics()
-        .fillStyle(0x0d1f3c, 1)
-        .fillRoundedRect(x - W * 0.19, y - H * 0.042, W * 0.38, H * 0.082, 7);
-      this.add.text(x, y - H * 0.012, s.label, {
-        fontSize: '10px', fontFamily: 'monospace', fill: '#555',
+        .fillStyle(0x0d1020, 1)
+        .fillRoundedRect(x - bw/2, y - bh/2, bw, bh, 8)
+        .lineStyle(1, 0xFF69B4, 0.3)
+        .strokeRoundedRect(x - bw/2, y - bh/2, bw, bh, 8);
+      // Label
+      this.add.text(x, y - bh*0.22, s.label, {
+        fontSize: '10px', fontFamily: 'monospace', fill: '#666',
       }).setOrigin(0.5);
-      this.add.text(x, y + H * 0.018, s.value, {
-        fontSize: '17px', fontFamily: 'monospace', fontStyle: 'bold', fill: s.color,
+      // Valor grande
+      this.add.text(x, y + bh*0.15, s.value, {
+        fontSize: '22px', fontFamily: 'monospace', fontStyle: 'bold', fill: s.color,
+        stroke: '#000', strokeThickness: 2,
       }).setOrigin(0.5);
     });
-
-    // Botones — ANTES del ranking para que no queden tapados
-    const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
-    if (hasNext) {
-      this.add.text(W * 0.30, H * 0.76, '▶ SIGUIENTE', {
-        fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
-        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 14, y: 9 },
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(20)
-        .on('pointerdown', () => this.scene.start('Game', { lvl: lvlIdx + 1, prevScore: score, prevFast: data.prevFast }));
-    }
-    this.add.text(hasNext ? W * 0.72 : W/2, H * 0.76, '⟵ MENÚ', {
-      fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#000', backgroundColor: '#FFC107', padding: { x: 14, y: 9 },
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(20)
-      .on('pointerdown', () => this.scene.start('Menu'));
 
     // Posición del jugador
     const myPos = await DB.getPosition(name, score);
     if (myPos) {
-      const posColor = myPos <= 10 ? '#FFD700' : myPos <= 50 ? '#FF69B4' : '#888';
-      this.add.text(W/2, H * 0.86, `Tu posición en el ranking: #${myPos}`, {
-        fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: posColor,
+      const posColor = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : myPos <= 50 ? '#aaa' : '#666';
+      const posText  = myPos <= 3 ? `🏆 #${myPos} DEL RANKING` : `Tu posición: #${myPos}`;
+      this.add.text(W/2, H*0.72, posText, {
+        fontSize: myPos <= 3 ? '20px' : '15px',
+        fontFamily: 'monospace', fontStyle: 'bold', fill: posColor,
         stroke: '#000', strokeThickness: 2,
       }).setOrigin(0.5);
     }
 
-    // Ranking con cámara secundaria
-    this.add.text(W/2, H * 0.91, '🏆 RANKING GLOBAL', {
-      fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
-    }).setOrigin(0.5);
+    // Botones grandes y claros
+    const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
+    const btnY = H * 0.84;
 
-    const rankY0 = Math.round(H * 0.96);
-    const rankH  = Math.round(H * 0.3);
-    const lineH  = 18;
+    if (hasNext) {
+      // Fondo botón siguiente
+      this.add.graphics()
+        .fillStyle(0xFF69B4, 1).fillRoundedRect(W*0.12, btnY-20, W*0.34, 42, 10);
+      this.add.text(W*0.29, btnY, '▶  SIGUIENTE', {
+        fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5)
+        .on('pointerdown', () => this.scene.start('Game', {
+          lvl: lvlIdx + 1, prevScore: score, prevFast: data.prevFast
+        }));
+    }
 
-    const rankCam = this.cameras.add(0, rankY0 - rankH, W, rankH);
+    // Botón menú
+    const menuX = hasNext ? W * 0.71 : W * 0.5;
+    this.add.graphics()
+      .fillStyle(0xFFC107, 1).fillRoundedRect(menuX - W*0.17, btnY-20, W*0.34, 42, 10);
+    this.add.text(menuX, btnY, '⟵  MENÚ', {
+      fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(5)
+      .on('pointerdown', () => this.scene.start('Menu'));
+
+    // Mini ranking abajo
+    this.add.graphics()
+      .lineStyle(1, 0xFF69B4, 0.3)
+      .lineBetween(W*0.1, H*0.91, W*0.9, H*0.91);
+
+    const rankY0 = Math.round(H * 0.93);
+    const rankH  = Math.round(H - rankY0 - 4);
+    const lineH  = 16;
+
+    const rankCam = this.cameras.add(0, rankY0, W, rankH);
     rankCam.setBackgroundColor('rgba(0,0,0,0)');
-    rankCam.scrollY = rankY0 - rankH;
+    rankCam.scrollY = rankY0;
 
     const rows = await DB.top(100);
     const rankContainer = this.add.container(0, 0);
-    let scrollY = 0;
-
     rows.forEach((r, i) => {
       const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
       const isMe  = r.player_name === name;
       rankContainer.add(this.add.text(W/2, rankY0 + i * lineH,
         `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
-        { fontSize: '11px', fontFamily: 'monospace',
-          fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#666',
+        { fontSize: '10px', fontFamily: 'monospace',
+          fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#555',
           fontStyle: isMe ? 'bold' : 'normal' }
       ).setOrigin(0.5));
     });
-
     rankContainer.each(obj => { obj.cameraFilter = this.cameras.main.id; });
 
     const maxScroll = Math.max(0, rows.length * lineH - rankH);
+    let scrollY = 0;
     this.input.on('pointermove', (p) => {
       if (!p.isDown) return;
       scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.4, 0, maxScroll);
-      rankCam.scrollY = (rankY0 - rankH) + scrollY;
+      rankCam.scrollY = rankY0 + scrollY;
     });
   }
 }
