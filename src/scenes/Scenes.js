@@ -121,12 +121,13 @@ class MenuScene extends Phaser.Scene {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
 
-    // ── Ranking con cámara secundaria para clip real ──
-    const rankY0  = Math.round(H * 0.73);
-    const rankH   = Math.round(H - rankY0 - 10);
-    const lineH   = 20;
+    // ── Ranking con cámara secundaria ──
+    const rankY0 = Math.round(H * 0.73);
+    const rankH  = Math.round(H - rankY0 - 10);
+    // Top 3 más altos, resto normal
+    const lineH3 = 28;  // altura top 3
+    const lineH  = 18;  // altura resto
 
-    // Cámara secundaria que solo muestra la zona del ranking
     const rankCam = this.cameras.add(0, rankY0, W, rankH);
     rankCam.setBackgroundColor('rgba(0,0,0,0)');
     rankCam.scrollY = rankY0;
@@ -139,31 +140,62 @@ class MenuScene extends Phaser.Scene {
         fontSize: '12px', fontFamily: 'monospace', fill: '#555',
       }).setOrigin(0.5));
     } else {
+      // Calcular posición Y de cada fila
+      let curY = rankY0 + 4;
       rows.forEach((r, i) => {
-        const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
-        const isMe  = r.player_name === name;
-        rankContainer.add(this.add.text(W/2, rankY0 + i * lineH,
+        const isTop3 = i < 3;
+        const fh     = isTop3 ? lineH3 : lineH;
+        const medal  = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+        const isMe   = r.player_name === name;
+        const fs     = isTop3 ? '15px' : '11px';
+        const fill   = isMe   ? '#FF69B4'
+                     : i === 0 ? '#FFD700'
+                     : i === 1 ? '#E0E0E0'
+                     : i === 2 ? '#CD7F32'
+                     : '#888';
+
+        // Fondo para top 3
+        if (isTop3) {
+          const fbg = this.add.graphics();
+          const bgCol = i===0 ? 0x332200 : i===1 ? 0x222222 : 0x221100;
+          fbg.fillStyle(bgCol, 0.8).fillRoundedRect(W*0.05, curY, W*0.9, fh-2, 4);
+          rankContainer.add(fbg);
+        }
+
+        rankContainer.add(this.add.text(W/2, curY + fh/2,
           `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
-          { fontSize: '12px', fontFamily: 'monospace',
-            fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#888',
-            fontStyle: isMe ? 'bold' : 'normal' }
+          { fontSize: fs, fontFamily: 'monospace',
+            fill, fontStyle: isTop3 ? 'bold' : 'normal',
+            stroke: isTop3 ? '#000' : undefined,
+            strokeThickness: isTop3 ? 2 : 0 }
         ).setOrigin(0.5));
+
+        curY += fh;
       });
     }
 
-    // Ignorar ranking en cámara principal
-    rankContainer.each(obj => {
-      obj.cameraFilter = this.cameras.main.id;
-    });
+    // Ignorar en cámara principal
+    rankContainer.each(obj => { obj.cameraFilter = this.cameras.main.id; });
 
-    // Scroll drag — solo mueve la cámara secundaria
-    const maxScroll = Math.max(0, rows.length * lineH - rankH);
+    // Total altura del contenido
+    const totalH = 4 + rows.slice(0,3).length * lineH3 + Math.max(0, rows.length-3) * lineH;
+    const maxScroll = Math.max(0, totalH - rankH);
     let scrollY = 0;
+
+    // Scroll: arrastrar hacia arriba = ver más abajo (scrollY aumenta)
     this.input.on('pointermove', (p) => {
       if (!p.isDown) return;
-      scrollY = Phaser.Math.Clamp(scrollY + p.velocity.y * 0.5, 0, maxScroll);
+      // velocity.y negativo = dedo sube = queremos ver más abajo
+      scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.4, 0, maxScroll);
       rankCam.scrollY = rankY0 + scrollY;
     });
+
+    // Indicador de scroll si hay más contenido
+    if (maxScroll > 0) {
+      this.add.text(W/2, H - 8, '▼ desliza para ver más', {
+        fontSize: '9px', fontFamily: 'monospace', fill: '#FF69B4',
+      }).setOrigin(0.5).setAlpha(0.6);
+    }
   }
 }
 
