@@ -305,30 +305,22 @@ class ResultScene extends Phaser.Scene {
     const btnH = 48;
 
     if (hasNext) {
-      const bx = W*0.10;
-      // Usar zona invisible interactiva sobre el botón
-      this.add.graphics().setDepth(6)
-        .fillStyle(0xFF69B4, 1).fillRoundedRect(bx, btnY-btnH/2, btnW, btnH, 12)
-        .lineStyle(2, 0xffffff, 0.5).strokeRoundedRect(bx, btnY-btnH/2, btnW, btnH, 12);
-      this.add.text(bx + btnW/2, btnY, '▶  SIGUIENTE', {
-        fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
-      }).setOrigin(0.5).setDepth(7)
-        .setInteractive(new Phaser.Geom.Rectangle(-btnW/2, -btnH/2, btnW, btnH), Phaser.Geom.Rectangle.Contains)
+      this.add.text(W*0.29, btnY, '▶  SIGUIENTE', {
+        fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FF69B4',
+        padding: { x: 24, y: 12 },
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', {
           lvl: lvlIdx + 1, prevScore: score, prevFast: data.prevFast
         }));
     }
 
-    // Botón menú
-    const mbx = hasNext ? W*0.54 : W*0.25;
-    const mbw = hasNext ? W*0.36 : W*0.5;
-    this.add.graphics().setDepth(6)
-      .fillStyle(0xFFC107, 1).fillRoundedRect(mbx, btnY-btnH/2, mbw, btnH, 12)
-      .lineStyle(2, 0xffffff, 0.5).strokeRoundedRect(mbx, btnY-btnH/2, mbw, btnH, 12);
-    this.add.text(mbx + mbw/2, btnY, '⟵  MENÚ', {
-      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
-    }).setOrigin(0.5).setDepth(7)
-      .setInteractive(new Phaser.Geom.Rectangle(-mbw/2, -btnH/2, mbw, btnH), Phaser.Geom.Rectangle.Contains)
+    const menuX = hasNext ? W*0.71 : W*0.5;
+    this.add.text(menuX, btnY, '⟵  MENÚ', {
+      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FFC107',
+      padding: { x: 24, y: 12 },
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Menu'));
 
     // Mini ranking abajo
