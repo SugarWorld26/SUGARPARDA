@@ -149,9 +149,10 @@ class GameScene extends Phaser.Scene {
     const sp = lvl.length / (lvl.checkpoints + 1);
     for (let i = 1; i <= lvl.checkpoints; i++) {
       const cx = Math.round(sp * i);
-      const cpTex = this.textures.exists('cp_off') ? 'cp_off' : '_cp';
+      const cpTex  = this.textures.exists('cp_off') ? 'cp_off' : '_cp';
       if (cpTex === '_cp' && !this.textures.exists('_cp')) this._makeCpTex();
-      const cpSprite = this.add.image(cx, GY, cpTex, 0).setDepth(6).setOrigin(0.5, 1);
+      const cpSurfY = this._ground ? this._ground.getSurfaceY(cx) : GY;
+      const cpSprite = this.add.image(cx, cpSurfY, cpTex, 0).setDepth(6).setOrigin(0.5, 1);
       this._cpData.push({ x: cx, sprite: cpSprite, done: false });
     }
 
