@@ -82,38 +82,29 @@ class MenuScene extends Phaser.Scene {
     for (let x = 0; x < W; x += 80) bg.lineBetween(x, 0, x, H);
     bg.lineStyle(2, 0xFF69B4, 0.6).strokeRect(8, 8, W-16, H-16);
     bg.lineStyle(1, 0xFF69B4, 0.3).strokeRect(14, 14, W-28, H-28);
-    // Separador vertical
-    bg.lineStyle(1, 0xFF69B4, 0.35).lineBetween(W*0.55, 20, W*0.55, H-20);
 
-    // ── IZQUIERDA: logo + botones ──
-    const logoX = W * 0.27;
-
-    // Efecto neón detrás del logo
-    const neon = this.add.graphics();
-    neon.fillStyle(0xFF69B4, 0.08).fillEllipse(logoX, H*0.22, 280, 120);
-    neon.fillStyle(0xFF69B4, 0.05).fillEllipse(logoX, H*0.22, 360, 170);
-
+    // Logo
     if (this.textures.exists('logo')) {
-      const logo = this.add.image(logoX, H*0.22, 'logo').setOrigin(0.5);
-      logo.setScale(Math.min(300/logo.width, 120/logo.height));
+      const logo = this.add.image(W/2, H*0.20, 'logo').setOrigin(0.5);
+      logo.setScale(Math.min(380/logo.width, 140/logo.height));
     }
 
     const name = window.PLAYER_NAME || '?';
-    this.add.text(logoX, H*0.42, `¡Hola, ${name}!`, {
-      fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold',
+    this.add.text(W/2, H*0.39, `¡Hola, ${name}!`, {
+      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#fff', stroke: '#FF69B4', strokeThickness: 2,
     }).setOrigin(0.5);
 
     // Botón JUGAR
     this.add.graphics()
-      .fillStyle(0xFF69B4, 1).fillRoundedRect(logoX-100, H*0.50, 200, 40, 10);
-    this.add.text(logoX, H*0.50+20, '▶  JUGAR', {
+      .fillStyle(0xFF69B4, 1).fillRoundedRect(W/2-110, H*0.47, 220, 40, 10);
+    this.add.text(W/2, H*0.47+20, '▶  JUGAR', {
       fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Game', { lvl: 0 }));
 
     // Cambiar nombre
-    this.add.text(logoX, H*0.63, '✎ Cambiar nombre', {
+    this.add.text(W/2, H*0.58, '✎ Cambiar nombre', {
       fontSize: '11px', fontFamily: 'monospace', fill: '#666',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
@@ -122,41 +113,56 @@ class MenuScene extends Phaser.Scene {
         location.reload();
       });
 
-    // ── DERECHA: ranking ──
-    const rankX = W * 0.77;
-    this.add.text(rankX, H*0.06, '🏆 RANKING', {
+    // Separador + título ranking
+    this.add.graphics()
+      .lineStyle(1, 0xFF69B4, 0.4)
+      .lineBetween(W*0.05, H*0.64, W*0.95, H*0.64);
+    this.add.text(W/2, H*0.67, '🏆  RANKING GLOBAL', {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
 
+    // ── Ranking con cámara secundaria para clip real ──
+    const rankY0  = Math.round(H * 0.73);
+    const rankH   = Math.round(H - rankY0 - 10);
+    const lineH   = 20;
+
+    // Cámara secundaria que solo muestra la zona del ranking
+    const rankCam = this.cameras.add(0, rankY0, W, rankH);
+    rankCam.setBackgroundColor('rgba(0,0,0,0)');
+    rankCam.scrollY = rankY0;
+
     const rows = await DB.top(100);
-    const rankY0 = H * 0.14;
-    const lineH  = 18;
-    const rankH  = H - rankY0 - 10;
     const rankContainer = this.add.container(0, 0);
-    let scrollY = 0;
 
     if (!rows.length) {
-      rankContainer.add(this.add.text(rankX, rankY0+10, '¡Sé el primero!', {
-        fontSize: '11px', fontFamily: 'monospace', fill: '#555',
+      rankContainer.add(this.add.text(W/2, rankY0+10, '¡Sé el primero!', {
+        fontSize: '12px', fontFamily: 'monospace', fill: '#555',
       }).setOrigin(0.5));
     } else {
       rows.forEach((r, i) => {
         const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
         const isMe  = r.player_name === name;
-        rankContainer.add(this.add.text(rankX, rankY0 + i * lineH,
-          `${medal} ${r.player_name.substring(0,10).padEnd(10)} ${String(r.score).padStart(5)}`,
-          { fontSize: '11px', fontFamily: 'monospace',
-            fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#777',
+        rankContainer.add(this.add.text(W/2, rankY0 + i * lineH,
+          `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
+          { fontSize: '12px', fontFamily: 'monospace',
+            fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#888',
             fontStyle: isMe ? 'bold' : 'normal' }
         ).setOrigin(0.5));
       });
     }
 
+    // Ignorar ranking en cámara principal
+    rankContainer.each(obj => {
+      obj.cameraFilter = this.cameras.main.id;
+    });
+
+    // Scroll drag — solo mueve la cámara secundaria
     const maxScroll = Math.max(0, rows.length * lineH - rankH);
+    let scrollY = 0;
     this.input.on('pointermove', (p) => {
       if (!p.isDown) return;
-      scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.5, 0, maxScroll);
-      rankContainer.y = -scrollY;
+      scrollY = Phaser.Math.Clamp(scrollY + p.velocity.y * 0.5, 0, maxScroll);
+      rankCam.scrollY = rankY0 + scrollY;
     });
   }
 }
