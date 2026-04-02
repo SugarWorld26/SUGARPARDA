@@ -85,7 +85,9 @@ class HUD {
       fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#555',
     }).setScrollFactor(0).setDepth(90);
 
-    this._hyperOv = this._scene.add.graphics().setScrollFactor(0).setDepth(88);
+    this._hyperOv   = this._scene.add.graphics().setScrollFactor(0).setDepth(88);
+    this._rangazoOv = this._scene.add.graphics().setScrollFactor(0).setDepth(93);
+    this._rangazoStars = [];
 
     this._buildButtons(fastLeft, backpack);
   }
@@ -247,6 +249,30 @@ class HUD {
     if (glucose.isHyper) {
       const a = 0.06 + 0.04 * Math.sin(Date.now() / 200);
       this._hyperOv.fillStyle(0xFF0000, a).fillRect(0, 0, CONFIG.W, CONFIG.H);
+    }
+
+    // Destellos RANGAZO alrededor del glucómetro
+    this._rangazoOv.clear();
+    if (glucose.state === 'rangazo') {
+      const t   = Date.now();
+      const W   = CONFIG.W;
+      const cx  = W / 2;
+      const cy  = 50;
+      const num = 8;
+      for (let i = 0; i < num; i++) {
+        const angle = (t / 400 + i / num * Math.PI * 2);
+        const dist  = 90 + Math.sin(t / 200 + i) * 15;
+        const sx    = cx + Math.cos(angle) * dist;
+        const sy    = cy + Math.sin(angle) * dist * 0.4;
+        const sz    = 3 + Math.sin(t / 150 + i * 1.3) * 2;
+        const alpha = 0.6 + 0.4 * Math.sin(t / 180 + i);
+        this._rangazoOv.fillStyle(0xFFD700, alpha);
+        this._rangazoOv.fillStar(sx, sy, 4, sz, sz * 0.4, 0);
+      }
+      // Flash dorado suave en el glucómetro
+      const fa = 0.08 + 0.05 * Math.sin(t / 120);
+      this._rangazoOv.fillStyle(0xFFD700, fa)
+        .fillRoundedRect(W/2 - 100, 5, 170, 85, 8);
     }
 
     // Marcador minimapa
