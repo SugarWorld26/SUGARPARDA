@@ -474,7 +474,15 @@ class GameScene extends Phaser.Scene {
       }
     }
 
-    if (this._player.x >= this._metaX) this._finish();
+    if (this._player.x >= this._metaX) {
+      if (!this._metaDone) {
+        this._metaDone = true;
+        const { pts } = this._score.checkpoint(this._glucose.v);
+        AudioManager.sfx('checkpoint');
+        this._float(this._player.x, this._player.y - 60, `+${pts} pts`, '#FFD700');
+      }
+      this._finish();
+    }
 
     this._hud.refresh(this._glucose, this._glucagons, this._fastLeft, this._fast, onSlope, this._backpack, this._player.x, this._glucose.slowSecsLeft);
   }
