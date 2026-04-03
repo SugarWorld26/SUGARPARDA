@@ -4,15 +4,33 @@
 const DB = {
   _c: null,
 
+  // Sufijo invisible de verificación — carácter raro que nadie usaría
+  _V: '§V',
+
   init() {
     this._c = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
   },
 
+  // Devuelve true si el nombre guardado en BD es verificado
+  isVerified(player_name) {
+    return player_name ? player_name.endsWith(this._V) : false;
+  },
+
+  // Devuelve el nombre limpio sin el sufijo
+  cleanName(player_name) {
+    if (!player_name) return '';
+    return player_name.endsWith(this._V)
+      ? player_name.slice(0, -this._V.length)
+      : player_name;
+  },
+
   async save({ name, score, secs, tir, rng, level }) {
     if (!this._c) return;
+    // Si el jugador está verificado, añadir sufijo al guardar
+    const storedName = window.PLAYER_VERIFIED ? name + this._V : name;
     try {
       await this._c.from('ranking').insert({
-        player_name:     name,
+        player_name:     storedName,
         score,
         time_seconds:    secs,
         time_in_range:   tir,
