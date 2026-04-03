@@ -223,13 +223,11 @@ class ResultScene extends Phaser.Scene {
     for (let y = 0; y < H; y += 40) bg.lineBetween(0, y, W, y);
     for (let x = 0; x < W; x += 80) bg.lineBetween(x, 0, x, H);
     bg.lineStyle(2, 0xFF69B4, 0.5).strokeRect(8, 8, W-16, H-16);
-    bg.lineStyle(1, 0xFF69B4, 0.25).strokeRect(14, 14, W-28, H-28);
 
-    // ── FILA 1: Título nivel ──
+    // Título nivel
     this.add.text(W/2, H*0.07, `NIVEL ${lvl.id}`, {
       fontSize: '16px', fontFamily: 'monospace', fill: '#ffffff',
     }).setOrigin(0.5);
-
     this.add.text(W/2, H*0.14, lvl.name.toUpperCase(), {
       fontSize: '26px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FF69B4', stroke: '#880E4F', strokeThickness: 3,
@@ -242,100 +240,61 @@ class ResultScene extends Phaser.Scene {
       }).setOrigin(0.5);
     }
 
-    // ── FILA 2: Puntuación ──
-    this.add.text(W/2, H*0.30, String(score), {
+    // Puntuación
+    this.add.text(W/2, H*0.31, String(score), {
       fontSize: '64px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FF69B4', stroke: '#880E4F', strokeThickness: 5,
     }).setOrigin(0.5);
-    this.add.text(W/2, H*0.40, 'PUNTOS', {
+    this.add.text(W/2, H*0.41, 'PUNTOS', {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FF69B4',
     }).setOrigin(0.5);
 
     // Separador
     this.add.graphics()
       .lineStyle(1, 0xFF69B4, 0.4)
-      .lineBetween(W*0.05, H*0.45, W*0.95, H*0.45);
+      .lineBetween(W*0.05, H*0.46, W*0.95, H*0.46);
 
-    // ── FILA 3: 2 cajas stats (TIEMPO EN RANGO + RANGAZO) ──
+    // Stats: 2 cajas
     const stats = [
       { label: 'TIEMPO EN RANGO', value: `${tir}%`, color: tir >= 70 ? '#FF69B4' : '#FFC107' },
       { label: 'RANGAZO',         value: `${rng}%`, color: rng >= 50 ? '#FFD700' : '#aaa' },
     ];
-    const statXs = [W*0.26, W*0.74];
-    stats.forEach((s, i) => {
-      const x = statXs[i];
-      const y = H * 0.555;
-      const bw = W * 0.38, bh = H * 0.16;
+    [W*0.26, W*0.74].forEach((x, i) => {
+      const s = stats[i];
+      const y = H*0.57, bw = W*0.38, bh = H*0.16;
       this.add.graphics()
         .fillStyle(0x0d1020, 1).fillRoundedRect(x-bw/2, y-bh/2, bw, bh, 8)
         .lineStyle(1, 0xFF69B4, 0.35).strokeRoundedRect(x-bw/2, y-bh/2, bw, bh, 8);
-      this.add.text(x, y - bh*0.2, s.label, {
+      this.add.text(x, y-bh*0.2, s.label, {
         fontSize: '11px', fontFamily: 'monospace', fill: '#ffffff',
       }).setOrigin(0.5);
-      this.add.text(x, y + bh*0.18, s.value, {
+      this.add.text(x, y+bh*0.18, s.value, {
         fontSize: '26px', fontFamily: 'monospace', fontStyle: 'bold',
         fill: s.color, stroke: '#000', strokeThickness: 2,
       }).setOrigin(0.5);
     });
 
-    // ── LAYOUT INFERIOR: ranking a la izquierda, botones a la derecha ──
+    // Separador
+    this.add.graphics()
+      .lineStyle(1, 0xFF69B4, 0.3)
+      .lineBetween(W*0.05, H*0.68, W*0.95, H*0.68);
+
+    // Botones — simples y seguros
     const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
 
-    // Cargar datos primero (sin bloquear render)
-    const rows  = await DB.top(8);
-    const myPos = await DB.getPosition(name, score);
-
-    // Ranking — columna izquierda
-    const rkX  = W * 0.30;
-    const rkY  = H * 0.70;
-    const rkW  = W * 0.52;
-    const rkH  = H * 0.26;
-
-    this.add.graphics()
-      .fillStyle(0x0d1020, 1).fillRoundedRect(rkX - rkW/2, rkY, rkW, rkH, 8)
-      .lineStyle(1, 0xFFC107, 0.6).strokeRoundedRect(rkX - rkW/2, rkY, rkW, rkH, 8);
-
-    this.add.text(rkX, rkY + 12, '🏆  RANKING GLOBAL', {
-      fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
-    }).setOrigin(0.5);
-
-    if (myPos) {
-      const pc = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : '#fff';
-      this.add.text(rkX, rkY + 26, `Tu posición: #${myPos}`, {
-        fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: pc,
-      }).setOrigin(0.5);
-    }
-
-    const lineH = 15;
-    rows.forEach((r, i) => {
-      const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
-      const isMe  = r.player_name === name;
-      this.add.text(rkX, rkY + 40 + i * lineH,
-        `${medal} ${r.player_name.substring(0,10).padEnd(10)} ${String(r.score).padStart(5)}`,
-        { fontSize: '11px', fontFamily: 'monospace',
-          fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#aaa',
-          fontStyle: isMe ? 'bold' : 'normal' }
-      ).setOrigin(0.5);
-    });
-
-    // Botones — columna derecha, alineados verticalmente
-    const btnX  = W * 0.82;
-    const btn1Y = H * 0.76;
-    const btn2Y = H * 0.88;
-
     if (hasNext) {
-      this.add.text(btnX, btn1Y, '▶  SIGUIENTE', {
-        fontSize: '15px', fontFamily: 'monospace', fontStyle: 'bold',
-        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 12, y: 10 },
+      this.add.text(W*0.28, H*0.80, '▶  SIGUIENTE NIVEL', {
+        fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 18, y: 12 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', {
           lvl: lvlIdx+1, prevScore: score, prevFast: data.prevFast
         }));
     }
 
-    this.add.text(hasNext ? btnX : W*0.5, hasNext ? btn2Y : H*0.82, '⟵  MENÚ', {
-      fontSize: '15px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#000', backgroundColor: '#FFC107', padding: { x: 12, y: 10 },
+    this.add.text(hasNext ? W*0.74 : W*0.5, H*0.80, '⟵  MENÚ PRINCIPAL', {
+      fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FFC107', padding: { x: 18, y: 12 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Menu'));
   }
