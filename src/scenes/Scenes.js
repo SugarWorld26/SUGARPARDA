@@ -278,79 +278,61 @@ class ResultScene extends Phaser.Scene {
       }).setOrigin(0.5);
     });
 
-    // ── FILA 4: Ranking en el centro ──
-    const rows = await DB.top(10);
-    const myPos = await DB.getPosition(name, score);
-
-    const rkX = W/2, rkY = H*0.70;
-    const rkW = W*0.42, rkH = H*0.22;
-
-    // Caja ranking
-    this.add.graphics()
-      .fillStyle(0x0d1020, 1).fillRoundedRect(rkX-rkW/2, rkY-rkH/2, rkW, rkH, 8)
-      .lineStyle(1, 0xFFC107, 0.5).strokeRoundedRect(rkX-rkW/2, rkY-rkH/2, rkW, rkH, 8);
-
-    this.add.text(rkX, rkY - rkH/2 + 10, '🏆 RANKING', {
-      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
-    }).setOrigin(0.5);
-
-    if (myPos) {
-      const posColor = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : '#ffffff';
-      this.add.text(rkX, rkY - rkH/2 + 24, `Tu posición: #${myPos}`, {
-        fontSize: '10px', fontFamily: 'monospace', fill: posColor,
-      }).setOrigin(0.5);
-    }
-
-    const lineH = 14;
-    const startY = rkY - rkH/2 + 38;
-    rows.slice(0, 8).forEach((r, i) => {
-      const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
-      const isMe  = r.player_name === name;
-      this.add.text(rkX, startY + i * lineH,
-        `${medal} ${r.player_name.substring(0,10).padEnd(10)} ${String(r.score).padStart(5)}`,
-        { fontSize: '10px', fontFamily: 'monospace',
-          fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#888',
-          fontStyle: isMe ? 'bold' : 'normal' }
-      ).setOrigin(0.5);
-    });
-
-    // ── BOTONES a los lados del ranking ──
+    // ── BOTONES — primero, sin async, funcionan siempre ──
     const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
-    const btnY = rkY;
+    const btnY = H * 0.70;
 
+    // Botón SIGUIENTE izquierda
     if (hasNext) {
-      this.add.text(W*0.14, btnY - 20, '▶', {
-        fontSize: '28px', fontFamily: 'monospace', fill: '#FF69B4',
-        stroke: '#000', strokeThickness: 3,
-      }).setOrigin(0.5);
-      this.add.text(W*0.14, btnY + 14, 'SIGUIENTE', {
-        fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
-        fill: '#FF69B4',
-      }).setOrigin(0.5);
-      // Zona interactiva
-      this.add.graphics()
-        .fillStyle(0xFF69B4, 0.15).fillRoundedRect(W*0.03, btnY-40, W*0.22, 70, 8)
-        .lineStyle(2, 0xFF69B4, 0.8).strokeRoundedRect(W*0.03, btnY-40, W*0.22, 70, 8);
-      this.add.zone(W*0.14, btnY, W*0.22, 70)
-        .setInteractive({ useHandCursor: true })
+      this.add.text(W*0.14, btnY, '▶  SIGUIENTE', {
+        fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 14, y: 10 },
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', {
           lvl: lvlIdx+1, prevScore: score, prevFast: data.prevFast
         }));
     }
 
-    // Botón menú — derecha del ranking
-    this.add.text(W*0.86, btnY - 20, '⟵', {
-      fontSize: '28px', fontFamily: 'monospace', fill: '#FFC107',
-      stroke: '#000', strokeThickness: 3,
-    }).setOrigin(0.5);
-    this.add.text(W*0.86, btnY + 14, 'MENÚ', {
+    // Botón MENÚ derecha
+    this.add.text(hasNext ? W*0.86 : W*0.5, btnY, '⟵  MENÚ', {
+      fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FFC107', padding: { x: 14, y: 10 },
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.scene.start('Menu'));
+
+    // ── RANKING centro — async después de botones ──
+    const rkX = W/2, rkY = H*0.70;
+    const rkW = W*0.42, rkH = H*0.24;
+
+    this.add.graphics()
+      .fillStyle(0x0d1020, 1).fillRoundedRect(rkX-rkW/2, rkY-rkH/2, rkW, rkH, 8)
+      .lineStyle(1, 0xFFC107, 0.5).strokeRoundedRect(rkX-rkW/2, rkY-rkH/2, rkW, rkH, 8);
+
+    this.add.text(rkX, rkY-rkH/2+10, '🏆 RANKING', {
       fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
-    this.add.graphics()
-      .fillStyle(0xFFC107, 0.15).fillRoundedRect(W*0.75, btnY-40, W*0.22, 70, 8)
-      .lineStyle(2, 0xFFC107, 0.8).strokeRoundedRect(W*0.75, btnY-40, W*0.22, 70, 8);
-    this.add.zone(W*0.86, btnY, W*0.22, 70)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.scene.start('Menu'));
+
+    const rows  = await DB.top(10);
+    const myPos = await DB.getPosition(name, score);
+
+    if (myPos) {
+      const posColor = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : '#ffffff';
+      this.add.text(rkX, rkY-rkH/2+23, `Tu posición: #${myPos}`, {
+        fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: posColor,
+      }).setOrigin(0.5);
+    }
+
+    const lineH = 15;
+    const startY = rkY - rkH/2 + 36;
+    rows.slice(0,7).forEach((r, i) => {
+      const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+      const isMe  = r.player_name === name;
+      this.add.text(rkX, startY + i*lineH,
+        `${medal} ${r.player_name.substring(0,10).padEnd(10)} ${String(r.score).padStart(5)}`,
+        { fontSize: '10px', fontFamily: 'monospace',
+          fill: isMe ? '#FF69B4' : i<3 ? '#FFC107' : '#888',
+          fontStyle: isMe ? 'bold' : 'normal' }
+      ).setOrigin(0.5);
+    });
   }
 }
