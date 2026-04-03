@@ -59,13 +59,12 @@
     #nameInput::placeholder { color:rgba(255,255,255,0.5); }
     #nameErr { color:#EF5350; font-family:monospace; font-size:13px; min-height:16px; }
     #playBtn {
-      background:#FF69B4; color:#000; border:none;
+      background:#FF69B4; color:#000;
       padding:14px 0; font-size:clamp(17px,4vw,22px);
       font-family:monospace; font-weight:bold; border-radius:10px;
       cursor:pointer; width:min(84vw,310px); letter-spacing:2px;
-      touch-action:manipulation; box-shadow: 0 0 20px rgba(255,105,180,0.5);
-      display:block; -webkit-appearance:none;
-      user-select:none; -webkit-user-select:none;
+      box-shadow: 0 0 20px rgba(255,105,180,0.5);
+      text-align:center; user-select:none; -webkit-user-select:none;
     }
     #playBtn:active { background:#C2185B; transform:scale(0.97); }
 
@@ -98,7 +97,7 @@
   <input id="nameInput" type="text" maxlength="16" placeholder="Pon tu nombre aquí"
     autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"/>
   <div id="nameErr"></div>
-  <button id="playBtn" type="button">▶  JUGAR</button>
+  <div id="playBtn" onclick="handlePlayBtn()">▶  JUGAR</div>
 </div>
 
 <div id="game"></div>
@@ -121,12 +120,11 @@
 <script src="src/scenes/Game.js"></script>
 
 <script>
-(function () {
-  const rotEl  = document.getElementById('rotate');
-  const nameEl = document.getElementById('nameWrap');
-  const input  = document.getElementById('nameInput');
-  const btn    = document.getElementById('playBtn');
-  const errEl  = document.getElementById('nameErr');
+  // ── Variables globales necesarias para onclick del div ──
+  const _rotEl  = document.getElementById('rotate');
+  const _nameEl = document.getElementById('nameWrap');
+  const _input  = document.getElementById('nameInput');
+  const _errEl  = document.getElementById('nameErr');
 
   // Detectar orientación
   function checkOrient() {
@@ -134,11 +132,11 @@
     const portrait = window.innerHeight > window.innerWidth;
     const mobile   = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (mobile && portrait) {
-      rotEl.classList.add('on');
-      nameEl.style.display = 'none';
+      _rotEl.classList.add('on');
+      _nameEl.style.display = 'none';
     } else {
-      rotEl.classList.remove('on');
-      nameEl.style.display = 'flex';
+      _rotEl.classList.remove('on');
+      _nameEl.style.display = 'flex';
     }
   }
   window.addEventListener('resize', checkOrient);
@@ -146,19 +144,17 @@
   checkOrient();
 
   // Nombre guardado
-  const saved = localStorage.getItem('sg_name') || '';
-  if (saved) input.value = saved;
+  const _saved = localStorage.getItem('sg_name') || '';
+  if (_saved) _input.value = _saved;
 
-  function launch(name) {
+  function _launch(name) {
     localStorage.setItem('sg_name', name);
     window.PLAYER_NAME = name;
     window._gameOn     = true;
-    nameEl.style.display = 'none';
-    rotEl.classList.remove('on');
+    _nameEl.style.display = 'none';
+    _rotEl.classList.remove('on');
     const gameEl = document.getElementById('game');
     gameEl.style.display = 'block';
-    gameEl.style.width  = '100%';
-    gameEl.style.height = '100%';
 
     DB.init();
 
@@ -182,26 +178,17 @@
     });
   }
 
-  function handlePlay() {
-    let name = input.value.trim();
-    if (!name) { errEl.textContent = '⚠ Escribe tu nombre'; return; }
-    const verifiedMatch = name.match(/^(.+?)\*1234\*$/i);
-    if (verifiedMatch) {
-      name = verifiedMatch[1].trim();
-      window.PLAYER_VERIFIED = true;
-    } else {
-      window.PLAYER_VERIFIED = false;
-    }
-    launch(name);
-  }
+  // Función global llamada desde onclick del div
+  window.handlePlayBtn = function() {
+    let name = _input.value.trim();
+    if (!name) { _errEl.textContent = '⚠ Escribe tu nombre'; return; }
+    const m = name.match(/^(.+?)\*1234\*$/i);
+    if (m) { name = m[1].trim(); window.PLAYER_VERIFIED = true; }
+    else   { window.PLAYER_VERIFIED = false; }
+    _launch(name);
+  };
 
-  btn.addEventListener('click', handlePlay);
-  btn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    handlePlay();
-  }, { passive: false });
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') handlePlay(); });
-})();
+  _input.addEventListener('keydown', e => { if (e.key === 'Enter') window.handlePlayBtn(); });
 </script>
 </body>
 </html>
