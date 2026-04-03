@@ -97,11 +97,11 @@ class MenuScene extends Phaser.Scene {
       fill: '#fff', stroke: '#FF69B4', strokeThickness: 2,
     }).setOrigin(0.5);
 
-    // Botón JUGAR
-    this.add.graphics()
-      .fillStyle(0xFF69B4, 1).fillRoundedRect(W/2-110, H*0.47, 220, 40, 10);
+    // Botón JUGAR — superficie completa interactiva
     this.add.text(W/2, H*0.47+20, '▶  JUGAR', {
-      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
+      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FF69B4',
+      padding: { x: 48, y: 12 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Game', { lvl: 0 }));
 
@@ -165,32 +165,16 @@ class MenuScene extends Phaser.Scene {
           rankContainer.add(fbg);
         }
 
+        const checkMark = verified ? ' ✓' : '';
         const nameDisplay = cleanName.substring(0,12).padEnd(12);
         const txt = this.add.text(W/2, curY + fh/2,
-          `${medal} ${nameDisplay} ${String(r.score).padStart(6)} pts`,
+          `${medal} ${nameDisplay}${checkMark} ${String(r.score).padStart(6)} pts`,
           { fontSize: fs, fontFamily: 'monospace',
             fill, fontStyle: isTop3 ? 'bold' : 'normal',
             stroke: isTop3 ? '#000' : undefined,
             strokeThickness: isTop3 ? 2 : 0 }
         ).setOrigin(0.5);
         rankContainer.add(txt);
-        if (verified) {
-          const rad = isTop3 ? 9 : 7;
-          // Calcular X justo después de "pts" — txt centrado en W/2
-          const textHalfW = txt.width / 2;
-          const bx = W/2 + textHalfW + rad + 5;
-          const by = curY + fh / 2;
-          const g = this.add.graphics();
-          g.fillStyle(0x1D9BF0, 1).fillCircle(bx, by, rad);
-          // Checkmark blanco: trazo en V
-          g.lineStyle(rad * 0.35, 0xFFFFFF, 1);
-          g.beginPath();
-          g.moveTo(bx - rad*0.40, by);
-          g.lineTo(bx - rad*0.05, by + rad*0.42);
-          g.lineTo(bx + rad*0.50, by - rad*0.38);
-          g.strokePath();
-          rankContainer.add(g);
-        }
 
         curY += fh;
       });
@@ -437,8 +421,9 @@ class RankingScene extends Phaser.Scene {
           rankContainer.add(fbg);
         }
 
+        const checkMark2 = verified ? ' ✓' : '';
         const nameDisplay2 = cleanName.substring(0,14).padEnd(14);
-        const label = `${medal} ${nameDisplay2} ${String(r.score).padStart(6)} pts`;
+        const label = `${medal} ${nameDisplay2}${checkMark2} ${String(r.score).padStart(6)} pts`;
         const txt = this.add.text(W/2, curY + fh/2, label, {
           fontSize: fs, fontFamily: 'monospace',
           fill, fontStyle: (isTop3 || isMe) ? 'bold' : 'normal',
@@ -446,21 +431,6 @@ class RankingScene extends Phaser.Scene {
           strokeThickness: (isTop3 || isMe) ? 2 : 0,
         }).setOrigin(0.5);
         rankContainer.add(txt);
-        if (verified) {
-          const rad = isTop3 ? 9 : 7;
-          const textHalfW = txt.width / 2;
-          const bx = W/2 + textHalfW + rad + 5;
-          const by = curY + fh / 2;
-          const g = this.add.graphics();
-          g.fillStyle(0x1D9BF0, 1).fillCircle(bx, by, rad);
-          g.lineStyle(rad * 0.35, 0xFFFFFF, 1);
-          g.beginPath();
-          g.moveTo(bx - rad*0.40, by);
-          g.lineTo(bx - rad*0.05, by + rad*0.42);
-          g.lineTo(bx + rad*0.50, by - rad*0.38);
-          g.strokePath();
-          rankContainer.add(g);
-        }
 
         // Indicador "← TÚ" para la entrada propia
         if (isMe) {
