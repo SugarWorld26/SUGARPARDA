@@ -309,7 +309,8 @@ class ResultScene extends Phaser.Scene {
         fill: '#000', backgroundColor: '#FF69B4', padding: { x: 14, y: 11 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', {
-          lvl: lvlIdx+1, prevScore: score, prevFast: data.prevFast
+          lvl: lvlIdx+1, prevScore: score, prevFast: data.prevFast,
+          prevBackpack: data.backpack != null ? data.backpack : CONFIG.BACKPACK_START,
         }));
 
       this.add.text(W*0.74, H*0.82, '⟵  MENÚ', {
@@ -361,15 +362,7 @@ class RankingScene extends Phaser.Scene {
       fill: '#FFC107', stroke: '#000', strokeThickness: 2,
     }).setOrigin(0.5);
 
-    // Botón volver (arriba derecha, siempre visible)
-    this.add.text(W - 12, 12, '✕ VOLVER', {
-      fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#000', backgroundColor: '#FFC107', padding: { x: 10, y: 6 },
-    }).setOrigin(1, 0).setInteractive({ useHandCursor: true }).setDepth(99)
-      .setScrollFactor(0)
-      .on('pointerdown', () => this.scene.start('Menu'));
-
-    // Zona scrollable
+    // Zona scrollable — se crea ANTES del botón para poder excluirlo
     const rankY0 = 52;
     const rankH  = H - rankY0 - 10;
     const lineH3 = 28;
@@ -378,6 +371,15 @@ class RankingScene extends Phaser.Scene {
     const rankCam = this.cameras.add(0, rankY0, W, rankH);
     rankCam.setBackgroundColor('rgba(0,0,0,0)');
     rankCam.scrollY = rankY0;
+
+    // Botón volver — creado DESPUÉS de rankCam para poder filtrarlo
+    const volverBtn = this.add.text(W - 12, 12, '✕ VOLVER', {
+      fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FFC107', padding: { x: 10, y: 6 },
+    }).setOrigin(1, 0).setInteractive({ useHandCursor: true }).setDepth(99)
+      .setScrollFactor(0)
+      .on('pointerdown', () => this.scene.start('Menu'));
+    volverBtn.cameraFilter = rankCam.id;
 
     const rows = await DB.top(200);
     const rankContainer = this.add.container(0, 0);
