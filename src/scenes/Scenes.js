@@ -73,6 +73,8 @@ class MenuScene extends Phaser.Scene {
   async create() {
     const W = CONFIG.W, H = CONFIG.H;
     this.cameras.main.setBackgroundColor('#000000');
+    AudioManager.unlock();
+    AudioManager.playMusic(-1);
 
     // Fondo grid rosa + bordes
     const bg = this.add.graphics();
@@ -208,6 +210,7 @@ class ResultScene extends Phaser.Scene {
   async create(data) {
     const W = CONFIG.W, H = CONFIG.H;
     this.cameras.main.setBackgroundColor('#000000');
+    AudioManager.stopMusic();
     const { score, secs, tir, rng, lvlIdx, name } = data;
     const lvl = CONFIG.LEVELS[lvlIdx];
 
