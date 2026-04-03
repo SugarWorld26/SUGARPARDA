@@ -109,6 +109,7 @@ const AudioManager = (() => {
     // ── MENÚ PRINCIPAL ─────────────────────────────────────────
     menu: {
       bpm: 128,
+      beats: 16,
       build(loopStart, B, totalDur) {
         const melody = [
           {n:'E5',d:.25},{n:'G5',d:.25},{n:'A5',d:.5},{n:'G5',d:.25},{n:'E5',d:.25},{n:'C5',d:.5},
@@ -167,6 +168,7 @@ const AudioManager = (() => {
     // ── NIVEL 1: Glucowood ─────────────────────────────────────
     level1: {
       bpm: 120,
+      beats: 16,
       build(loopStart, B, totalDur) {
         const melody=[
           {n:'E5',d:.5},{n:'E5',d:.5},{n:'R',d:.5},{n:'G5',d:.5},
@@ -205,6 +207,7 @@ const AudioManager = (() => {
     // ── NIVEL 2: Picos de Glucosa ──────────────────────────────
     level2: {
       bpm: 138,
+      beats: 17,
       build(loopStart, B, totalDur) {
         const melody=[
           {n:'A4',d:.5},{n:'R',d:.25},{n:'A4',d:.25},{n:'C5',d:.5},{n:'R',d:.5},
@@ -255,6 +258,7 @@ const AudioManager = (() => {
     // ── NIVEL 3: Ciudad Páncreas ───────────────────────────────
     level3: {
       bpm: 110,
+      beats: 16,
       build(loopStart, B, totalDur) {
         const melody=[
           {n:'C5',d:.5},{n:'Bb4',d:.5},{n:'Ab4',d:.5},{n:'G4',d:.5},
@@ -307,6 +311,7 @@ const AudioManager = (() => {
     // ── NIVEL 4: Laboratorio de Insulina ──────────────────────
     level4: {
       bpm: 125,
+      beats: 19,
       build(loopStart, B, totalDur) {
         const melody=[
           {n:'E4',d:.5},{n:'R',d:.5},{n:'F4',d:.25},{n:'E4',d:.25},{n:'R',d:1},
@@ -362,7 +367,8 @@ const AudioManager = (() => {
 
     // ── NIVEL 5: Mundo del Azúcar y las Piruletas ─────────────
     level5: {
-      bpm: 160,
+      bpm: 115,
+      beats: 17,
       build(loopStart, B, totalDur) {
         const melody=[
           {n:'G4',d:.25},{n:'A4',d:.25},{n:'B4',d:.25},{n:'C5',d:.25},
@@ -475,32 +481,10 @@ const AudioManager = (() => {
     _currentTrack = null;
   }
 
-  function _calcLoopDur(track) {
-    const B = 60 / track.bpm;
-    // Ejecutar en modo "dry-run" contando duración: usamos un flag temporal
-    // En vez de eso calculamos según la melodía de cada pista manualmente
-    // Aproximación: la pista tiene una duración fija conocida en beats
-    // Se calcula la primera vez ejecutando build y midiendo
-    return B; // placeholder — se calcula real abajo
-  }
-
   function _scheduleLoop(track, loopStart) {
     const B = 60 / track.bpm;
-    // Calcular totalDur: necesitamos saber cuántos beats dura el loop
-    // Lo hacemos guardando el tiempo máximo alcanzado durante build
-    let maxT = loopStart;
-    const origOsc = _osc;
-    // Monkey-patch temporal para medir duración
-    const times = [];
-    // En vez de monkey-patch, usamos valores conocidos por pista
-    const beatCounts = {
-      menu:16, level1:12, level2:16, level3:12, level4:16, level5:16
-    };
-    // Obtener nombre de la pista
-    const name = Object.keys(TRACKS).find(k => TRACKS[k] === track) || 'menu';
-    const beats = beatCounts[name] || 16;
-    const totalDur = beats * B * 4; // 4 beats por compás
-
+    // Duración real = beats de la melodía (calculados exactos por pista)
+    const totalDur = track.beats * B;
     track.build(loopStart, B, totalDur);
     return totalDur;
   }
@@ -596,9 +580,15 @@ const AudioManager = (() => {
     hole() {
       _init(); _resume();
       const now = _ctx.currentTime;
-      _sweep(660, 40,  'sawtooth', now,     .55, .28, _sfxGain);
-      _sweep(220, 30,  'square',   now+.20, .40, .18, _sfxGain);
-      _noise(now+.10, .45, .25, .20, _sfxGain);
+      // Fase 1: grito descendente — caída libre
+      _sweep(880, 40,  'sawtooth', now,       0.65, 0.30, _sfxGain);
+      _sweep(660, 30,  'square',   now + 0.05, 0.60, 0.22, _sfxGain);
+      // Fase 2: impacto — golpe sordo grave
+      _noise(now + 0.55, 0.20, 0.45, 0.06, _sfxGain);
+      _sweep(120, 30,  'sawtooth', now + 0.55, 0.18, 0.35, _sfxGain);
+      // Fase 3: eco final que se desvanece
+      _sweep(200, 40,  'sine',     now + 0.72, 0.40, 0.15, _sfxGain);
+      _noise(now + 0.72, 0.35, 0.18, 0.12, _sfxGain);
     },
 
     rangazo() {
