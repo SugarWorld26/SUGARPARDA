@@ -94,7 +94,7 @@ class HUD {
     this._buildButtons(fastLeft, backpack);
   }
 
-  buildMinimap(ground, levelLength, levelName) {
+  buildMinimap(ground, levelLength, levelName, lvl) {
     const W  = CONFIG.W;
     const MY = 102;
     const MH = 14;
@@ -103,9 +103,9 @@ class HUD {
     this._scene.add.graphics().setScrollFactor(0).setDepth(89)
       .fillStyle(0x000000, 0.55).fillRect(0, MY, W, MH);
 
-    // Nombre del nivel debajo del minimapa
-    if (levelName) {
-      this._scene.add.text(W / 2, MY + MH + 2, levelName.toUpperCase(), {
+    // Nombre del nivel debajo del minimapa (con número)
+    if (levelName && lvl) {
+      this._scene.add.text(W / 2, MY + MH + 2, `NIVEL ${lvl.id} - ${levelName.toUpperCase()}`, {
         fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold',
         fill: '#FFD700', stroke: '#000', strokeThickness: 3,
       }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(92);
@@ -139,6 +139,15 @@ class HUD {
       }
       prevEnd = seg.x + seg.w;
     });
+
+    // Checkpoints — pequeña línea verde en su posición X
+    if (lvl && lvl.checkpoints) {
+      const sp = levelLength / (lvl.checkpoints + 1);
+      for (let i = 1; i <= lvl.checkpoints; i++) {
+        const cx = Math.round(sp * i * sc);
+        gfx.fillStyle(0x00E676, 1).fillRect(cx - 1, MY, 2, MH);
+      }
+    }
 
     // Meta
     gfx.fillStyle(0xFFD700, 1).fillRect(Math.round((levelLength - 160) * sc), MY, 3, MH);
