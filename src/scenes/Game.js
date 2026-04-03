@@ -268,6 +268,7 @@ class GameScene extends Phaser.Scene {
     this._dead = true;
     this._player.sprite.body.setVelocityX(0);
     this._player.sprite.body.setVelocityY(0);
+    AudioManager.stopMusic();
     AudioManager.sfx('hole');
     this._flash(0xB71C1C, 600);
 
