@@ -278,61 +278,65 @@ class ResultScene extends Phaser.Scene {
       }).setOrigin(0.5);
     });
 
-    // ── BOTONES y RANKING en la parte inferior ──
+    // ── LAYOUT INFERIOR: ranking a la izquierda, botones a la derecha ──
     const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
 
-    // Botones en la fila de abajo del todo
-    const btnY = H * 0.91;
+    // Cargar datos primero (sin bloquear render)
+    const rows  = await DB.top(8);
+    const myPos = await DB.getPosition(name, score);
+
+    // Ranking — columna izquierda
+    const rkX  = W * 0.30;
+    const rkY  = H * 0.70;
+    const rkW  = W * 0.52;
+    const rkH  = H * 0.26;
+
+    this.add.graphics()
+      .fillStyle(0x0d1020, 1).fillRoundedRect(rkX - rkW/2, rkY, rkW, rkH, 8)
+      .lineStyle(1, 0xFFC107, 0.6).strokeRoundedRect(rkX - rkW/2, rkY, rkW, rkH, 8);
+
+    this.add.text(rkX, rkY + 12, '🏆  RANKING GLOBAL', {
+      fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
+    }).setOrigin(0.5);
+
+    if (myPos) {
+      const pc = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : '#fff';
+      this.add.text(rkX, rkY + 26, `Tu posición: #${myPos}`, {
+        fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: pc,
+      }).setOrigin(0.5);
+    }
+
+    const lineH = 15;
+    rows.forEach((r, i) => {
+      const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+      const isMe  = r.player_name === name;
+      this.add.text(rkX, rkY + 40 + i * lineH,
+        `${medal} ${r.player_name.substring(0,10).padEnd(10)} ${String(r.score).padStart(5)}`,
+        { fontSize: '11px', fontFamily: 'monospace',
+          fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#aaa',
+          fontStyle: isMe ? 'bold' : 'normal' }
+      ).setOrigin(0.5);
+    });
+
+    // Botones — columna derecha, alineados verticalmente
+    const btnX  = W * 0.82;
+    const btn1Y = H * 0.76;
+    const btn2Y = H * 0.88;
+
     if (hasNext) {
-      this.add.text(W*0.25, btnY, '▶  SIGUIENTE', {
-        fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
-        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 14, y: 10 },
+      this.add.text(btnX, btn1Y, '▶  SIGUIENTE', {
+        fontSize: '15px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 12, y: 10 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', {
           lvl: lvlIdx+1, prevScore: score, prevFast: data.prevFast
         }));
     }
-    this.add.text(hasNext ? W*0.75 : W*0.5, btnY, '⟵  MENÚ', {
-      fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#000', backgroundColor: '#FFC107', padding: { x: 14, y: 10 },
+
+    this.add.text(hasNext ? btnX : W*0.5, hasNext ? btn2Y : H*0.82, '⟵  MENÚ', {
+      fontSize: '15px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FFC107', padding: { x: 12, y: 10 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Menu'));
-
-    // ── RANKING — ocupa el espacio entre stats y botones ──
-    const rkX = W/2;
-    const rkY0 = H*0.70;  // Y inicio del bloque ranking
-    const rkW = W*0.50, rkH = H*0.18;
-    const rkYc = rkY0 + rkH/2;
-
-    this.add.graphics()
-      .fillStyle(0x0d1020, 1).fillRoundedRect(rkX-rkW/2, rkY0, rkW, rkH, 8)
-      .lineStyle(1, 0xFFC107, 0.5).strokeRoundedRect(rkX-rkW/2, rkY0, rkW, rkH, 8);
-
-    this.add.text(rkX, rkY0 + 10, '🏆 RANKING GLOBAL', {
-      fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
-    }).setOrigin(0.5);
-
-    // Cargar datos ranking
-    const rows  = await DB.top(10);
-    const myPos = await DB.getPosition(name, score);
-
-    if (myPos) {
-      const posColor = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : '#ffffff';
-      this.add.text(rkX, rkY0 + 24, `Tu posición: #${myPos}`, {
-        fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: posColor,
-      }).setOrigin(0.5);
-    }
-
-    const lineH = 14;
-    rows.slice(0, 6).forEach((r, i) => {
-      const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
-      const isMe  = r.player_name === name;
-      this.add.text(rkX, rkY0 + 36 + i * lineH,
-        `${medal} ${r.player_name.substring(0,10).padEnd(10)} ${String(r.score).padStart(5)} pts`,
-        { fontSize: '10px', fontFamily: 'monospace',
-          fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#888',
-          fontStyle: isMe ? 'bold' : 'normal' }
-      ).setOrigin(0.5);
-    });
   }
 }
