@@ -212,8 +212,18 @@ class ResultScene extends Phaser.Scene {
     const lvl = CONFIG.LEVELS[lvlIdx];
 
     const isLastLevel = lvlIdx + 1 >= CONFIG.LEVELS.length;
+
+    // Si es el último nivel: guardar y buscar posición en ranking
+    let rankPos = null;
     if (isLastLevel) {
       await DB.save({ name, score, secs, tir, rng, level: lvl.id });
+      // Obtener ranking completo para calcular posición
+      const allRows = await DB.top(200);
+      // La posición es cuántas entradas tienen score mayor al nuestro + 1
+      // (puede haber empates: mostramos el primer puesto igual)
+      rankPos = allRows.findIndex(r => r.score <= score);
+      if (rankPos === -1) rankPos = allRows.length; // último
+      rankPos += 1; // 1-based
     }
 
     // Fondo grid
@@ -233,11 +243,21 @@ class ResultScene extends Phaser.Scene {
       fill: '#FF69B4', stroke: '#880E4F', strokeThickness: 3,
     }).setOrigin(0.5);
 
-    const nextLvl = CONFIG.LEVELS[lvlIdx + 1];
-    if (nextLvl) {
-      this.add.text(W/2, H*0.21, `PRÓXIMO: ${nextLvl.name.toUpperCase()}`, {
-        fontSize: '15px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
+    // Línea de subtítulo: puesto en ranking (último nivel) o próximo nivel
+    if (isLastLevel && rankPos !== null) {
+      const medal = rankPos === 1 ? '🥇' : rankPos === 2 ? '🥈' : rankPos === 3 ? '🥉' : '🏅';
+      const posColor = rankPos <= 3 ? '#FFD700' : rankPos <= 10 ? '#FFC107' : '#FF69B4';
+      this.add.text(W/2, H*0.21, `${medal}  PUESTO #${rankPos} EN EL RANKING`, {
+        fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: posColor, stroke: '#000', strokeThickness: 2,
       }).setOrigin(0.5);
+    } else {
+      const nextLvl = CONFIG.LEVELS[lvlIdx + 1];
+      if (nextLvl) {
+        this.add.text(W/2, H*0.21, `PRÓXIMO: ${nextLvl.name.toUpperCase()}`, {
+          fontSize: '15px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
+        }).setOrigin(0.5);
+      }
     }
 
     // Puntuación
@@ -279,23 +299,155 @@ class ResultScene extends Phaser.Scene {
       .lineStyle(1, 0xFF69B4, 0.3)
       .lineBetween(W*0.05, H*0.68, W*0.95, H*0.68);
 
-    // Botones — simples y seguros
-    const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
+    // ── Botones ──
+    const hasNext = !isLastLevel && !data.gameOver;
 
     if (hasNext) {
-      this.add.text(W*0.28, H*0.80, '▶  SIGUIENTE NIVEL', {
-        fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold',
-        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 18, y: 12 },
+      // Niveles intermedios: SIGUIENTE NIVEL (izq) + MENÚ (der)
+      this.add.text(W*0.28, H*0.82, '▶  SIGUIENTE NIVEL', {
+        fontSize: '17px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 14, y: 11 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', {
           lvl: lvlIdx+1, prevScore: score, prevFast: data.prevFast
         }));
+
+      this.add.text(W*0.74, H*0.82, '⟵  MENÚ', {
+        fontSize: '17px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FFC107', padding: { x: 14, y: 11 },
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => this.scene.start('Menu'));
+
+    } else {
+      // Último nivel: MENÚ (izq) + RANKING (der)
+      this.add.text(W*0.28, H*0.82, '⟵  MENÚ', {
+        fontSize: '17px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FFC107', padding: { x: 14, y: 11 },
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => this.scene.start('Menu'));
+
+      this.add.text(W*0.74, H*0.82, '🏆  RANKING', {
+        fontSize: '17px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 14, y: 11 },
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => this.scene.start('Ranking', { myScore: score, myName: name }));
+    }
+  }
+}
+
+// ================================================================
+//  Ranking.js — Pantalla de ranking completo
+// ================================================================
+class RankingScene extends Phaser.Scene {
+  constructor() { super('Ranking'); }
+
+  async create(data) {
+    const W = CONFIG.W, H = CONFIG.H;
+    this.cameras.main.setBackgroundColor('#000000');
+    const myScore = data ? data.myScore : null;
+    const myName  = data ? data.myName  : null;
+
+    // Fondo grid
+    const bg = this.add.graphics();
+    bg.fillStyle(0x000000, 1).fillRect(0, 0, W, H);
+    bg.lineStyle(1, 0xFF69B4, 0.10);
+    for (let y = 0; y < H; y += 40) bg.lineBetween(0, y, W, y);
+    for (let x = 0; x < W; x += 80) bg.lineBetween(x, 0, x, H);
+    bg.lineStyle(2, 0xFF69B4, 0.5).strokeRect(8, 8, W-16, H-16);
+
+    // Título
+    this.add.text(W/2, 26, '🏆  RANKING GLOBAL', {
+      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#FFC107', stroke: '#000', strokeThickness: 2,
+    }).setOrigin(0.5);
+
+    // Botón volver (arriba derecha, siempre visible)
+    this.add.text(W - 12, 12, '✕ VOLVER', {
+      fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FFC107', padding: { x: 10, y: 6 },
+    }).setOrigin(1, 0).setInteractive({ useHandCursor: true }).setDepth(99)
+      .setScrollFactor(0)
+      .on('pointerdown', () => this.scene.start('Menu'));
+
+    // Zona scrollable
+    const rankY0 = 52;
+    const rankH  = H - rankY0 - 10;
+    const lineH3 = 28;
+    const lineH  = 20;
+
+    const rankCam = this.cameras.add(0, rankY0, W, rankH);
+    rankCam.setBackgroundColor('rgba(0,0,0,0)');
+    rankCam.scrollY = rankY0;
+
+    const rows = await DB.top(200);
+    const rankContainer = this.add.container(0, 0);
+
+    if (!rows.length) {
+      rankContainer.add(this.add.text(W/2, rankY0 + 20, '¡Aún no hay puntuaciones!', {
+        fontSize: '14px', fontFamily: 'monospace', fill: '#555',
+      }).setOrigin(0.5));
+    } else {
+      let curY = rankY0 + 6;
+      rows.forEach((r, i) => {
+        const isTop3 = i < 3;
+        const fh     = isTop3 ? lineH3 : lineH;
+        const medal  = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+        const isMe   = r.player_name === myName && r.score === myScore;
+        const fs     = isTop3 ? '14px' : '12px';
+        const fill   = isMe   ? '#00FF99'
+                     : i === 0 ? '#FFD700'
+                     : i === 1 ? '#E0E0E0'
+                     : i === 2 ? '#CD7F32'
+                     : '#aaa';
+
+        if (isTop3 || isMe) {
+          const fbg   = this.add.graphics();
+          const bgCol = isMe    ? 0x003322
+                      : i === 0 ? 0x332200
+                      : i === 1 ? 0x222222
+                      : 0x221100;
+          fbg.fillStyle(bgCol, 0.85).fillRoundedRect(W*0.04, curY, W*0.92, fh - 2, 4);
+          rankContainer.add(fbg);
+        }
+
+        const label = `${medal} ${r.player_name.substring(0,14).padEnd(14)} ${String(r.score).padStart(6)} pts`;
+        rankContainer.add(this.add.text(W/2, curY + fh/2, label, {
+          fontSize: fs, fontFamily: 'monospace',
+          fill, fontStyle: (isTop3 || isMe) ? 'bold' : 'normal',
+          stroke: (isTop3 || isMe) ? '#000' : undefined,
+          strokeThickness: (isTop3 || isMe) ? 2 : 0,
+        }).setOrigin(0.5));
+
+        // Indicador "← TÚ" para la entrada propia
+        if (isMe) {
+          rankContainer.add(this.add.text(W*0.93, curY + fh/2, '← TÚ', {
+            fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold',
+            fill: '#00FF99',
+          }).setOrigin(1, 0.5));
+        }
+
+        curY += fh;
+      });
     }
 
-    this.add.text(hasNext ? W*0.74 : W*0.5, H*0.80, '⟵  MENÚ PRINCIPAL', {
-      fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#000', backgroundColor: '#FFC107', padding: { x: 18, y: 12 },
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.scene.start('Menu'));
+    // Excluir de cámara principal
+    rankContainer.each(obj => { obj.cameraFilter = this.cameras.main.id; });
+
+    // Scroll táctil
+    const totalH   = 6 + rows.slice(0,3).length * lineH3 + Math.max(0, rows.length - 3) * lineH;
+    const maxScroll = Math.max(0, totalH - rankH);
+    let scrollY = 0;
+
+    this.input.on('pointermove', (p) => {
+      if (!p.isDown) return;
+      scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.4, 0, maxScroll);
+      rankCam.scrollY = rankY0 + scrollY;
+    });
+
+    if (maxScroll > 0) {
+      this.add.text(W/2, H - 8, '▼ desliza para ver más', {
+        fontSize: '9px', fontFamily: 'monospace', fill: '#FF69B4',
+      }).setOrigin(0.5).setAlpha(0.6);
+    }
   }
 }
