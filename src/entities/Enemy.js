@@ -215,12 +215,21 @@ class Spawner {
       const sx   = e.getData('startX');
       const rng  = e.getData('range');
       const spd  = e.getData('speed');
-      const surfY= e.getData('surfY');
       const th   = e.height || 48;
+
+      // Recalcular surfY en tiempo real según posición X actual
+      const surfY = this._ground.getSurfaceY(e.x);
+
+      // Si el suelo bajo el enemigo es un agujero, volver al startX
+      if (!this._ground.isSolidAt(e.x)) {
+        e.x = sx;
+        e.body.setVelocityX(-e.body.velocity.x);
+        return;
+      }
 
       // Patrulla horizontal — verifica suelo sólido antes de avanzar
       const nextX = e.x + (e.body.velocity.x > 0 ? 20 : -20);
-      const solidAhead = this._ground.isSolidAt(nextX);
+      const solidAhead = this._ground.isSolidAt(nextX) && !this._ground.isSlopeAt(nextX);
       if (!solidAhead) {
         e.body.setVelocityX(-e.body.velocity.x);
         e.setFlipX(e.body.velocity.x < 0);
@@ -232,7 +241,7 @@ class Spawner {
         e.setFlipX(true);
       }
 
-      // Animación: oscilación vertical suave anclada a surfY
+      // Animación: oscilación vertical anclada al suelo real
       let tk = e.getData('tick') + delta;
       if (tk > 400) tk -= 400;
       e.setData('tick', tk);
