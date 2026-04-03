@@ -278,13 +278,13 @@ class ResultScene extends Phaser.Scene {
       }).setOrigin(0.5);
     });
 
-    // ── BOTONES — primero, sin async, funcionan siempre ──
+    // ── BOTONES y RANKING en la parte inferior ──
     const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
-    const btnY = H * 0.70;
 
-    // Botón SIGUIENTE izquierda
+    // Botones en la fila de abajo del todo
+    const btnY = H * 0.91;
     if (hasNext) {
-      this.add.text(W*0.14, btnY, '▶  SIGUIENTE', {
+      this.add.text(W*0.25, btnY, '▶  SIGUIENTE', {
         fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
         fill: '#000', backgroundColor: '#FF69B4', padding: { x: 14, y: 10 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
@@ -292,45 +292,45 @@ class ResultScene extends Phaser.Scene {
           lvl: lvlIdx+1, prevScore: score, prevFast: data.prevFast
         }));
     }
-
-    // Botón MENÚ derecha
-    this.add.text(hasNext ? W*0.86 : W*0.5, btnY, '⟵  MENÚ', {
+    this.add.text(hasNext ? W*0.75 : W*0.5, btnY, '⟵  MENÚ', {
       fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#000', backgroundColor: '#FFC107', padding: { x: 14, y: 10 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Menu'));
 
-    // ── RANKING centro — async después de botones ──
-    const rkX = W/2, rkY = H*0.70;
-    const rkW = W*0.42, rkH = H*0.24;
+    // ── RANKING — ocupa el espacio entre stats y botones ──
+    const rkX = W/2;
+    const rkY0 = H*0.70;  // Y inicio del bloque ranking
+    const rkW = W*0.50, rkH = H*0.18;
+    const rkYc = rkY0 + rkH/2;
 
     this.add.graphics()
-      .fillStyle(0x0d1020, 1).fillRoundedRect(rkX-rkW/2, rkY-rkH/2, rkW, rkH, 8)
-      .lineStyle(1, 0xFFC107, 0.5).strokeRoundedRect(rkX-rkW/2, rkY-rkH/2, rkW, rkH, 8);
+      .fillStyle(0x0d1020, 1).fillRoundedRect(rkX-rkW/2, rkY0, rkW, rkH, 8)
+      .lineStyle(1, 0xFFC107, 0.5).strokeRoundedRect(rkX-rkW/2, rkY0, rkW, rkH, 8);
 
-    this.add.text(rkX, rkY-rkH/2+10, '🏆 RANKING', {
+    this.add.text(rkX, rkY0 + 10, '🏆 RANKING GLOBAL', {
       fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
 
+    // Cargar datos ranking
     const rows  = await DB.top(10);
     const myPos = await DB.getPosition(name, score);
 
     if (myPos) {
       const posColor = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : '#ffffff';
-      this.add.text(rkX, rkY-rkH/2+23, `Tu posición: #${myPos}`, {
+      this.add.text(rkX, rkY0 + 24, `Tu posición: #${myPos}`, {
         fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: posColor,
       }).setOrigin(0.5);
     }
 
-    const lineH = 15;
-    const startY = rkY - rkH/2 + 36;
-    rows.slice(0,7).forEach((r, i) => {
+    const lineH = 14;
+    rows.slice(0, 6).forEach((r, i) => {
       const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
       const isMe  = r.player_name === name;
-      this.add.text(rkX, startY + i*lineH,
-        `${medal} ${r.player_name.substring(0,10).padEnd(10)} ${String(r.score).padStart(5)}`,
+      this.add.text(rkX, rkY0 + 36 + i * lineH,
+        `${medal} ${r.player_name.substring(0,10).padEnd(10)} ${String(r.score).padStart(5)} pts`,
         { fontSize: '10px', fontFamily: 'monospace',
-          fill: isMe ? '#FF69B4' : i<3 ? '#FFC107' : '#888',
+          fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#888',
           fontStyle: isMe ? 'bold' : 'normal' }
       ).setOrigin(0.5);
     });
