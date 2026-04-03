@@ -165,16 +165,34 @@ class MenuScene extends Phaser.Scene {
           rankContainer.add(fbg);
         }
 
-        const checkMark = verified ? ' ✓' : '';
         const nameDisplay = cleanName.substring(0,12).padEnd(12);
+        const verifiedSpace = verified ? '   ' : '';
         const txt = this.add.text(W/2, curY + fh/2,
-          `${medal} ${nameDisplay}${checkMark} ${String(r.score).padStart(6)} pts`,
+          `${medal} ${nameDisplay}${verifiedSpace} ${String(r.score).padStart(6)} pts`,
           { fontSize: fs, fontFamily: 'monospace',
             fill, fontStyle: isTop3 ? 'bold' : 'normal',
             stroke: isTop3 ? '#000' : undefined,
             strokeThickness: isTop3 ? 2 : 0 }
         ).setOrigin(0.5);
         rankContainer.add(txt);
+        if (verified) {
+          // Círculo azul justo después del nombre
+          // charW aproximado en monospace: fontSize * 0.6
+          const charW = isTop3 ? 15 * 0.6 : 11 * 0.6;
+          const nameLen = (medal.length + 1 + nameDisplay.length);
+          const nameEndX = W/2 - txt.width/2 + nameLen * charW + charW * 0.5;
+          const rad = isTop3 ? 8 : 6;
+          const by = curY + fh / 2;
+          const g = this.add.graphics();
+          g.fillStyle(0x1D9BF0, 1).fillCircle(nameEndX + rad, by, rad);
+          g.lineStyle(rad * 0.38, 0xFFFFFF, 1);
+          g.beginPath();
+          g.moveTo(nameEndX + rad - rad*0.38, by + rad*0.02);
+          g.lineTo(nameEndX + rad - rad*0.02, by + rad*0.40);
+          g.lineTo(nameEndX + rad + rad*0.48, by - rad*0.36);
+          g.strokePath();
+          rankContainer.add(g);
+        }
 
         curY += fh;
       });
@@ -421,9 +439,9 @@ class RankingScene extends Phaser.Scene {
           rankContainer.add(fbg);
         }
 
-        const checkMark2 = verified ? ' ✓' : '';
         const nameDisplay2 = cleanName.substring(0,14).padEnd(14);
-        const label = `${medal} ${nameDisplay2}${checkMark2} ${String(r.score).padStart(6)} pts`;
+        const verifiedSpace2 = verified ? '   ' : '';
+        const label = `${medal} ${nameDisplay2}${verifiedSpace2} ${String(r.score).padStart(6)} pts`;
         const txt = this.add.text(W/2, curY + fh/2, label, {
           fontSize: fs, fontFamily: 'monospace',
           fill, fontStyle: (isTop3 || isMe) ? 'bold' : 'normal',
@@ -431,6 +449,22 @@ class RankingScene extends Phaser.Scene {
           strokeThickness: (isTop3 || isMe) ? 2 : 0,
         }).setOrigin(0.5);
         rankContainer.add(txt);
+        if (verified) {
+          const charW2 = isTop3 ? 14 * 0.6 : 12 * 0.6;
+          const nameLen2 = (medal.length + 1 + nameDisplay2.length);
+          const nameEndX2 = W/2 - txt.width/2 + nameLen2 * charW2 + charW2 * 0.5;
+          const rad2 = isTop3 ? 8 : 6;
+          const by2 = curY + fh / 2;
+          const g2 = this.add.graphics();
+          g2.fillStyle(0x1D9BF0, 1).fillCircle(nameEndX2 + rad2, by2, rad2);
+          g2.lineStyle(rad2 * 0.38, 0xFFFFFF, 1);
+          g2.beginPath();
+          g2.moveTo(nameEndX2 + rad2 - rad2*0.38, by2 + rad2*0.02);
+          g2.lineTo(nameEndX2 + rad2 - rad2*0.02, by2 + rad2*0.40);
+          g2.lineTo(nameEndX2 + rad2 + rad2*0.48, by2 - rad2*0.36);
+          g2.strokePath();
+          rankContainer.add(g2);
+        }
 
         // Indicador "← TÚ" para la entrada propia
         if (isMe) {
