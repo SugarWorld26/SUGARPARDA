@@ -170,8 +170,16 @@
   }
 
   btn.addEventListener('click', () => {
-    const name = input.value.trim();
+    let name = input.value.trim();
     if (!name) { errEl.textContent = '⚠ Escribe tu nombre'; return; }
+    // Detectar código de verificación *1234*
+    const verifiedMatch = name.match(/^(.+?)\*1234\*$/i);
+    if (verifiedMatch) {
+      name = verifiedMatch[1].trim();
+      window.PLAYER_VERIFIED = true;
+    } else {
+      window.PLAYER_VERIFIED = false;
+    }
     launch(name);
   });
   input.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
