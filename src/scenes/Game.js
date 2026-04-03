@@ -134,12 +134,16 @@ class GameScene extends Phaser.Scene {
     this._apples = this.physics.add.staticGroup();
     for (let i = 0; i < lvl.apples; i++) {
       let ax, tries = 0;
-      do { ax = Phaser.Math.Between(600, lvl.length - 400); tries++; }
-      while (!this._ground.isSolidAt(ax) && tries < 20);
-      const a = this._apples.create(ax, GY - 40, 'apple');
+      do {
+        ax = Phaser.Math.Between(600, lvl.length - 400);
+        tries++;
+      } while ((!this._ground.isSolidAt(ax) || this._ground.isSlopeAt(ax)) && tries < 40);
+      if (!this._ground.isSolidAt(ax) || this._ground.isSlopeAt(ax)) continue;
+      const surfY = this._ground.getSurfaceY(ax);
+      const a = this._apples.create(ax, surfY - 40, 'apple');
       a.setDepth(7);
       a.refreshBody();
-      this.tweens.add({ targets: a, y: GY - 62, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.tweens.add({ targets: a, y: surfY - 58, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
     this.physics.add.overlap(this._player.sprite, this._apples, (_, a) => {
       a.destroy();
@@ -154,14 +158,21 @@ class GameScene extends Phaser.Scene {
       }
     });
 
-    // ── Checkpoints — se activan al cruzar la X, saltando o corriendo ──
-    this._cpData = [];  // { x, sprite, done }
+    // ── Checkpoints — se activan al cruzar la X ──
+    this._cpData = [];
     const sp = lvl.length / (lvl.checkpoints + 1);
     for (let i = 1; i <= lvl.checkpoints; i++) {
-      const cx = Math.round(sp * i);
-      const cpTex  = this.textures.exists('cp_off') ? 'cp_off' : '_cp';
+      let cx = Math.round(sp * i);
+      // Si cae en agujero o cuesta, buscar suelo plano cercano
+      let offset = 0;
+      while ((!this._ground.isSolidAt(cx) || this._ground.isSlopeAt(cx)) && offset < 400) {
+        offset += 20;
+        cx = Math.round(sp * i) + (offset % 2 === 0 ? offset/2 : -Math.ceil(offset/2));
+      }
+      if (!this._ground.isSolidAt(cx) || this._ground.isSlopeAt(cx)) continue;
+      const cpTex    = this.textures.exists('cp_off') ? 'cp_off' : '_cp';
       if (cpTex === '_cp' && !this.textures.exists('_cp')) this._makeCpTex();
-      const cpSurfY = this._ground ? this._ground.getSurfaceY(cx) : GY;
+      const cpSurfY  = this._ground.getSurfaceY(cx);
       const cpSprite = this.add.image(cx, cpSurfY, cpTex, 0).setDepth(6).setOrigin(0.5, 1);
       this._cpData.push({ x: cx, sprite: cpSprite, done: false });
     }
@@ -172,12 +183,13 @@ class GameScene extends Phaser.Scene {
     do {
       fpx = Phaser.Math.Between(Math.round(lvl.length * 0.3), Math.round(lvl.length * 0.7));
       fpTries++;
-    } while (!this._ground.isSolidAt(fpx) && fpTries < 30);
-    if (this._ground.isSolidAt(fpx)) {
-      const fp = this._fastPickups.create(fpx, GY - 40, 'fastpickup');
+    } while ((!this._ground.isSolidAt(fpx) || this._ground.isSlopeAt(fpx)) && fpTries < 40);
+    if (this._ground.isSolidAt(fpx) && !this._ground.isSlopeAt(fpx)) {
+      const fpSurfY = this._ground.getSurfaceY(fpx);
+      const fp = this._fastPickups.create(fpx, fpSurfY - 40, 'fastpickup');
       fp.setDepth(7);
       fp.refreshBody();
-      this.tweens.add({ targets: fp, y: GY - 62, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.tweens.add({ targets: fp, y: fpSurfY - 58, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
     this.physics.add.overlap(this._player.sprite, this._fastPickups, (_, fp) => {
       fp.destroy();
