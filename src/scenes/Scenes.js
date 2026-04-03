@@ -166,15 +166,22 @@ class MenuScene extends Phaser.Scene {
         }
 
         const nameDisplay = cleanName.substring(0,12).padEnd(12);
-        const verifiedMark = verified ? ' ✓' : '  ';
         const txt = this.add.text(W/2, curY + fh/2,
-          `${medal} ${nameDisplay}${verifiedMark} ${String(r.score).padStart(6)} pts`,
+          `${medal} ${nameDisplay} ${String(r.score).padStart(6)} pts`,
           { fontSize: fs, fontFamily: 'monospace',
             fill, fontStyle: isTop3 ? 'bold' : 'normal',
             stroke: isTop3 ? '#000' : undefined,
             strokeThickness: isTop3 ? 2 : 0 }
         ).setOrigin(0.5);
         rankContainer.add(txt);
+        if (verified) {
+          const badge = this.add.text(W * 0.76, curY + fh/2, '  ✓  ', {
+            fontSize: isTop3 ? '13px' : '10px', fontFamily: 'monospace', fontStyle: 'bold',
+            fill: '#ffffff', backgroundColor: '#1D9BF0',
+            padding: { x: 3, y: 2 },
+          }).setOrigin(0.5);
+          rankContainer.add(badge);
+        }
 
         curY += fh;
       });
@@ -422,8 +429,7 @@ class RankingScene extends Phaser.Scene {
         }
 
         const nameDisplay2 = cleanName.substring(0,14).padEnd(14);
-        const verifiedMark2 = verified ? ' ✓' : '  ';
-        const label = `${medal} ${nameDisplay2}${verifiedMark2} ${String(r.score).padStart(6)} pts`;
+        const label = `${medal} ${nameDisplay2} ${String(r.score).padStart(6)} pts`;
         const txt = this.add.text(W/2, curY + fh/2, label, {
           fontSize: fs, fontFamily: 'monospace',
           fill, fontStyle: (isTop3 || isMe) ? 'bold' : 'normal',
@@ -431,6 +437,14 @@ class RankingScene extends Phaser.Scene {
           strokeThickness: (isTop3 || isMe) ? 2 : 0,
         }).setOrigin(0.5);
         rankContainer.add(txt);
+        if (verified) {
+          const badge = this.add.text(W * 0.78, curY + fh/2, '  ✓  ', {
+            fontSize: isTop3 ? '13px' : '10px', fontFamily: 'monospace', fontStyle: 'bold',
+            fill: '#ffffff', backgroundColor: '#1D9BF0',
+            padding: { x: 3, y: 2 },
+          }).setOrigin(0.5);
+          rankContainer.add(badge);
+        }
 
         // Indicador "← TÚ" para la entrada propia
         if (isMe) {
