@@ -158,6 +158,7 @@ class MenuScene extends Phaser.Scene {
         fontSize: '12px', fontFamily: 'monospace', fill: '#555',
       }).setOrigin(0.5));
     } else {
+      const badges = []; // badges fuera del container para evitar coords locales
       let curY = rankY0 + 4;
       rows.forEach((r, i) => {
         const isTop3    = i < 3;
@@ -190,13 +191,16 @@ class MenuScene extends Phaser.Scene {
         ).setOrigin(0.5);
         rankContainer.add(txt);
 
-        // Badge verificado — posición fija a la derecha del bloque
+        // Badge verificado — fuera del container, coordenadas mundiales directas
         if (verified) {
-          _addVerifiedBadge(this, W * 0.80, curY + fh / 2, rankContainer);
+          badges.push(_addVerifiedBadge(this, W * 0.80, curY + fh / 2, null));
         }
 
         curY += fh;
       });
+
+      // Aplicar cameraFilter a los badges igual que al container
+      badges.forEach(b => { b.cameraFilter = this.cameras.main.id; });
     }
 
     // Ignorar en cámara principal
@@ -415,6 +419,7 @@ class RankingScene extends Phaser.Scene {
         fontSize: '14px', fontFamily: 'monospace', fill: '#555',
       }).setOrigin(0.5));
     } else {
+      const badges = [];
       let curY = rankY0 + 6;
       rows.forEach((r, i) => {
         const isTop3    = i < 3;
@@ -449,9 +454,9 @@ class RankingScene extends Phaser.Scene {
         }).setOrigin(0.5);
         rankContainer.add(txt);
 
-        // Badge verificado — posición fija a la derecha del bloque
+        // Badge verificado — fuera del container, coordenadas mundiales
         if (verified) {
-          _addVerifiedBadge(this, W * 0.80, curY + fh / 2, rankContainer);
+          badges.push(_addVerifiedBadge(this, W * 0.80, curY + fh / 2, null));
         }
 
         // Indicador "← TÚ" para la entrada propia
@@ -464,6 +469,9 @@ class RankingScene extends Phaser.Scene {
 
         curY += fh;
       });
+
+      // Aplicar cameraFilter a los badges igual que al container
+      badges.forEach(b => { b.cameraFilter = this.cameras.main.id; });
     }
 
     // Excluir de cámara principal
