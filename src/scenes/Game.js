@@ -5,18 +5,22 @@ class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
 
   init(data) {
-    this._lvlIdx      = (data && data.lvl != null) ? data.lvl : 0;
-    this._prevBackpack = (data && data.prevBackpack != null) ? data.prevBackpack : CONFIG.BACKPACK_START;
+    this._lvlIdx      = (data && data.lvl         != null) ? data.lvl         : 0;
+    this._prevScore   = (data && data.prevScore    != null) ? data.prevScore    : 0;
+    this._prevFast    = (data && data.prevFast     != null) ? data.prevFast     : CONFIG.INS_FAST_MAX;
+    this._prevBackpack= (data && data.prevBackpack != null) ? data.prevBackpack : CONFIG.BACKPACK_START;
   }
 
   create() {
     const lvl = CONFIG.LEVELS[this._lvlIdx];
 
-    this._fast      = false;
-    this._fastTimer = 0;
-    this._dead      = false;
-    this._done      = false;
-    this._fastLeft  = CONFIG.INS_FAST_MAX;
+    this._fast        = false;
+    this._fastTimer   = 0;
+    this._dead        = false;
+    this._done        = false;
+    this._fastLeft    = this._prevFast;
+    this._slopeJump   = false;  // true mientras salta en rampa
+    this._wasOnSlope  = false;  // para detectar entrada en rampa
 
     this.physics.world.gravity.y = CONFIG.GRAVITY;
     this.physics.world.setBounds(0, 0, lvl.length, CONFIG.H + 200);
@@ -24,16 +28,14 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(lvl.skyColor);
     this._buildBackground(lvl);
 
-    // Tiempo de referencia para el bonus de velocidad
-    const refSecs   = Math.round(lvl.length / CONFIG.SPD_NORMAL);
     this._glucose   = new Glucose();
-    this._score     = new Score(refSecs);
+    this._score     = new Score();
     this._glucagons = lvl.glucagons;
     this._backpack  = this._prevBackpack;
 
     this._ground = new Ground(this, lvl);
 
-    const startY = CONFIG.GROUND_Y - 30;
+    const startY = CONFIG.GROUND_Y - 48;
     this._player = new Player(this, 200, startY);
     this._player.addToGround(this._ground);
 
@@ -45,7 +47,14 @@ class GameScene extends Phaser.Scene {
     this._buildPickups(lvl);
 
     this._hud = new HUD(this, this._glucagons, this._fastLeft, this._backpack);
-    this._hud.onJump(() => this._player.jump(this._glucose));
+    this._hud.onJump(() => {
+      if (this._slopeJump) return;  // evitar saltos acumulados en cuesta
+      const slope  = this._ground.isSlopeAt(this._player.x);
+      const jumped = this._player.jump(this._glucose, slope);
+      if (jumped && slope) {
+        this._slopeJump = true;
+      }
+    });
     this._hud.onSlowInsulin(() => {
       this._glucose.useSlowInsulin();
       this._float(this._player.x, this._player.y - 45, '💉 -5/s x5s', '#43A047');
@@ -78,32 +87,17 @@ class GameScene extends Phaser.Scene {
   }
 
   _buildBackground(lvl) {
-    const L  = lvl.length;
-    const GY = CONFIG.GROUND_Y;
-    const g  = this.add.graphics().setScrollFactor(0.15).setDepth(0);
-
-    if (lvl.skyColor === 0x87CEEB) {
-      g.fillStyle(0x90A4AE, 1);
-      for (let bx = 60; bx < L; bx += 220) {
-        const bh = Phaser.Math.Between(70, 180);
-        const bw = Phaser.Math.Between(40, 80);
-        g.fillRect(bx, GY - bh, bw, bh);
-        g.fillStyle(0xFFF9C4, 0.65);
-        for (let wy = GY - bh + 8; wy < GY - 6; wy += 16)
-          for (let wx = bx + 5; wx < bx + bw - 5; wx += 13)
-            g.fillRect(wx, wy, 7, 9);
-        g.fillStyle(0x90A4AE, 1);
-      }
-    } else {
-      const tc = (lvl.skyColor === 0x2E7D32) ? 0x1B5E20
-               : (lvl.skyColor === 0x78909C) ? 0x37474F
-               : (lvl.skyColor === 0xF48FB1) ? 0xAD1457
-               : 0x283593;
-      g.fillStyle(tc, 1);
-      for (let tx = 40; tx < L; tx += 150) {
-        const th = Phaser.Math.Between(40, 90);
-        g.fillTriangle(tx, GY, tx + 22, GY - th, tx + 44, GY);
-        g.fillTriangle(tx + 10, GY, tx + 22, GY - th * 0.65, tx + 34, GY);
+    const bgKey = `bg${lvl.id}`;
+    if (this.textures.exists(bgKey)) {
+      // Repetir el fondo a lo largo del nivel con parallax
+      const W = CONFIG.W, H = CONFIG.H;
+      const L = lvl.length;
+      const reps = Math.ceil(L / W) + 1;
+      for (let i = 0; i < reps; i++) {
+        this.add.image(i * W + W / 2, H / 2, bgKey)
+          .setScrollFactor(0.3)
+          .setDepth(0)
+          .setDisplaySize(W, H);
       }
     }
   }
@@ -111,9 +105,15 @@ class GameScene extends Phaser.Scene {
   _buildMeta(lvl) {
     const GY = CONFIG.GROUND_Y;
     const mx = this._metaX;
-    const g  = this.add.graphics().setDepth(3);
-    g.fillStyle(0xFFD700, 1).fillRect(mx, GY - 88, 6, 88);
-    g.fillStyle(0xFFC107, 1).fillTriangle(mx + 6, GY - 88, mx + 6, GY - 52, mx + 52, GY - 70);
+    if (this.textures.exists('meta_flag')) {
+      this.add.image(mx + 24, GY, 'meta_flag')
+        .setDepth(3).setOrigin(0.5, 1)
+        .setDisplaySize(60, 110);
+    } else {
+      const g = this.add.graphics().setDepth(3);
+      g.fillStyle(0xFFD700, 1).fillRect(mx, GY - 88, 6, 88);
+      g.fillStyle(0xFFC107, 1).fillTriangle(mx + 6, GY - 88, mx + 6, GY - 52, mx + 52, GY - 70);
+    }
     this.add.text(mx + 2, GY - 104, 'META', {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FFD700', stroke: '#000', strokeThickness: 2,
@@ -129,8 +129,7 @@ class GameScene extends Phaser.Scene {
       let ax, tries = 0;
       do { ax = Phaser.Math.Between(600, lvl.length - 400); tries++; }
       while (!this._ground.isSolidAt(ax) && tries < 20);
-      if (!this.textures.exists('_apple')) this._makeAppleTex();
-      const a = this._apples.create(ax, GY - 52, '_apple');
+      const a = this._apples.create(ax, GY - 40, 'apple');
       a.setDepth(7);
       a.refreshBody();
       this.tweens.add({ targets: a, y: GY - 62, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -147,23 +146,35 @@ class GameScene extends Phaser.Scene {
       }
     });
 
-    // ── Checkpoints ──
-    this._cps = this.physics.add.staticGroup();
-    const sp  = lvl.length / (lvl.checkpoints + 1);
+    // ── Checkpoints — se activan al cruzar la X, saltando o corriendo ──
+    this._cpData = [];  // { x, sprite, done }
+    const sp = lvl.length / (lvl.checkpoints + 1);
     for (let i = 1; i <= lvl.checkpoints; i++) {
-      const cx = sp * i;
-      if (!this.textures.exists('_cp')) this._makeCpTex();
-      const cp = this._cps.create(cx, GY - 28, '_cp');
-      cp.setDepth(6);
-      cp.setData('done', false);
-      cp.refreshBody();
+      const cx = Math.round(sp * i);
+      const cpTex  = this.textures.exists('cp_off') ? 'cp_off' : '_cp';
+      if (cpTex === '_cp' && !this.textures.exists('_cp')) this._makeCpTex();
+      const cpSurfY = this._ground ? this._ground.getSurfaceY(cx) : GY;
+      const cpSprite = this.add.image(cx, cpSurfY, cpTex, 0).setDepth(6).setOrigin(0.5, 1);
+      this._cpData.push({ x: cx, sprite: cpSprite, done: false });
     }
-    this.physics.add.overlap(this._player.sprite, this._cps, (_, cp) => {
-      if (cp.getData('done')) return;
-      cp.setData('done', true);
-      cp.setTint(0x00E676);
-      const { pts } = this._score.checkpoint(this._glucose.v);
-      this._float(this._player.x, this._player.y - 60, `+${pts} pts`, '#FFC107');
+
+    // ── 1 pickup de insulina rápida por nivel ──
+    this._fastPickups = this.physics.add.staticGroup();
+    let fpx, fpTries = 0;
+    do {
+      fpx = Phaser.Math.Between(Math.round(lvl.length * 0.3), Math.round(lvl.length * 0.7));
+      fpTries++;
+    } while (!this._ground.isSolidAt(fpx) && fpTries < 30);
+    if (this._ground.isSolidAt(fpx)) {
+      const fp = this._fastPickups.create(fpx, GY - 40, 'fastpickup');
+      fp.setDepth(7);
+      fp.refreshBody();
+      this.tweens.add({ targets: fp, y: GY - 62, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    this.physics.add.overlap(this._player.sprite, this._fastPickups, (_, fp) => {
+      fp.destroy();
+      this._fastLeft++;
+      this._float(this._player.x, this._player.y - 50, '⚡ +1 dosis', '#FF6F00');
     });
   }
 
@@ -185,6 +196,27 @@ class GameScene extends Phaser.Scene {
     g.fillStyle(0x546E7A, 1).fillRect(3*S, 0, 2*S, 20*S);
     g.fillStyle(0xFFC107, 1).fillRect(4*S, 2*S, 6*S, 3*S).fillRect(4*S, 5*S, 6*S, 1*S);
     g.generateTexture('_cp', 10*S, 20*S);
+    g.destroy();
+  }
+
+  _makeCpDoneTex() {
+    const g = this.make.graphics({ add: false });
+    const S = 3;
+    g.fillStyle(0x546E7A, 1).fillRect(3*S, 0, 2*S, 20*S);
+    g.fillStyle(0x00E676, 1).fillRect(4*S, 2*S, 6*S, 3*S).fillRect(4*S, 5*S, 6*S, 1*S);
+    g.generateTexture('_cp_done', 10*S, 20*S);
+    g.destroy();
+  }
+
+  _makeFastPickupTex() {
+    const g = this.make.graphics({ add: false });
+    const S = 4;
+    g.fillStyle(0xFF6F00, 1).fillRect(3*S, 1*S, 5*S, 8*S);
+    g.fillStyle(0xFFE0B2, 1).fillRect(4*S, 0, 3*S, 2*S);
+    g.fillStyle(0xBF360C, 1).fillRect(3*S, 7*S, 5*S, 2*S);
+    g.fillStyle(0xFFFFFF, 1).fillRect(4*S, 2*S, 1*S, 4*S);
+    g.fillStyle(0xFFD54F, 1).fillRect(0, 3*S, 2*S, 2*S).fillRect(9*S, 3*S, 2*S, 2*S);
+    g.generateTexture('_fastpickup', 11*S, 10*S);
     g.destroy();
   }
 
@@ -240,18 +272,20 @@ class GameScene extends Phaser.Scene {
     this._flash(0x1565C0, 500);
 
     const W = CONFIG.W, H = CONFIG.H;
-    const ov = this.add.graphics().setScrollFactor(0).setDepth(300);
+    const ov    = this.add.graphics().setScrollFactor(0).setDepth(300);
     ov.fillStyle(0x000820, 0.9).fillRect(0, 0, W, H);
 
-    this.add.text(W/2, H*0.20, '😵', { fontSize: '52px' })
+    const t1 = this.add.text(W/2, H*0.20, '😵', { fontSize: '52px' })
       .setOrigin(0.5).setScrollFactor(0).setDepth(301);
-    this.add.text(W/2, H*0.40, 'HIPOGLUCEMIA', {
+    const t2 = this.add.text(W/2, H*0.40, 'HIPOGLUCEMIA', {
       fontSize: '26px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#4FC3F7', stroke: '#000', strokeThickness: 3,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
-    this.add.text(W/2, H*0.54, `Glucagones: ${this._glucagons}`, {
+    const t3 = this.add.text(W/2, H*0.54, `Glucagones: ${this._glucagons}`, {
       fontSize: '15px', fontFamily: 'monospace', fill: '#fff',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
+
+    const destroyAll = () => { ov.destroy(); t1.destroy(); t2.destroy(); t3.destroy(); };
 
     if (this._glucagons > 0) {
       const btn = this.add.text(W/2, H*0.70, '💉 USAR GLUCAGÓN', {
@@ -262,18 +296,17 @@ class GameScene extends Phaser.Scene {
       btn.on('pointerdown', () => {
         this._glucagons--;
         this._glucose.useGlucagon();
-        // Volver a suelo sólido plano cercano
         const safeX = this._findSafeX(this._player.x);
-        this._player.sprite.body.reset(safeX, CONFIG.GROUND_Y - 30);
+        this._player.sprite.body.reset(safeX, CONFIG.GROUND_Y - 48);
         this._dead = false;
-        ov.destroy();
+        destroyAll();
         btn.destroy();
       });
     } else {
-      this.add.text(W/2, H*0.70, 'Sin glucagón — fin del nivel', {
+      this.add.text(W/2, H*0.70, 'Sin glucagón — fin del juego', {
         fontSize: '15px', fontFamily: 'monospace', fill: '#FF5252',
       }).setOrigin(0.5).setScrollFactor(0).setDepth(301);
-      this.time.delayedCall(2500, () => this._finish());
+      this.time.delayedCall(2500, () => this.scene.start('Menu'));
     }
   }
 
@@ -286,20 +319,21 @@ class GameScene extends Phaser.Scene {
     return 300;
   }
 
-  _finish() {
+  _finish(gameOver = false) {
     if (this._done) return;
     this._done = true;
     if (this._motionHandler) window.removeEventListener('devicemotion', this._motionHandler);
-    const bonus = this._score.finish();
+    this._score.finish();
     this.scene.start('Result', {
-      score:   this._score.total,
-      secs:    this._score.elapsedSecs,
-      tir:     this._score.timeInRange,
-      rng:     this._score.rangazoPct,
-      bonus,
-      lvlIdx:  this._lvlIdx,
-      name:    window.PLAYER_NAME,
-      backpack: this._backpack,
+      score:        this._score.total + this._prevScore,
+      secs:         this._score.elapsedSecs,
+      tir:          this._score.timeInRange,
+      rng:          this._score.rangazoPct,
+      lvlIdx:       this._lvlIdx,
+      name:         window.PLAYER_NAME,
+      prevFast:     this._fastLeft,
+      prevBackpack: this._backpack,
+      gameOver,
     });
   }
 
@@ -328,10 +362,10 @@ class GameScene extends Phaser.Scene {
     }
 
     // Caída en agujero = fin de partida inmediato
-    const overHole = !this._ground.isSolidAt(this._player.x) &&
-                     this._player.sprite.body.blocked.down === false &&
-                     this._player.y > CONFIG.GROUND_Y - 10;
-    if (overHole || this._player.y > CONFIG.H + 40) {
+    // Agujero: solo cuando ha caído físicamente por debajo del suelo
+    const belowGround = this._player.y > CONFIG.GROUND_Y + 80;
+    const offScreen   = this._player.y > CONFIG.H + 40;
+    if (belowGround || offScreen) {
       this._triggerHole();
       return;
     }
@@ -344,9 +378,65 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
+    // ── Lógica de rampa sin física ──────────────────────────────
+    if (onSlope) {
+      const sprite  = this._player.sprite;
+      const surfY   = this._ground.getSurfaceY(this._player.x);
+      const targetY = surfY - 48;
+
+      if (this._slopeJump) {
+        // En salto sobre rampa: física libre, sin snap
+        sprite.body.allowGravity = true;
+        // Aterriza cuando baja y está cerca del suelo
+        if (sprite.body.velocity.y >= 0 && sprite.y >= targetY - 4) {
+          this._slopeJump = false;
+        }
+      }
+
+      if (!this._slopeJump) {
+        // En suelo de rampa: pegar Y exacta
+        sprite.body.allowGravity = false;
+        sprite.body.setVelocityY(0);
+        sprite.y = targetY;
+      }
+      this._wasOnSlope = true;
+
+    } else {
+      // Fuera de rampa
+      sprite_ref: {
+        const sprite = this._player.sprite;
+        sprite.body.allowGravity = true;
+
+        if (this._wasOnSlope && !this._slopeJump) {
+          // Salió de la rampa andando (no saltando) — suavizar transición
+          sprite.body.setVelocityY(0);
+        }
+        // Solo cancelar slopeJump cuando toca suelo plano
+        if (sprite.body.blocked.down) {
+          this._slopeJump = false;
+        }
+        this._wasOnSlope = false;
+      }
+    }
+    // ──────────────────────────────────────────────────────────────
+
     this._player.update(delta, this._fast);
     this._player.applyGlucoseVFX(this._glucose.state, time);
     this._spawner.update(delta);
+
+    // Checkpoints por X — cuenta aunque el jugador salte por encima
+    if (this._cpData) {
+      for (const cp of this._cpData) {
+        if (!cp.done && this._player.x >= cp.x) {
+          cp.done = true;
+          const doneTex = this.textures.exists('cp_on') ? 'cp_on' : '_cp_done';
+          if (doneTex === '_cp_done' && !this.textures.exists('_cp_done')) this._makeCpDoneTex();
+          cp.sprite.setTexture(doneTex, 0);
+          const { pts } = this._score.checkpoint(this._glucose.v);
+          this._float(this._player.x, this._player.y - 60, `+${pts} pts`, '#FFC107');
+        }
+      }
+    }
 
     if (this._player.x >= this._metaX) this._finish();
 
