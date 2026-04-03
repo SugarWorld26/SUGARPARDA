@@ -64,18 +64,6 @@ class BootScene extends Phaser.Scene {
   }
 }
 
-// ── Helper: pinta el badge de verificado azul ──────────────────
-function _addVerifiedBadge(scene, x, y) {
-  // Usar texto con fondo de color — funciona sin problemas de cámara
-  const t = scene.add.text(x, y, ' ✓ ', {
-    fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
-    fill: '#ffffff',
-    backgroundColor: '#1D9BF0',
-    padding: { x: 3, y: 1 },
-  }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(96);
-  return t;
-}
-
 // ================================================================
 //  Menu.js — Menú principal
 // ================================================================
@@ -154,7 +142,6 @@ class MenuScene extends Phaser.Scene {
         fontSize: '12px', fontFamily: 'monospace', fill: '#555',
       }).setOrigin(0.5));
     } else {
-      const badges = []; // badges fuera del container para evitar coords locales
       let curY = rankY0 + 4;
       rows.forEach((r, i) => {
         const isTop3    = i < 3;
@@ -178,8 +165,10 @@ class MenuScene extends Phaser.Scene {
           rankContainer.add(fbg);
         }
 
+        const nameDisplay = cleanName.substring(0,12).padEnd(12);
+        const verifiedMark = verified ? ' ✓' : '  ';
         const txt = this.add.text(W/2, curY + fh/2,
-          `${medal} ${cleanName.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
+          `${medal} ${nameDisplay}${verifiedMark} ${String(r.score).padStart(6)} pts`,
           { fontSize: fs, fontFamily: 'monospace',
             fill, fontStyle: isTop3 ? 'bold' : 'normal',
             stroke: isTop3 ? '#000' : undefined,
@@ -187,17 +176,8 @@ class MenuScene extends Phaser.Scene {
         ).setOrigin(0.5);
         rankContainer.add(txt);
 
-        // Badge verificado
-        if (verified) {
-          badges.push(_addVerifiedBadge(this, W * 0.78, curY + fh / 2));
-        }
-
         curY += fh;
       });
-
-      // Aplicar cameraFilter a los badges igual que al container
-      badges.forEach(b => { b.cameraFilter = this.cameras.main.id; });
-    }
 
     // Ignorar en cámara principal
     rankContainer.each(obj => { obj.cameraFilter = this.cameras.main.id; });
@@ -415,7 +395,6 @@ class RankingScene extends Phaser.Scene {
         fontSize: '14px', fontFamily: 'monospace', fill: '#555',
       }).setOrigin(0.5));
     } else {
-      const badges = [];
       let curY = rankY0 + 6;
       rows.forEach((r, i) => {
         const isTop3    = i < 3;
@@ -441,7 +420,9 @@ class RankingScene extends Phaser.Scene {
           rankContainer.add(fbg);
         }
 
-        const label = `${medal} ${cleanName.substring(0,14).padEnd(14)} ${String(r.score).padStart(6)} pts`;
+        const nameDisplay2 = cleanName.substring(0,14).padEnd(14);
+        const verifiedMark2 = verified ? ' ✓' : '  ';
+        const label = `${medal} ${nameDisplay2}${verifiedMark2} ${String(r.score).padStart(6)} pts`;
         const txt = this.add.text(W/2, curY + fh/2, label, {
           fontSize: fs, fontFamily: 'monospace',
           fill, fontStyle: (isTop3 || isMe) ? 'bold' : 'normal',
@@ -449,11 +430,6 @@ class RankingScene extends Phaser.Scene {
           strokeThickness: (isTop3 || isMe) ? 2 : 0,
         }).setOrigin(0.5);
         rankContainer.add(txt);
-
-        // Badge verificado
-        if (verified) {
-          badges.push(_addVerifiedBadge(this, W * 0.78, curY + fh / 2));
-        }
 
         // Indicador "← TÚ" para la entrada propia
         if (isMe) {
@@ -465,10 +441,6 @@ class RankingScene extends Phaser.Scene {
 
         curY += fh;
       });
-
-      // Aplicar cameraFilter a los badges igual que al container
-      badges.forEach(b => { b.cameraFilter = this.cameras.main.id; });
-    }
 
     // Excluir de cámara principal
     rankContainer.each(obj => { obj.cameraFilter = this.cameras.main.id; });
