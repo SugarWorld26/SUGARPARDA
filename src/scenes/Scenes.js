@@ -65,19 +65,15 @@ class BootScene extends Phaser.Scene {
 }
 
 // ── Helper: pinta el badge de verificado azul ──────────────────
-function _addVerifiedBadge(scene, x, y, container) {
-  const g = scene.add.graphics();
-  g.fillStyle(0x1D9BF0, 1).fillCircle(x, y, 7);
-  // Checkmark blanco dibujado con líneas gruesas
-  g.lineStyle(2.5, 0xFFFFFF, 1);
-  g.beginPath();
-  g.moveTo(x - 3.5, y);
-  g.lineTo(x - 1,   y + 3);
-  g.lineTo(x + 4,   y - 3);
-  g.strokePath();
-  g.setScrollFactor(0).setDepth(95);
-  if (container) container.add(g);
-  return g;
+function _addVerifiedBadge(scene, x, y) {
+  // Usar texto con fondo de color — funciona sin problemas de cámara
+  const t = scene.add.text(x, y, ' ✓ ', {
+    fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
+    fill: '#ffffff',
+    backgroundColor: '#1D9BF0',
+    padding: { x: 3, y: 1 },
+  }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(96);
+  return t;
 }
 
 // ================================================================
@@ -191,9 +187,9 @@ class MenuScene extends Phaser.Scene {
         ).setOrigin(0.5);
         rankContainer.add(txt);
 
-        // Badge verificado — fuera del container, coordenadas mundiales directas
+        // Badge verificado
         if (verified) {
-          badges.push(_addVerifiedBadge(this, W * 0.80, curY + fh / 2, null));
+          badges.push(_addVerifiedBadge(this, W * 0.78, curY + fh / 2));
         }
 
         curY += fh;
@@ -454,9 +450,9 @@ class RankingScene extends Phaser.Scene {
         }).setOrigin(0.5);
         rankContainer.add(txt);
 
-        // Badge verificado — fuera del container, coordenadas mundiales
+        // Badge verificado
         if (verified) {
-          badges.push(_addVerifiedBadge(this, W * 0.80, curY + fh / 2, null));
+          badges.push(_addVerifiedBadge(this, W * 0.78, curY + fh / 2));
         }
 
         // Indicador "← TÚ" para la entrada propia
