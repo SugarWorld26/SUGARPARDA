@@ -310,7 +310,7 @@ class ResultScene extends Phaser.Scene {
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', {
           lvl: lvlIdx+1, prevScore: score, prevFast: data.prevFast,
-          prevBackpack: data.backpack != null ? data.backpack : CONFIG.BACKPACK_START,
+          prevBackpack: data.prevBackpack != null ? data.prevBackpack : CONFIG.BACKPACK_START,
         }));
 
       this.add.text(W*0.74, H*0.82, '⟵  MENÚ', {
@@ -362,7 +362,7 @@ class RankingScene extends Phaser.Scene {
       fill: '#FFC107', stroke: '#000', strokeThickness: 2,
     }).setOrigin(0.5);
 
-    // Zona scrollable — se crea ANTES del botón para poder excluirlo
+    // Zona scrollable — se crea ANTES del botón para poder filtrarlo
     const rankY0 = 52;
     const rankH  = H - rankY0 - 10;
     const lineH3 = 28;
@@ -372,7 +372,7 @@ class RankingScene extends Phaser.Scene {
     rankCam.setBackgroundColor('rgba(0,0,0,0)');
     rankCam.scrollY = rankY0;
 
-    // Botón volver — creado DESPUÉS de rankCam para poder filtrarlo
+    // Botón volver — creado DESPUÉS de rankCam y excluido de ella
     const volverBtn = this.add.text(W - 12, 12, '✕ VOLVER', {
       fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#000', backgroundColor: '#FFC107', padding: { x: 10, y: 6 },
