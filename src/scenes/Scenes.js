@@ -178,6 +178,7 @@ class MenuScene extends Phaser.Scene {
 
         curY += fh;
       });
+    }
 
     // Ignorar en cámara principal
     rankContainer.each(obj => { obj.cameraFilter = this.cameras.main.id; });
@@ -441,6 +442,7 @@ class RankingScene extends Phaser.Scene {
 
         curY += fh;
       });
+    }
 
     // Excluir de cámara principal
     rankContainer.each(obj => { obj.cameraFilter = this.cameras.main.id; });
