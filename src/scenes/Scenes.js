@@ -289,73 +289,35 @@ class ResultScene extends Phaser.Scene {
     // Posición del jugador
     const myPos = await DB.getPosition(name, score);
     if (myPos) {
-      const posColor = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : myPos <= 50 ? '#ffffff' : '#ffffff';
+      const posColor = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : '#ffffff';
       const posText  = myPos <= 3 ? `🏆 #${myPos} DEL RANKING` : `Tu posición: #${myPos}`;
-      this.add.text(W/2, H*0.72, posText, {
+      this.add.text(W/2, H*0.74, posText, {
         fontSize: myPos <= 3 ? '20px' : '15px',
         fontFamily: 'monospace', fontStyle: 'bold', fill: posColor,
         stroke: '#000', strokeThickness: 2,
       }).setOrigin(0.5);
     }
 
-    // Botones grandes y claros
+    // Botones — SIN cámara secundaria para que funcionen siempre
     const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
-    const btnY = H * 0.84;
-    const btnW = hasNext ? W*0.36 : W*0.5;
-    const btnH = 48;
+    const btnY = H * 0.87;
 
     if (hasNext) {
-      this.add.text(W*0.29, btnY, '▶  SIGUIENTE', {
+      this.add.text(W * 0.29, btnY, '▶  SIGUIENTE', {
         fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold',
         fill: '#000', backgroundColor: '#FF69B4',
-        padding: { x: 24, y: 12 },
+        padding: { x: 22, y: 12 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', {
           lvl: lvlIdx + 1, prevScore: score, prevFast: data.prevFast
         }));
     }
 
-    const menuX = hasNext ? W*0.71 : W*0.5;
-    this.add.text(menuX, btnY, '⟵  MENÚ', {
+    this.add.text(hasNext ? W * 0.71 : W * 0.5, btnY, '⟵  MENÚ', {
       fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#000', backgroundColor: '#FFC107',
-      padding: { x: 24, y: 12 },
+      padding: { x: 22, y: 12 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Menu'));
-
-    // Mini ranking abajo
-    this.add.graphics()
-      .lineStyle(1, 0xFF69B4, 0.3)
-      .lineBetween(W*0.1, H*0.91, W*0.9, H*0.91);
-
-    const rankY0 = Math.round(H * 0.93);
-    const rankH  = Math.round(H - rankY0 - 4);
-    const lineH  = 16;
-
-    const rankCam = this.cameras.add(0, rankY0, W, rankH);
-    rankCam.setBackgroundColor('rgba(0,0,0,0)');
-    rankCam.scrollY = rankY0;
-
-    const rows = await DB.top(100);
-    const rankContainer = this.add.container(0, 0);
-    rows.forEach((r, i) => {
-      const medal = ['🥇','🥈','🥉'][i] || `${i+1}.`;
-      const isMe  = r.player_name === name;
-      rankContainer.add(this.add.text(W/2, rankY0 + i * lineH,
-        `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
-        { fontSize: '10px', fontFamily: 'monospace',
-          fill: isMe ? '#FF69B4' : i < 3 ? '#FFC107' : '#555',
-          fontStyle: isMe ? 'bold' : 'normal' }
-      ).setOrigin(0.5));
-    });
-    rankContainer.each(obj => { obj.cameraFilter = this.cameras.main.id; });
-
-    const maxScroll = Math.max(0, rows.length * lineH - rankH);
-    let scrollY = 0;
-    this.input.on('pointermove', (p) => {
-      if (!p.isDown) return;
-      scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.4, 0, maxScroll);
-      rankCam.scrollY = rankY0 + scrollY;
-    });
   }
 }
