@@ -64,6 +64,20 @@ class BootScene extends Phaser.Scene {
   }
 }
 
+// ── Helper: pinta el badge de verificado azul ──────────────────
+function _addVerifiedBadge(scene, x, y, container) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x1D9BF0, 1).fillCircle(x, y, 7);
+  g.fillStyle(0xFFFFFF, 1);
+  // Checkmark dibujado con píxeles
+  g.fillRect(x - 3.5, y - 0.5, 2.5, 2.5);
+  g.fillRect(x - 1,   y + 1.5, 1.5, 1.5);
+  g.fillRect(x + 0.5, y - 2,   1.5, 4);
+  g.setScrollFactor(0).setDepth(93);
+  if (container) container.add(g);
+  return g;
+}
+
 // ================================================================
 //  Menu.js — Menú principal
 // ================================================================
@@ -142,19 +156,20 @@ class MenuScene extends Phaser.Scene {
         fontSize: '12px', fontFamily: 'monospace', fill: '#555',
       }).setOrigin(0.5));
     } else {
-      // Calcular posición Y de cada fila
       let curY = rankY0 + 4;
       rows.forEach((r, i) => {
-        const isTop3 = i < 3;
-        const fh     = isTop3 ? lineH3 : lineH;
-        const medal  = ['🥇','🥈','🥉'][i] || `${i+1}.`;
-        const isMe   = r.player_name === name;
-        const fs     = isTop3 ? '15px' : '11px';
-        const fill   = isMe   ? '#FF69B4'
-                     : i === 0 ? '#FFD700'
-                     : i === 1 ? '#E0E0E0'
-                     : i === 2 ? '#CD7F32'
-                     : '#888';
+        const isTop3    = i < 3;
+        const fh        = isTop3 ? lineH3 : lineH;
+        const medal     = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+        const verified  = DB.isVerified(r.player_name);
+        const cleanName = DB.cleanName(r.player_name);
+        const isMe      = cleanName === name;
+        const fs        = isTop3 ? '15px' : '11px';
+        const fill      = isMe   ? '#FF69B4'
+                        : i === 0 ? '#FFD700'
+                        : i === 1 ? '#E0E0E0'
+                        : i === 2 ? '#CD7F32'
+                        : '#888';
 
         // Fondo para top 3
         if (isTop3) {
@@ -164,13 +179,21 @@ class MenuScene extends Phaser.Scene {
           rankContainer.add(fbg);
         }
 
-        rankContainer.add(this.add.text(W/2, curY + fh/2,
-          `${medal} ${r.player_name.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
+        const txt = this.add.text(W/2, curY + fh/2,
+          `${medal} ${cleanName.substring(0,12).padEnd(12)} ${String(r.score).padStart(6)} pts`,
           { fontSize: fs, fontFamily: 'monospace',
             fill, fontStyle: isTop3 ? 'bold' : 'normal',
             stroke: isTop3 ? '#000' : undefined,
             strokeThickness: isTop3 ? 2 : 0 }
-        ).setOrigin(0.5));
+        ).setOrigin(0.5);
+        rankContainer.add(txt);
+
+        // Badge verificado
+        if (verified) {
+          const bx = txt.x + txt.width / 2 + 12;
+          const by = curY + fh / 2;
+          _addVerifiedBadge(this, bx, by, rankContainer);
+        }
 
         curY += fh;
       });
@@ -394,16 +417,18 @@ class RankingScene extends Phaser.Scene {
     } else {
       let curY = rankY0 + 6;
       rows.forEach((r, i) => {
-        const isTop3 = i < 3;
-        const fh     = isTop3 ? lineH3 : lineH;
-        const medal  = ['🥇','🥈','🥉'][i] || `${i+1}.`;
-        const isMe   = r.player_name === myName && r.score === myScore;
-        const fs     = isTop3 ? '14px' : '12px';
-        const fill   = isMe   ? '#00FF99'
-                     : i === 0 ? '#FFD700'
-                     : i === 1 ? '#E0E0E0'
-                     : i === 2 ? '#CD7F32'
-                     : '#aaa';
+        const isTop3    = i < 3;
+        const fh        = isTop3 ? lineH3 : lineH;
+        const medal     = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+        const verified  = DB.isVerified(r.player_name);
+        const cleanName = DB.cleanName(r.player_name);
+        const isMe      = cleanName === myName && r.score === myScore;
+        const fs        = isTop3 ? '14px' : '12px';
+        const fill      = isMe   ? '#00FF99'
+                        : i === 0 ? '#FFD700'
+                        : i === 1 ? '#E0E0E0'
+                        : i === 2 ? '#CD7F32'
+                        : '#aaa';
 
         if (isTop3 || isMe) {
           const fbg   = this.add.graphics();
@@ -415,13 +440,21 @@ class RankingScene extends Phaser.Scene {
           rankContainer.add(fbg);
         }
 
-        const label = `${medal} ${r.player_name.substring(0,14).padEnd(14)} ${String(r.score).padStart(6)} pts`;
-        rankContainer.add(this.add.text(W/2, curY + fh/2, label, {
+        const label = `${medal} ${cleanName.substring(0,14).padEnd(14)} ${String(r.score).padStart(6)} pts`;
+        const txt = this.add.text(W/2, curY + fh/2, label, {
           fontSize: fs, fontFamily: 'monospace',
           fill, fontStyle: (isTop3 || isMe) ? 'bold' : 'normal',
           stroke: (isTop3 || isMe) ? '#000' : undefined,
           strokeThickness: (isTop3 || isMe) ? 2 : 0,
-        }).setOrigin(0.5));
+        }).setOrigin(0.5);
+        rankContainer.add(txt);
+
+        // Badge verificado
+        if (verified) {
+          const bx = txt.x + txt.width / 2 + 12;
+          const by = curY + fh / 2;
+          _addVerifiedBadge(this, bx, by, rankContainer);
+        }
 
         // Indicador "← TÚ" para la entrada propia
         if (isMe) {
