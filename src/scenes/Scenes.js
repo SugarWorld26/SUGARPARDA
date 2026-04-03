@@ -274,27 +274,141 @@ class ResultScene extends Phaser.Scene {
       }).setOrigin(0.5);
     });
 
-    // Separador
-    this.add.graphics()
-      .lineStyle(1, 0xFF69B4, 0.3)
-      .lineBetween(W*0.05, H*0.68, W*0.95, H*0.68);
+    // Posición en ranking — solo último nivel
+    if (isLastLevel) {
+      const myPos = await DB.getPosition(name, score);
+      if (myPos) {
+        const posColor = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : '#ffffff';
+        this.add.text(W/2, H*0.70, `🏆 TU POSICIÓN EN EL RANKING: #${myPos}`, {
+          fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold',
+          fill: posColor, stroke: '#000', strokeThickness: 3,
+        }).setOrigin(0.5);
+      }
+    }
 
-    // Botones — simples y seguros
+    // Botones
     const hasNext = lvlIdx + 1 < CONFIG.LEVELS.length && !data.gameOver;
+    const row1Y = isLastLevel ? H*0.80 : H*0.78;
+    const row2Y = isLastLevel ? H*0.90 : H*0.88;
 
     if (hasNext) {
-      this.add.text(W*0.28, H*0.80, '▶  SIGUIENTE NIVEL', {
-        fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold',
-        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 18, y: 12 },
+      this.add.text(W*0.28, row1Y, '▶  SIGUIENTE NIVEL', {
+        fontSize: '17px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FF69B4', padding: { x: 16, y: 11 },
       }).setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.scene.start('Game', {
           lvl: lvlIdx+1, prevScore: score, prevFast: data.prevFast
         }));
     }
 
-    this.add.text(hasNext ? W*0.74 : W*0.5, H*0.80, '⟵  MENÚ PRINCIPAL', {
-      fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#000', backgroundColor: '#FFC107', padding: { x: 18, y: 12 },
+    // Botón ver ranking (solo último nivel)
+    if (isLastLevel) {
+      this.add.text(W*0.72, row1Y, '🏆  VER RANKING', {
+        fontSize: '17px', fontFamily: 'monospace', fontStyle: 'bold',
+        fill: '#000', backgroundColor: '#FFC107', padding: { x: 16, y: 11 },
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => this.scene.start('RankingScene', { name, score }));
+    }
+
+    this.add.text(W*0.5, row2Y, '⟵  MENÚ PRINCIPAL', {
+      fontSize: '17px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#888888', padding: { x: 16, y: 11 },
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.scene.start('Menu'));
+  }
+}
+
+// ================================================================
+//  RankingScene — Pantalla de ranking completo
+// ================================================================
+class RankingScene extends Phaser.Scene {
+  constructor() { super('RankingScene'); }
+
+  async create(data) {
+    const W = CONFIG.W, H = CONFIG.H;
+    const name  = data ? data.name  : '';
+    const score = data ? data.score : 0;
+    this.cameras.main.setBackgroundColor('#000000');
+
+    // Fondo
+    const bg = this.add.graphics();
+    bg.fillStyle(0x000000, 1).fillRect(0, 0, W, H);
+    bg.lineStyle(1, 0xFF69B4, 0.10);
+    for (let y = 0; y < H; y += 40) bg.lineBetween(0, y, W, y);
+    for (let x = 0; x < W; x += 80) bg.lineBetween(x, 0, x, H);
+    bg.lineStyle(2, 0xFF69B4, 0.5).strokeRect(8, 8, W-16, H-16);
+
+    this.add.text(W/2, H*0.06, '🏆  RANKING GLOBAL', {
+      fontSize: '22px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
+    }).setOrigin(0.5);
+
+    // Cargar ranking
+    const rows  = await DB.top(100);
+    const myPos = await DB.getPosition(name, score);
+
+    if (myPos) {
+      const pc = myPos <= 3 ? '#FFD700' : myPos <= 10 ? '#FF69B4' : '#ffffff';
+      this.add.text(W/2, H*0.13, `Tu posición: #${myPos}`, {
+        fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold', fill: pc,
+      }).setOrigin(0.5);
+    }
+
+    this.add.graphics()
+      .lineStyle(1, 0xFF69B4, 0.4).lineBetween(W*0.05, H*0.18, W*0.95, H*0.18);
+
+    // Ranking con cámara secundaria para scroll
+    const rankY0 = Math.round(H * 0.20);
+    const rankH  = Math.round(H * 0.72);
+    const lineH3 = 26, lineH = 17;
+
+    const rankCam = this.cameras.add(0, rankY0, W, rankH);
+    rankCam.setBackgroundColor('rgba(0,0,0,0)');
+    rankCam.scrollY = rankY0;
+
+    const rankContainer = this.add.container(0, 0);
+    let curY = rankY0 + 4;
+
+    rows.forEach((r, i) => {
+      const isTop3 = i < 3;
+      const fh     = isTop3 ? lineH3 : lineH;
+      const medal  = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+      const isMe   = r.player_name === name;
+      const fs     = isTop3 ? '14px' : '12px';
+      const fill   = isMe    ? '#FF69B4'
+                   : i === 0 ? '#FFD700'
+                   : i === 1 ? '#E0E0E0'
+                   : i === 2 ? '#CD7F32'
+                   : '#aaa';
+      if (isTop3) {
+        const fbg = this.add.graphics();
+        fbg.fillStyle(i===0?0x332200:i===1?0x222222:0x221100, 0.8)
+           .fillRoundedRect(W*0.05, curY, W*0.9, fh-2, 4);
+        rankContainer.add(fbg);
+      }
+      rankContainer.add(this.add.text(W/2, curY + fh/2,
+        `${medal} ${r.player_name.substring(0,14).padEnd(14)} ${String(r.score).padStart(6)} pts`,
+        { fontSize: fs, fontFamily: 'monospace', fill,
+          fontStyle: isTop3||isMe ? 'bold' : 'normal',
+          stroke: isTop3 ? '#000' : undefined, strokeThickness: isTop3 ? 2 : 0 }
+      ).setOrigin(0.5));
+      curY += fh;
+    });
+
+    rankContainer.each(obj => { obj.cameraFilter = this.cameras.main.id; });
+
+    const totalH   = rows.slice(0,3).length * lineH3 + Math.max(0, rows.length-3) * lineH;
+    const maxScroll = Math.max(0, totalH - rankH);
+    let scrollY = 0;
+    this.input.on('pointermove', (p) => {
+      if (!p.isDown) return;
+      scrollY = Phaser.Math.Clamp(scrollY - p.velocity.y * 0.4, 0, maxScroll);
+      rankCam.scrollY = rankY0 + scrollY;
+    });
+
+    // Botón volver
+    this.add.text(W/2, H*0.95, '⟵  VOLVER', {
+      fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FFC107', padding: { x: 18, y: 10 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Menu'));
   }
