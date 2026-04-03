@@ -175,12 +175,21 @@ class MenuScene extends Phaser.Scene {
         ).setOrigin(0.5);
         rankContainer.add(txt);
         if (verified) {
-          const badge = this.add.text(W * 0.76, curY + fh/2, '  ✓  ', {
-            fontSize: isTop3 ? '13px' : '10px', fontFamily: 'monospace', fontStyle: 'bold',
-            fill: '#ffffff', backgroundColor: '#1D9BF0',
-            padding: { x: 3, y: 2 },
-          }).setOrigin(0.5);
-          rankContainer.add(badge);
+          const rad = isTop3 ? 9 : 7;
+          // Calcular X justo después de "pts" — txt centrado en W/2
+          const textHalfW = txt.width / 2;
+          const bx = W/2 + textHalfW + rad + 5;
+          const by = curY + fh / 2;
+          const g = this.add.graphics();
+          g.fillStyle(0x1D9BF0, 1).fillCircle(bx, by, rad);
+          // Checkmark blanco: trazo en V
+          g.lineStyle(rad * 0.35, 0xFFFFFF, 1);
+          g.beginPath();
+          g.moveTo(bx - rad*0.40, by);
+          g.lineTo(bx - rad*0.05, by + rad*0.42);
+          g.lineTo(bx + rad*0.50, by - rad*0.38);
+          g.strokePath();
+          rankContainer.add(g);
         }
 
         curY += fh;
@@ -438,12 +447,19 @@ class RankingScene extends Phaser.Scene {
         }).setOrigin(0.5);
         rankContainer.add(txt);
         if (verified) {
-          const badge = this.add.text(W * 0.78, curY + fh/2, '  ✓  ', {
-            fontSize: isTop3 ? '13px' : '10px', fontFamily: 'monospace', fontStyle: 'bold',
-            fill: '#ffffff', backgroundColor: '#1D9BF0',
-            padding: { x: 3, y: 2 },
-          }).setOrigin(0.5);
-          rankContainer.add(badge);
+          const rad = isTop3 ? 9 : 7;
+          const textHalfW = txt.width / 2;
+          const bx = W/2 + textHalfW + rad + 5;
+          const by = curY + fh / 2;
+          const g = this.add.graphics();
+          g.fillStyle(0x1D9BF0, 1).fillCircle(bx, by, rad);
+          g.lineStyle(rad * 0.35, 0xFFFFFF, 1);
+          g.beginPath();
+          g.moveTo(bx - rad*0.40, by);
+          g.lineTo(bx - rad*0.05, by + rad*0.42);
+          g.lineTo(bx + rad*0.50, by - rad*0.38);
+          g.strokePath();
+          rankContainer.add(g);
         }
 
         // Indicador "← TÚ" para la entrada propia
