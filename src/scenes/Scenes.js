@@ -122,17 +122,16 @@ class MenuScene extends Phaser.Scene {
     const lineH  = 18;
 
     const rankCam = this.cameras.add(0, rankY0, W, rankH);
+
     rankCam.setBackgroundColor('rgba(0,0,0,0)');
     rankCam.scrollY = rankY0;
-    rankCam.ignore = [];
 
-    // Separador y título — sólo visibles en cámara principal (no en rankCam)
+    // Separador y título — ignorados por rankCam para que no se peguen al scroll
     const sepLine = this.add.graphics();
     sepLine.lineStyle(1, 0xFF69B4, 0.4).lineBetween(W*0.05, H*0.64, W*0.95, H*0.64);
     const titleTxt = this.add.text(W/2, H*0.67, '🏆  RANKING GLOBAL', {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
-    // Excluir de la rankCam usando ignore
     rankCam.ignore([sepLine, titleTxt]);
 
     const rows = await DB.top(100);
@@ -167,10 +166,9 @@ class MenuScene extends Phaser.Scene {
           rankContainer.add(fbg);
         }
 
-        const verifiedPad = verified ? '  ' : '';
         const nameDisplay = cleanName.substring(0,12).padEnd(12);
         const txt = this.add.text(W/2, curY + fh/2,
-          `${medal} ${nameDisplay}${verifiedPad} ${String(r.score).padStart(6)} pts`,
+          `${medal} ${nameDisplay} ${String(r.score).padStart(6)} pts`,
           { fontSize: fs, fontFamily: 'monospace',
             fill, fontStyle: isTop3 ? 'bold' : 'normal',
             stroke: isTop3 ? '#000' : undefined,
@@ -184,15 +182,15 @@ class MenuScene extends Phaser.Scene {
           const prefixLen = medal.length + 1 + nameDisplay.length;
           const bx = (W/2 - txt.width/2) + prefixLen * charW + rad + 1;
           const by = curY + fh / 2;
-          const g = this.add.graphics();
-          g.fillStyle(0x1D9BF0, 1).fillCircle(bx, by, rad);
-          g.lineStyle(rad * 0.38, 0xFFFFFF, 1);
-          g.beginPath();
-          g.moveTo(bx - rad*0.38, by + rad*0.05);
-          g.lineTo(bx - rad*0.02, by + rad*0.42);
-          g.lineTo(bx + rad*0.48, by - rad*0.36);
-          g.strokePath();
-          rankContainer.add(g);
+          const gv = this.add.graphics();
+          gv.fillStyle(0x1D9BF0, 1).fillCircle(bx, by, rad);
+          gv.lineStyle(rad * 0.38, 0xFFFFFF, 1);
+          gv.beginPath();
+          gv.moveTo(bx - rad*0.38, by + rad*0.05);
+          gv.lineTo(bx - rad*0.02, by + rad*0.42);
+          gv.lineTo(bx + rad*0.48, by - rad*0.36);
+          gv.strokePath();
+          rankContainer.add(gv);
         }
 
         curY += fh;
@@ -441,9 +439,8 @@ class RankingScene extends Phaser.Scene {
           rankContainer.add(fbg);
         }
 
-        const verifiedPad2 = verified ? '  ' : '';
         const nameDisplay2 = cleanName.substring(0,14).padEnd(14);
-        const label = `${medal} ${nameDisplay2}${verifiedPad2} ${String(r.score).padStart(6)} pts`;
+        const label = `${medal} ${nameDisplay2} ${String(r.score).padStart(6)} pts`;
         const txt = this.add.text(W/2, curY + fh/2, label, {
           fontSize: fs, fontFamily: 'monospace',
           fill, fontStyle: (isTop3 || isMe) ? 'bold' : 'normal',
@@ -458,15 +455,15 @@ class RankingScene extends Phaser.Scene {
           const prefixLen2 = medal.length + 1 + nameDisplay2.length;
           const bx2 = (W/2 - txt.width/2) + prefixLen2 * charW2 + rad2 + 1;
           const by2 = curY + fh / 2;
-          const g2 = this.add.graphics();
-          g2.fillStyle(0x1D9BF0, 1).fillCircle(bx2, by2, rad2);
-          g2.lineStyle(rad2 * 0.38, 0xFFFFFF, 1);
-          g2.beginPath();
-          g2.moveTo(bx2 - rad2*0.38, by2 + rad2*0.05);
-          g2.lineTo(bx2 - rad2*0.02, by2 + rad2*0.42);
-          g2.lineTo(bx2 + rad2*0.48, by2 - rad2*0.36);
-          g2.strokePath();
-          rankContainer.add(g2);
+          const gv2 = this.add.graphics();
+          gv2.fillStyle(0x1D9BF0, 1).fillCircle(bx2, by2, rad2);
+          gv2.lineStyle(rad2 * 0.38, 0xFFFFFF, 1);
+          gv2.beginPath();
+          gv2.moveTo(bx2 - rad2*0.38, by2 + rad2*0.05);
+          gv2.lineTo(bx2 - rad2*0.02, by2 + rad2*0.42);
+          gv2.lineTo(bx2 + rad2*0.48, by2 - rad2*0.36);
+          gv2.strokePath();
+          rankContainer.add(gv2);
         }
 
         // Indicador "← TÚ" para la entrada propia
