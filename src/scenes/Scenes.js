@@ -97,11 +97,11 @@ class MenuScene extends Phaser.Scene {
       fill: '#fff', stroke: '#FF69B4', strokeThickness: 2,
     }).setOrigin(0.5);
 
-    // Botón JUGAR — superficie completa interactiva
+    // Botón JUGAR
+    this.add.graphics()
+      .fillStyle(0xFF69B4, 1).fillRoundedRect(W/2-110, H*0.47, 220, 40, 10);
     this.add.text(W/2, H*0.47+20, '▶  JUGAR', {
-      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold',
-      fill: '#000', backgroundColor: '#FF69B4',
-      padding: { x: 48, y: 12 },
+      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Game', { lvl: 0 }));
 
@@ -115,22 +115,23 @@ class MenuScene extends Phaser.Scene {
         location.reload();
       });
 
-    // Separador + título ranking
-    this.add.graphics()
-      .lineStyle(1, 0xFF69B4, 0.4)
-      .lineBetween(W*0.05, H*0.64, W*0.95, H*0.64);
-    this.add.text(W/2, H*0.67, '🏆  RANKING GLOBAL', {
-      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
-    }).setOrigin(0.5);
-
     // ── Ranking con cámara secundaria ──
     const rankY0 = Math.round(H * 0.73);
     const rankH  = Math.round(H - rankY0 - 10);
-    // Top 3 más altos, resto normal
-    const lineH3 = 28;  // altura top 3
-    const lineH  = 18;  // altura resto
+    const lineH3 = 28;
+    const lineH  = 18;
 
     const rankCam = this.cameras.add(0, rankY0, W, rankH);
+
+    // Separador + título ranking — creados DESPUÉS de rankCam para filtrarlos
+    const sepLine = this.add.graphics()
+      .lineStyle(1, 0xFF69B4, 0.4)
+      .lineBetween(W*0.05, H*0.64, W*0.95, H*0.64);
+    sepLine.cameraFilter = rankCam.id;
+    const titleTxt = this.add.text(W/2, H*0.67, '🏆  RANKING GLOBAL', {
+      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
+    }).setOrigin(0.5);
+    titleTxt.cameraFilter = rankCam.id;
     rankCam.setBackgroundColor('rgba(0,0,0,0)');
     rankCam.scrollY = rankY0;
 
@@ -151,10 +152,11 @@ class MenuScene extends Phaser.Scene {
         const cleanName = DB.cleanName(r.player_name);
         const isMe      = cleanName === name;
         const fs        = isTop3 ? '15px' : '11px';
-        const fill      = isMe   ? '#FF69B4'
-                        : i === 0 ? '#FFD700'
-                        : i === 1 ? '#E0E0E0'
-                        : i === 2 ? '#CD7F32'
+        const fill      = isMe      ? '#FF69B4'
+                        : verified  ? '#4FC3F7'
+                        : i === 0   ? '#FFD700'
+                        : i === 1   ? '#E0E0E0'
+                        : i === 2   ? '#CD7F32'
                         : '#888';
 
         // Fondo para top 3
@@ -166,9 +168,8 @@ class MenuScene extends Phaser.Scene {
         }
 
         const nameDisplay = cleanName.substring(0,12).padEnd(12);
-        const verifiedSpace = verified ? '   ' : '';
         const txt = this.add.text(W/2, curY + fh/2,
-          `${medal} ${nameDisplay}${verifiedSpace} ${String(r.score).padStart(6)} pts`,
+          `${medal} ${nameDisplay} ${String(r.score).padStart(6)} pts`,
           { fontSize: fs, fontFamily: 'monospace',
             fill, fontStyle: isTop3 ? 'bold' : 'normal',
             stroke: isTop3 ? '#000' : undefined,
@@ -176,22 +177,12 @@ class MenuScene extends Phaser.Scene {
         ).setOrigin(0.5);
         rankContainer.add(txt);
         if (verified) {
-          // Círculo azul justo después del nombre
-          // charW aproximado en monospace: fontSize * 0.6
-          const charW = isTop3 ? 15 * 0.6 : 11 * 0.6;
-          const nameLen = (medal.length + 1 + nameDisplay.length);
-          const nameEndX = W/2 - txt.width/2 + nameLen * charW + charW * 0.5;
-          const rad = isTop3 ? 8 : 6;
-          const by = curY + fh / 2;
-          const g = this.add.graphics();
-          g.fillStyle(0x1D9BF0, 1).fillCircle(nameEndX + rad, by, rad);
-          g.lineStyle(rad * 0.38, 0xFFFFFF, 1);
-          g.beginPath();
-          g.moveTo(nameEndX + rad - rad*0.38, by + rad*0.02);
-          g.lineTo(nameEndX + rad - rad*0.02, by + rad*0.40);
-          g.lineTo(nameEndX + rad + rad*0.48, by - rad*0.36);
-          g.strokePath();
-          rankContainer.add(g);
+          const badge = this.add.text(W * 0.76, curY + fh/2, '  ✓  ', {
+            fontSize: isTop3 ? '13px' : '10px', fontFamily: 'monospace', fontStyle: 'bold',
+            fill: '#ffffff', backgroundColor: '#1D9BF0',
+            padding: { x: 3, y: 2 },
+          }).setOrigin(0.5);
+          rankContainer.add(badge);
         }
 
         curY += fh;
@@ -423,10 +414,11 @@ class RankingScene extends Phaser.Scene {
         const cleanName = DB.cleanName(r.player_name);
         const isMe      = cleanName === myName && r.score === myScore;
         const fs        = isTop3 ? '14px' : '12px';
-        const fill      = isMe   ? '#00FF99'
-                        : i === 0 ? '#FFD700'
-                        : i === 1 ? '#E0E0E0'
-                        : i === 2 ? '#CD7F32'
+        const fill      = isMe      ? '#00FF99'
+                        : verified  ? '#4FC3F7'
+                        : i === 0   ? '#FFD700'
+                        : i === 1   ? '#E0E0E0'
+                        : i === 2   ? '#CD7F32'
                         : '#aaa';
 
         if (isTop3 || isMe) {
@@ -440,8 +432,7 @@ class RankingScene extends Phaser.Scene {
         }
 
         const nameDisplay2 = cleanName.substring(0,14).padEnd(14);
-        const verifiedSpace2 = verified ? '   ' : '';
-        const label = `${medal} ${nameDisplay2}${verifiedSpace2} ${String(r.score).padStart(6)} pts`;
+        const label = `${medal} ${nameDisplay2} ${String(r.score).padStart(6)} pts`;
         const txt = this.add.text(W/2, curY + fh/2, label, {
           fontSize: fs, fontFamily: 'monospace',
           fill, fontStyle: (isTop3 || isMe) ? 'bold' : 'normal',
@@ -450,20 +441,12 @@ class RankingScene extends Phaser.Scene {
         }).setOrigin(0.5);
         rankContainer.add(txt);
         if (verified) {
-          const charW2 = isTop3 ? 14 * 0.6 : 12 * 0.6;
-          const nameLen2 = (medal.length + 1 + nameDisplay2.length);
-          const nameEndX2 = W/2 - txt.width/2 + nameLen2 * charW2 + charW2 * 0.5;
-          const rad2 = isTop3 ? 8 : 6;
-          const by2 = curY + fh / 2;
-          const g2 = this.add.graphics();
-          g2.fillStyle(0x1D9BF0, 1).fillCircle(nameEndX2 + rad2, by2, rad2);
-          g2.lineStyle(rad2 * 0.38, 0xFFFFFF, 1);
-          g2.beginPath();
-          g2.moveTo(nameEndX2 + rad2 - rad2*0.38, by2 + rad2*0.02);
-          g2.lineTo(nameEndX2 + rad2 - rad2*0.02, by2 + rad2*0.40);
-          g2.lineTo(nameEndX2 + rad2 + rad2*0.48, by2 - rad2*0.36);
-          g2.strokePath();
-          rankContainer.add(g2);
+          const badge = this.add.text(W * 0.78, curY + fh/2, '  ✓  ', {
+            fontSize: isTop3 ? '13px' : '10px', fontFamily: 'monospace', fontStyle: 'bold',
+            fill: '#ffffff', backgroundColor: '#1D9BF0',
+            padding: { x: 3, y: 2 },
+          }).setOrigin(0.5);
+          rankContainer.add(badge);
         }
 
         // Indicador "← TÚ" para la entrada propia
