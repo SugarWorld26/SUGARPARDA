@@ -49,25 +49,24 @@ class HUD {
     this._barFg = this._scene.add.graphics().setScrollFactor(0).setDepth(92);
     this._bx = bx; this._by = by; this._bw = bw; this._bh = bh;
 
-    // Indicadores izquierda — más grandes y claros
-    // Fondo semitransparente
+    // Indicadores izquierda — fondo semitransparente
     this._scene.add.graphics().setScrollFactor(0).setDepth(89)
-      .fillStyle(0x000000, 0.55).fillRoundedRect(2, 2, 80, 68, 8);
+      .fillStyle(0x000000, 0.55).fillRoundedRect(6, 8, 84, 68, 8);
 
-    this._fastTxt = this._scene.add.text(8, 6, `🖊 x${fastLeft}`, {
+    this._fastTxt = this._scene.add.text(12, 12, `🖊 x${fastLeft}`, {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FF6F00', stroke: '#000', strokeThickness: 2,
-    }).setScrollFactor(0).setDepth(92);
+    }).setScrollFactor(0).setDepth(94);
 
-    this._glucTxt = this._scene.add.text(8, 24, `❤️ x${glucagons}`, {
+    this._glucTxt = this._scene.add.text(12, 30, `❤️ x${glucagons}`, {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#FF6B6B', stroke: '#000', strokeThickness: 2,
-    }).setScrollFactor(0).setDepth(92);
+    }).setScrollFactor(0).setDepth(94);
 
-    this._backpackTxt = this._scene.add.text(8, 42, `🍎 x${backpack}`, {
+    this._backpackTxt = this._scene.add.text(12, 48, `🍎 x${backpack}`, {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#F8BBD9', stroke: '#000', strokeThickness: 2,
-    }).setScrollFactor(0).setDepth(92);
+    }).setScrollFactor(0).setDepth(94);
 
     this._fastDosesTxt = null;
 
@@ -108,8 +107,8 @@ class HUD {
     if (levelName) {
       this._scene.add.text(W / 2, MY + MH + 2, levelName.toUpperCase(), {
         fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold',
-        fill: '#90A4AE', stroke: '#000', strokeThickness: 2,
-      }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(90);
+        fill: '#FFD700', stroke: '#000', strokeThickness: 3,
+      }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(92);
     }
 
     const gfx = this._scene.add.graphics().setScrollFactor(0).setDepth(90);
