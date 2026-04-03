@@ -35,6 +35,9 @@ class GameScene extends Phaser.Scene {
 
     this._ground = new Ground(this, lvl);
 
+    AudioManager.unlock();
+    AudioManager.playMusic(this._lvlIdx);
+
     const startY = CONFIG.GROUND_Y - 48;
     this._player = new Player(this, 200, startY);
     this._player.addToGround(this._ground);
@@ -48,27 +51,31 @@ class GameScene extends Phaser.Scene {
 
     this._hud = new HUD(this, this._glucagons, this._fastLeft, this._backpack);
     this._hud.onJump(() => {
-      if (this._slopeJump) return;  // evitar saltos acumulados en cuesta
+      if (this._slopeJump) return;
       const slope  = this._ground.isSlopeAt(this._player.x);
       const jumped = this._player.jump(this._glucose, slope);
-      if (jumped && slope) {
-        this._slopeJump = true;
+      if (jumped) {
+        AudioManager.sfx('jump');
+        if (slope) this._slopeJump = true;
       }
     });
     this._hud.onSlowInsulin(() => {
       this._glucose.useSlowInsulin();
+      AudioManager.sfx('slowInsulin');
       this._float(this._player.x, this._player.y - 45, '💉 -5/s x5s', '#43A047');
     });
     this._hud.onFastInsulin(() => {
       if (this._fastLeft <= 0) return;
       this._fastLeft--;
       this._glucose.useFastInsulin();
+      AudioManager.sfx('fastInsulin');
       this._float(this._player.x, this._player.y - 45, `⚡ -${CONFIG.INS_FAST_DROP}`, '#FF6F00');
     });
     this._hud.onEatApple(() => {
       if (this._backpack <= 0) return;
       this._backpack--;
       this._glucose.eatApple();
+      AudioManager.sfx('apple');
       this._float(this._player.x, this._player.y - 45, `🍎 +${CONFIG.APPLE_RAISE}`, '#A5D6A7');
     });
 
@@ -138,10 +145,11 @@ class GameScene extends Phaser.Scene {
       a.destroy();
       if (this._backpack < CONFIG.BACKPACK_MAX) {
         this._backpack++;
+        AudioManager.sfx('apple');
         this._float(this._player.x, this._player.y - 50, `🎒 Mochila: ${this._backpack}`, '#FFC107');
       } else {
-        // Mochila llena: se come directamente
         this._glucose.eatApple();
+        AudioManager.sfx('apple');
         this._float(this._player.x, this._player.y - 50, `🍎 +${CONFIG.APPLE_RAISE}`, '#A5D6A7');
       }
     });
@@ -174,6 +182,7 @@ class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this._player.sprite, this._fastPickups, (_, fp) => {
       fp.destroy();
       this._fastLeft++;
+      AudioManager.sfx('pickup');
       this._float(this._player.x, this._player.y - 50, '⚡ +1 dosis', '#FF6F00');
     });
   }
@@ -236,6 +245,7 @@ class GameScene extends Phaser.Scene {
 
   _onEnemyHit(type) {
     this._glucose.onEnemyHit(type);
+    AudioManager.sfx('enemy');
     this._flash(0xFF0000, 160);
     const raise = CONFIG.ENEMY_RAISE[type] || 0;
     this._float(this._player.x, this._player.y - 40, `+${raise} 📈`, '#FF5252');
@@ -246,6 +256,7 @@ class GameScene extends Phaser.Scene {
     this._dead = true;
     this._player.sprite.body.setVelocityX(0);
     this._player.sprite.body.setVelocityY(0);
+    AudioManager.sfx('hole');
     this._flash(0xB71C1C, 600);
 
     const W = CONFIG.W, H = CONFIG.H;
@@ -269,6 +280,7 @@ class GameScene extends Phaser.Scene {
     this._dead = true;
     this._player.sprite.body.setVelocityX(0);
     this._player.sprite.body.setVelocityY(0);
+    AudioManager.sfx('hypo');
     this._flash(0x1565C0, 500);
 
     const W = CONFIG.W, H = CONFIG.H;
@@ -296,6 +308,7 @@ class GameScene extends Phaser.Scene {
       btn.on('pointerdown', () => {
         this._glucagons--;
         this._glucose.useGlucagon();
+        AudioManager.sfx('glucagon');
         const safeX = this._findSafeX(this._player.x);
         this._player.sprite.body.reset(safeX, CONFIG.GROUND_Y - 48);
         this._dead = false;
@@ -324,6 +337,12 @@ class GameScene extends Phaser.Scene {
     this._done = true;
     if (this._motionHandler) window.removeEventListener('devicemotion', this._motionHandler);
     this._score.finish();
+    AudioManager.stopMusic();
+    const isLast = this._lvlIdx + 1 >= CONFIG.LEVELS.length;
+    if (!gameOver) {
+      if (isLast) AudioManager.sfx('winFinal');
+      else        AudioManager.sfx('winLevel');
+    }
     this.scene.start('Result', {
       score:        this._score.total + this._prevScore,
       secs:         this._score.elapsedSecs,
@@ -424,7 +443,10 @@ class GameScene extends Phaser.Scene {
     this._player.applyGlucoseVFX(this._glucose.state, time);
     this._spawner.update(delta);
 
-    // Checkpoints por X — cuenta aunque el jugador salte por encima
+    // Rangazo — jingle si llevas 3s en rango perfecto
+    AudioManager.tickRangazo(delta / 1000, this._glucose.state === 'rangazo');
+
+    // Checkpoints por X
     if (this._cpData) {
       for (const cp of this._cpData) {
         if (!cp.done && this._player.x >= cp.x) {
@@ -433,6 +455,7 @@ class GameScene extends Phaser.Scene {
           if (doneTex === '_cp_done' && !this.textures.exists('_cp_done')) this._makeCpDoneTex();
           cp.sprite.setTexture(doneTex, 0);
           const { pts } = this._score.checkpoint(this._glucose.v);
+          AudioManager.sfx('checkpoint');
           this._float(this._player.x, this._player.y - 60, `+${pts} pts`, '#FFC107');
         }
       }
