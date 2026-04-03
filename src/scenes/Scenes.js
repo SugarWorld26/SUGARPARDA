@@ -68,12 +68,14 @@ class BootScene extends Phaser.Scene {
 function _addVerifiedBadge(scene, x, y, container) {
   const g = scene.add.graphics();
   g.fillStyle(0x1D9BF0, 1).fillCircle(x, y, 7);
-  g.fillStyle(0xFFFFFF, 1);
-  // Checkmark dibujado con píxeles
-  g.fillRect(x - 3.5, y - 0.5, 2.5, 2.5);
-  g.fillRect(x - 1,   y + 1.5, 1.5, 1.5);
-  g.fillRect(x + 0.5, y - 2,   1.5, 4);
-  g.setScrollFactor(0).setDepth(93);
+  // Checkmark blanco dibujado con líneas gruesas
+  g.lineStyle(2.5, 0xFFFFFF, 1);
+  g.beginPath();
+  g.moveTo(x - 3.5, y);
+  g.lineTo(x - 1,   y + 3);
+  g.lineTo(x + 4,   y - 3);
+  g.strokePath();
+  g.setScrollFactor(0).setDepth(95);
   if (container) container.add(g);
   return g;
 }
@@ -188,11 +190,9 @@ class MenuScene extends Phaser.Scene {
         ).setOrigin(0.5);
         rankContainer.add(txt);
 
-        // Badge verificado
+        // Badge verificado — posición fija a la derecha del bloque
         if (verified) {
-          const bx = txt.x + txt.width / 2 + 12;
-          const by = curY + fh / 2;
-          _addVerifiedBadge(this, bx, by, rankContainer);
+          _addVerifiedBadge(this, W * 0.80, curY + fh / 2, rankContainer);
         }
 
         curY += fh;
@@ -449,11 +449,9 @@ class RankingScene extends Phaser.Scene {
         }).setOrigin(0.5);
         rankContainer.add(txt);
 
-        // Badge verificado
+        // Badge verificado — posición fija a la derecha del bloque
         if (verified) {
-          const bx = txt.x + txt.width / 2 + 12;
-          const by = curY + fh / 2;
-          _addVerifiedBadge(this, bx, by, rankContainer);
+          _addVerifiedBadge(this, W * 0.80, curY + fh / 2, rankContainer);
         }
 
         // Indicador "← TÚ" para la entrada propia
