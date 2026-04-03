@@ -64,6 +64,8 @@
       font-family:monospace; font-weight:bold; border-radius:10px;
       cursor:pointer; width:min(84vw,310px); letter-spacing:2px;
       touch-action:manipulation; box-shadow: 0 0 20px rgba(255,105,180,0.5);
+      display:block; -webkit-appearance:none;
+      user-select:none; -webkit-user-select:none;
     }
     #playBtn:active { background:#C2185B; transform:scale(0.97); }
 
@@ -182,6 +184,7 @@
     }
     launch(name);
   });
+  btn.addEventListener('touchend', (e) => { e.preventDefault(); btn.click(); });
   input.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
 })();
 </script>
