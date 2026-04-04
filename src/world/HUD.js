@@ -94,7 +94,7 @@ class HUD {
     this._buildButtons(fastLeft, backpack);
   }
 
-  buildMinimap(ground, levelLength, levelName, lvl) {
+  buildMinimap(ground, levelLength, levelName, lvl, cpData) {
     const W  = CONFIG.W;
     const MY = 102;
     const MH = 14;
@@ -140,13 +140,12 @@ class HUD {
       prevEnd = seg.x + seg.w;
     });
 
-    // Checkpoints — pequeña línea verde en su posición X
-    if (lvl && lvl.checkpoints) {
-      const sp = levelLength / (lvl.checkpoints + 1);
-      for (let i = 1; i <= lvl.checkpoints; i++) {
-        const cx = Math.round(sp * i * sc);
+    // Checkpoints — posiciones reales de las banderas que existen
+    if (cpData && cpData.length) {
+      cpData.forEach(cp => {
+        const cx = Math.round(cp.x * sc);
         gfx.fillStyle(0x00E676, 1).fillRect(cx - 1, MY, 2, MH);
-      }
+      });
     }
 
     // Meta
