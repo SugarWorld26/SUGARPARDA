@@ -32,7 +32,7 @@ class Player {
     this._slowTimer = CONFIG.CUPCAKE_SLOW_MS;
   }
 
-  update(delta, fast) {
+  update(delta, fast, onSlope = false) {
     const spd = this.isSlowed ? CONFIG.SPD_SLOW
               : fast          ? CONFIG.SPD_FAST
               : CONFIG.SPD_NORMAL;
@@ -43,7 +43,7 @@ class Player {
       if (this._slowTimer <= 0) this.isSlowed = false;
     }
 
-    const onGround = this.sprite.body.blocked.down;
+    const onGround = this.sprite.body.blocked.down || onSlope;
     if (onGround) {
       if (!this.sprite.anims.isPlaying || this.sprite.anims.currentAnim?.key !== 'run') {
         this.sprite.play('run');
