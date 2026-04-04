@@ -174,21 +174,20 @@ class HUD {
       return img;
     };
 
-    // Saltar — abajo izquierda (mismo tamaño que insulina lenta)
-    const JUMP_SZ = Math.round(SZ * 1.6);  // ~115px, similar al botón verde
+    // Saltar — abajo izquierda (más grande que el resto)
     this._jumpCb  = null;
-    this._jumpBtn = makeImgBtn('btn_jump', 58, H - 58, JUMP_SZ, '_jumpCb')
-                 || this._makeBtn(58, H - 58, 44, 0x1565C0, 0x4FC3F7, '▲');
+    this._jumpBtn = makeImgBtn('btn_jump', 52, H - 52, Math.round(SZ * 1.35), '_jumpCb')
+                 || this._makeBtn(52, H - 52, 38, 0x1565C0, 0x4FC3F7, '▲');
     if (!sc.textures.exists('btn_jump'))
       this._jumpBtn.on('pointerdown', () => { if (this._jumpCb) this._jumpCb(); });
 
     // Manzana — encima del salto
     this._appleCb  = null;
-    this._appleBtn = makeImgBtn('btn_apple', 52, H - 134, SZ * 0.75, '_appleCb')
-                  || this._makeBtn(52, H - 112, 24, 0x388E3C, 0xF8BBD9, '🍎');
+    this._appleBtn = makeImgBtn('btn_apple', 72, H - 148, SZ * 0.75, '_appleCb')
+                  || this._makeBtn(72, H - 126, 24, 0x388E3C, 0xF8BBD9, '🍎');
     if (!sc.textures.exists('btn_apple'))
       this._appleBtn.on('pointerdown', () => { if (this._appleCb) this._appleCb(); });
-    this._appleLbl = sc.add.text(52, H - 170, `x${backpack}`, {
+    this._appleLbl = sc.add.text(72, H - 184, `x${backpack}`, {
       fontSize: '11px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#F8BBD9', stroke: '#000', strokeThickness: 2,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
