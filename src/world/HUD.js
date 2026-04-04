@@ -166,16 +166,17 @@ class HUD {
     const makeImgBtn = (key, cx, cy, size, cbName) => {
       if (!sc.textures.exists(key)) return null;
       const img = sc.add.image(cx, cy, key).setDisplaySize(size, size)
-        .setScrollFactor(0).setDepth(100).setInteractive();
+        .setScrollFactor(0).setDepth(100)
+        .setInteractive(new Phaser.Geom.Circle(size/2, size/2, size/2), Phaser.Geom.Circle.Contains);
       img.on('pointerdown', () => { img.setAlpha(0.7); if (this[cbName]) this[cbName](); });
       img.on('pointerup',   () => img.setAlpha(1));
       img.on('pointerout',  () => img.setAlpha(1));
       return img;
     };
 
-    // Saltar — abajo izquierda
+    // Saltar — abajo izquierda (más grande que el resto)
     this._jumpCb  = null;
-    this._jumpBtn = makeImgBtn('btn_jump', 52, H - 52, SZ, '_jumpCb')
+    this._jumpBtn = makeImgBtn('btn_jump', 52, H - 52, Math.round(SZ * 1.35), '_jumpCb')
                  || this._makeBtn(52, H - 52, 38, 0x1565C0, 0x4FC3F7, '▲');
     if (!sc.textures.exists('btn_jump'))
       this._jumpBtn.on('pointerdown', () => { if (this._jumpCb) this._jumpCb(); });
