@@ -82,7 +82,7 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, lvl.length, CONFIG.H);
     this.cameras.main.startFollow(this._player.sprite, false, 0.1, 1);
     this.cameras.main.setFollowOffset(-CONFIG.W * 0.25, 0);
-    this._hud.buildMinimap(this._ground, lvl.length, lvl.name, lvl);
+    this._hud.buildMinimap(this._ground, lvl.length, lvl.name, lvl, this._cpData);
 
     this._buildAccelerometer();
 
@@ -165,7 +165,7 @@ class GameScene extends Phaser.Scene {
       let cx = Math.round(sp * i);
       // Si cae en agujero o cuesta, buscar suelo plano cercano
       let offset = 0;
-      while ((!this._ground.isSolidAt(cx) || this._ground.isSlopeAt(cx)) && offset < 400) {
+      while ((!this._ground.isSolidAt(cx) || this._ground.isSlopeAt(cx)) && offset < 800) {
         offset += 20;
         cx = Math.round(sp * i) + (offset % 2 === 0 ? offset/2 : -Math.ceil(offset/2));
       }
