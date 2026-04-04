@@ -97,11 +97,11 @@ class MenuScene extends Phaser.Scene {
       fill: '#fff', stroke: '#FF69B4', strokeThickness: 2,
     }).setOrigin(0.5);
 
-    // Botón JUGAR
-    this.add.graphics()
-      .fillStyle(0xFF69B4, 1).fillRoundedRect(W/2-110, H*0.47, 220, 40, 10);
+    // Botón JUGAR — un solo objeto, toda la superficie es interactiva
     this.add.text(W/2, H*0.47+20, '▶  JUGAR', {
-      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#000',
+      fontSize: '20px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#000', backgroundColor: '#FF69B4',
+      padding: { x: 48, y: 12 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Game', { lvl: 0 }));
 
