@@ -49,13 +49,13 @@ class BootScene extends Phaser.Scene {
     if (this.textures.exists('sugargirl')) {
       this.anims.create({
         key: 'run',
-        frames: this.anims.generateFrameNumbers('sugargirl', { start: 0, end: 2 }),
-        frameRate: 10,
+        frames: this.anims.generateFrameNumbers('sugargirl', { start: 0, end: 5 }),
+        frameRate: 14,
         repeat: -1,
       });
       this.anims.create({
         key: 'jump',
-        frames: this.anims.generateFrameNumbers('sugargirl', { start: 3, end: 3 }),
+        frames: this.anims.generateFrameNumbers('sugargirl', { start: 6, end: 6 }),
         frameRate: 1,
         repeat: 0,
       });
