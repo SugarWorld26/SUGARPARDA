@@ -9,6 +9,16 @@
   <meta name="theme-color" content="#0a1628"/>
   <title>SugarWorld</title>
   <link rel="manifest" href="manifest.json"/>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-51JQYZ9FLP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-51JQYZ9FLP');
+  </script>
+
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     html, body {
@@ -121,13 +131,11 @@
 <script src="src/scenes/Game.js"></script>
 
 <script>
-  // ── Variables globales necesarias para onclick del div ──
   const _rotEl  = document.getElementById('rotate');
   const _nameEl = document.getElementById('nameWrap');
   const _input  = document.getElementById('nameInput');
   const _errEl  = document.getElementById('nameErr');
 
-  // Detectar orientación
   function checkOrient() {
     if (window._gameOn) return;
     const portrait = window.innerHeight > window.innerWidth;
@@ -144,7 +152,6 @@
   window.addEventListener('orientationchange', () => setTimeout(checkOrient, 250));
   checkOrient();
 
-  // Nombre guardado
   const _saved = localStorage.getItem('sg_name') || '';
   if (_saved) _input.value = _saved;
 
@@ -156,6 +163,9 @@
     _rotEl.classList.remove('on');
     const gameEl = document.getElementById('game');
     gameEl.style.display = 'block';
+
+    // Evento Analytics — partida iniciada
+    gtag('event', 'partida_iniciada', { player_name: name });
 
     DB.init();
 
@@ -179,7 +189,6 @@
     });
   }
 
-  // Función global llamada desde onclick del div
   window.handlePlayBtn = function() {
     let name = _input.value.trim();
     if (!name) { _errEl.textContent = '⚠ Escribe tu nombre'; return; }
