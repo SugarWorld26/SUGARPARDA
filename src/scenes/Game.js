@@ -452,7 +452,7 @@ class GameScene extends Phaser.Scene {
     }
     // ──────────────────────────────────────────────────────────────
 
-    this._player.update(delta, this._fast);
+    this._player.update(delta, this._fast, onSlope);
     this._player.applyGlucoseVFX(this._glucose.state, time);
     this._spawner.update(delta);
 
