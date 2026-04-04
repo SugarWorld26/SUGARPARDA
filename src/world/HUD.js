@@ -174,14 +174,15 @@ class HUD {
       return img;
     };
 
-    // Saltar — abajo izquierda (más grande que el resto)
+    // Saltar — abajo izquierda (mismo tamaño que insulina lenta)
+    const JUMP_SZ = Math.round(SZ * 1.6);
     this._jumpCb  = null;
-    this._jumpBtn = makeImgBtn('btn_jump', 52, H - 52, Math.round(SZ * 1.35), '_jumpCb')
-                 || this._makeBtn(52, H - 52, 38, 0x1565C0, 0x4FC3F7, '▲');
+    this._jumpBtn = makeImgBtn('btn_jump', 58, H - 58, JUMP_SZ, '_jumpCb')
+                 || this._makeBtn(58, H - 58, 44, 0x1565C0, 0x4FC3F7, '▲');
     if (!sc.textures.exists('btn_jump'))
       this._jumpBtn.on('pointerdown', () => { if (this._jumpCb) this._jumpCb(); });
 
-    // Manzana — encima del salto
+    // Manzana — encima del salto, un poco arriba y a la derecha
     this._appleCb  = null;
     this._appleBtn = makeImgBtn('btn_apple', 72, H - 148, SZ * 0.75, '_appleCb')
                   || this._makeBtn(72, H - 126, 24, 0x388E3C, 0xF8BBD9, '🍎');
