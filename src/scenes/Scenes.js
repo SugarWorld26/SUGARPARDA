@@ -105,6 +105,15 @@ class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Game', { lvl: 0 }));
 
+    // Botón manual — pequeño, esquina inferior derecha
+    this.add.text(W - 12, H - 12, '❓', {
+      fontSize: '18px',
+    }).setOrigin(1, 1).setScrollFactor(0).setDepth(200)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        if (window.openManual) window.openManual();
+      });
+
     // Cambiar nombre
     this.add.text(W/2, H*0.58, '✎ Cambiar nombre', {
       fontSize: '11px', fontFamily: 'monospace', fill: '#666',
