@@ -124,6 +124,14 @@ class MenuScene extends Phaser.Scene {
         location.reload();
       });
 
+    // Botón manual — esquina superior derecha
+    this.add.text(W - 12, 12, '❓ Cómo jugar', {
+      fontSize: '11px', fontFamily: 'monospace', fill: '#aaa',
+      backgroundColor: 'rgba(0,0,0,0.6)', padding: { x: 8, y: 5 },
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(200)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { if (window.openManual) window.openManual(); });
+
     // Botón manual — esquina inferior derecha
     this.add.text(W - 16, H - 16, '❓ Cómo jugar', {
       fontSize: '11px', fontFamily: 'monospace', fill: '#555',
