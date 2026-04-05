@@ -124,6 +124,14 @@ class MenuScene extends Phaser.Scene {
         location.reload();
       });
 
+    // Botón manual — esquina inferior derecha
+    this.add.text(W - 16, H - 16, '❓ Cómo jugar', {
+      fontSize: '11px', fontFamily: 'monospace', fill: '#555',
+      backgroundColor: 'rgba(0,0,0,0.5)', padding: { x: 8, y: 5 },
+    }).setOrigin(1, 1).setScrollFactor(0).setDepth(200)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { if (window.openManual) window.openManual(); });
+
     // ── Ranking con cámara secundaria ──
     const rankY0 = Math.round(H * 0.73);
     const rankH  = Math.round(H - rankY0 - 10);
