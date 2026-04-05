@@ -105,15 +105,6 @@ class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Game', { lvl: 0 }));
 
-    // Botón manual — pequeño, esquina inferior derecha
-    this.add.text(W - 12, H - 12, '❓', {
-      fontSize: '18px',
-    }).setOrigin(1, 1).setScrollFactor(0).setDepth(200)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        if (window.openManual) window.openManual();
-      });
-
     // Cambiar nombre
     this.add.text(W/2, H*0.58, '✎ Cambiar nombre', {
       fontSize: '11px', fontFamily: 'monospace', fill: '#666',
@@ -124,19 +115,13 @@ class MenuScene extends Phaser.Scene {
         location.reload();
       });
 
-    // Botón manual — esquina superior derecha
-    this.add.text(W - 12, 12, '❓ Cómo jugar', {
-      fontSize: '11px', fontFamily: 'monospace', fill: '#aaa',
-      backgroundColor: 'rgba(0,0,0,0.6)', padding: { x: 8, y: 5 },
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(200)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { if (window.openManual) window.openManual(); });
-
-    // Botón manual — esquina inferior derecha
-    this.add.text(W - 16, H - 16, '❓ Cómo jugar', {
-      fontSize: '11px', fontFamily: 'monospace', fill: '#555',
-      backgroundColor: 'rgba(0,0,0,0.5)', padding: { x: 8, y: 5 },
-    }).setOrigin(1, 1).setScrollFactor(0).setDepth(200)
+    // Botón ❓ Cómo jugar — único, bonito, esquina superior derecha
+    const helpBg = this.add.graphics().setScrollFactor(0).setDepth(199);
+    helpBg.fillStyle(0xFF69B4, 0.15).fillRoundedRect(W - 110, 8, 100, 26, 13);
+    helpBg.lineStyle(1, 0xFF69B4, 0.5).strokeRoundedRect(W - 110, 8, 100, 26, 13);
+    this.add.text(W - 60, 21, '❓  Cómo jugar', {
+      fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FF69B4',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(200)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { if (window.openManual) window.openManual(); });
 
