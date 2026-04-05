@@ -146,16 +146,15 @@ class GameScene extends Phaser.Scene {
       this.tweens.add({ targets: a, y: surfY - 58, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
     this.physics.add.overlap(this._player.sprite, this._apples, (_, a) => {
-      a.destroy();
-      if (this._backpack < CONFIG.BACKPACK_MAX) {
-        this._backpack++;
-        AudioManager.sfx('apple');
-        this._float(this._player.x, this._player.y - 50, `🎒 Mochila: ${this._backpack}`, '#FFC107');
-      } else {
-        this._glucose.eatApple();
-        AudioManager.sfx('apple');
-        this._float(this._player.x, this._player.y - 50, `🍎 +${CONFIG.APPLE_RAISE}`, '#A5D6A7');
+      if (this._backpack >= CONFIG.BACKPACK_MAX) {
+        // Mochila llena — ignorar la manzana
+        this._float(this._player.x, this._player.y - 50, '🎒 Mochila llena', '#888');
+        return;
       }
+      a.destroy();
+      this._backpack++;
+      AudioManager.sfx('apple');
+      this._float(this._player.x, this._player.y - 50, `🎒 Mochila: ${this._backpack}`, '#FFC107');
     });
 
     // ── Checkpoints — se activan al cruzar la X ──
