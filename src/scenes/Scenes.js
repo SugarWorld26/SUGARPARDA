@@ -115,15 +115,40 @@ class MenuScene extends Phaser.Scene {
         location.reload();
       });
 
-    // Botón ❓ Cómo jugar — único, bonito, esquina superior derecha
+    // Botón ❓ Cómo jugar — esquina superior derecha, diseño mejorado
+    const helpW = 130, helpH = 34, helpX = W - helpW - 12, helpY = 10;
     const helpBg = this.add.graphics().setScrollFactor(0).setDepth(199);
-    helpBg.fillStyle(0xFF69B4, 0.15).fillRoundedRect(W - 110, 8, 100, 26, 13);
-    helpBg.lineStyle(1, 0xFF69B4, 0.5).strokeRoundedRect(W - 110, 8, 100, 26, 13);
-    this.add.text(W - 60, 21, '❓  Cómo jugar', {
-      fontSize: '10px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FF69B4',
+    // Sombra
+    helpBg.fillStyle(0x000000, 0.4).fillRoundedRect(helpX+2, helpY+2, helpW, helpH, 17);
+    // Fondo degradado simulado con dos capas
+    helpBg.fillStyle(0xFF1493, 0.9).fillRoundedRect(helpX, helpY, helpW, helpH, 17);
+    helpBg.fillStyle(0xFF69B4, 0.5).fillRoundedRect(helpX, helpY, helpW, helpH/2, 17);
+    // Borde brillante
+    helpBg.lineStyle(1.5, 0xFFB6C1, 0.9).strokeRoundedRect(helpX, helpY, helpW, helpH, 17);
+
+    const helpBtn = this.add.text(helpX + helpW/2, helpY + helpH/2, '❓  Cómo jugar', {
+      fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold',
+      fill: '#ffffff',
+      stroke: '#880E4F', strokeThickness: 2,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(200)
       .setInteractive({ useHandCursor: true })
+      .on('pointerover', () => { helpBg.clear();
+        helpBg.fillStyle(0x000000, 0.4).fillRoundedRect(helpX+2, helpY+2, helpW, helpH, 17);
+        helpBg.fillStyle(0xFF69B4, 1).fillRoundedRect(helpX, helpY, helpW, helpH, 17);
+        helpBg.fillStyle(0xFFB6C1, 0.4).fillRoundedRect(helpX, helpY, helpW, helpH/2, 17);
+        helpBg.lineStyle(2, 0xFFFFFF, 0.9).strokeRoundedRect(helpX, helpY, helpW, helpH, 17);
+      })
+      .on('pointerout', () => { helpBg.clear();
+        helpBg.fillStyle(0x000000, 0.4).fillRoundedRect(helpX+2, helpY+2, helpW, helpH, 17);
+        helpBg.fillStyle(0xFF1493, 0.9).fillRoundedRect(helpX, helpY, helpW, helpH, 17);
+        helpBg.fillStyle(0xFF69B4, 0.5).fillRoundedRect(helpX, helpY, helpW, helpH/2, 17);
+        helpBg.lineStyle(1.5, 0xFFB6C1, 0.9).strokeRoundedRect(helpX, helpY, helpW, helpH, 17);
+      })
       .on('pointerdown', () => { if (window.openManual) window.openManual(); });
+
+    // Asegurarse de que rankCam ignorará el botón de ayuda (se añade al ignore más abajo)
+    this._helpBg  = helpBg;
+    this._helpBtn = helpBtn;
 
     // ── Ranking con cámara secundaria ──
     const rankY0 = Math.round(H * 0.73);
@@ -142,7 +167,7 @@ class MenuScene extends Phaser.Scene {
     const titleTxt = this.add.text(W/2, H*0.67, '🏆  RANKING GLOBAL', {
       fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold', fill: '#FFC107',
     }).setOrigin(0.5);
-    rankCam.ignore([sepLine, titleTxt]);
+    rankCam.ignore([sepLine, titleTxt, this._helpBg, this._helpBtn]);
 
     const rows = await DB.top(100);
     const rankContainer = this.add.container(0, 0);
