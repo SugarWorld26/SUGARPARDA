@@ -165,9 +165,11 @@ class HUD {
 
     const makeImgBtn = (key, cx, cy, size, cbName) => {
       if (!sc.textures.exists(key)) return null;
+      // Origen por defecto es (0.5,0.5) — coordenadas locales van de -size/2 a +size/2
+      // El círculo interactivo debe centrarse en (0,0) con radio size/2
       const img = sc.add.image(cx, cy, key).setDisplaySize(size, size)
         .setScrollFactor(0).setDepth(100)
-        .setInteractive(new Phaser.Geom.Circle(size/2, size/2, size/2), Phaser.Geom.Circle.Contains);
+        .setInteractive(new Phaser.Geom.Circle(0, 0, size/2), Phaser.Geom.Circle.Contains);
       img.on('pointerdown', () => { img.setAlpha(0.7); if (this[cbName]) this[cbName](); });
       img.on('pointerup',   () => img.setAlpha(1));
       img.on('pointerout',  () => img.setAlpha(1));
