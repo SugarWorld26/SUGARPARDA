@@ -126,8 +126,8 @@ class MenuScene extends Phaser.Scene {
     // Borde brillante
     helpBg.lineStyle(1.5, 0xFFB6C1, 0.9).strokeRoundedRect(helpX, helpY, helpW, helpH, 17);
 
-    const helpBtn = this.add.text(helpX + helpW/2, helpY + helpH/2, '❓  Cómo jugar', {
-      fontSize: '12px', fontFamily: 'monospace', fontStyle: 'bold',
+    const helpBtn = this.add.text(helpX + helpW/2, helpY + helpH/2, '?  Cómo jugar', {
+      fontSize: '13px', fontFamily: 'monospace', fontStyle: 'bold',
       fill: '#ffffff',
       stroke: '#880E4F', strokeThickness: 2,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(200)
